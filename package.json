@@ -1,7 +1,7 @@
 {
   "name": "@fritzy/ecs",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.1.0",
+  "description": "Entity-Component-System library for game development.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -10,8 +10,8 @@
     "type": "git",
     "url": "git+https://github.com/fritzy/barbican.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Nathanael Fritz",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/fritzy/barbican/issues"
   },

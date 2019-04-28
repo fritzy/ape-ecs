@@ -1,1 +1,1 @@
-# Barbican ECS
+# @fritzy/ecs
