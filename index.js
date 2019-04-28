@@ -1,18 +1,19 @@
+const UUID = require('uuid/v1');
 const BaseComponent = require('./component');
+const Entity = require('./entity');
+const QueryCache = require('./querycache');
 
 const componentMethods = new Set(['stringify', 'clone', 'getObject', Symbol.iterator]);
-const componentProperties = new Set(['type']);
-
 class ECS {
 
   constructor() {
 
-    this.components = new Map();
-    this.types = {};
     this.ticks = 0;
-    this.nextEntity = 0;
     this.entities = new Map();
-    this.entityTypes = new Map();
+    this.types = {};
+    this.entityComponents = new Map();
+    this.components = new Map();
+    this.queryCache = new Map();
   }
 
   tick() {
@@ -23,32 +24,23 @@ class ECS {
 
   registerComponent(name, definition = {}) {
 
-    if (!definition.hasOwnProperty('entityRefs')) {
-      definition.entityRefs = [];
-    };
-    definition.entityRefs.push('entity');
     const klass = class Component extends BaseComponent {}
     klass.definition = definition;
     Object.defineProperty(klass, 'name', {value: name});
-    this.types[name] = klass;
+    this.registerComponentClass(klass);
     return klass;
   }
 
-  newComponent(name, values = {}) {
+  registerComponentClass(klass) {
 
-    const ecs = this;
-    const component = new this.types[name](this, values);
-    if (!this.components.has(name)) {
-      this.components.set(name, new Set());
-    }
-    this.components.get(name).add(component);
-    if (values.hasOwnProperty('entity')) {
-      this.setEntity(values.entity, component);
-    }
-    return component;
+    this.types[klass.name] = klass;
+    this.entityComponents.set(klass.name, new Set());
+    this.components.set(klass.name, new Set());
   }
 
   createEntity(definition) {
+
+    return new Entity(this, definition);
   }
 
   getEntity(entityId) {
@@ -56,80 +48,93 @@ class ECS {
     return this.entities.get(entityId);
   }
 
-  setEntity(entity, component) {
+  queryEntities(args) {
 
-    if (entity !== null && entity !== undefined) {
-      if (!this.entities.has(entity)) {
-        this.entities.set(entity, new Set());
-        this.entityTypes.set(entity, new Set());
-      }
-      const entitySet = this.entities.get(entity);
-      const entityTypes = this.entityTypes.get(entity);
-      entitySet.add(component);
-      entityTypes.add(component.type);
-    } else if (this.components.has(component.type)) {
-      // orphaned component
-      this.components.get(component.type).delete(component);
+    if (typeof args === 'string') {
+      args = {
+        cache: args
+      };
     }
+    const { has, hasnt, cache, lastUpdated, lastComponentUpdated } = Object.assign({
+      has: [],
+      hasnt: [],
+      cache: false,
+      lastUpdated: 0,
+      lastComponentUpdated: 0
+    }, args);
 
-    if (component.entity !== entity) {
-      const old = this.entities.get(component.entity);
-      if (old) old.delete(component);
-      const oldTypes = this.entityTypes.get(entity);
-      if (oldTypes) oldTypes.delete(component.type);
+    let query;
+    if (cache) {
+      query = this.queryCache.get(cache);
     }
-
-  }
-
-  getEntities(has, hasnt = [], cache = false) {
-    const mustHave = new Set(has);
-    for (entity of this.entities) {
+    if (!query) {
+      query = new QueryCache(this, has, hasnt);
     }
+    if (cache) {
+      this.queryCache.set(cache, query);
+    }
+    return query.query(lastUpdated, lastComponentUpdated);
   }
 
   getComponents(name) {
 
-    return this.components.get(name);
+    return [...this.components.get(name)];
+  }
+
+  _updateCache(entity) {
+    for (const query of this.queryCache) {
+      query[1].updateEntity(entity);
+    }
   }
 
 }
 
+module.exports = ECS;
 
-
-
+/*
 const ecs = new ECS();
 ecs.registerComponent('Health', {
-  properties: {hp: 25,
+  properties: {
+    max: 25,
+    hp: 25,
     armor: 0
   }
 });
 
 ecs.registerComponent('Storage', {
   properties: {
+    name: 'Inventory',
     size: 10,
+    inventory: '<EntityArray>'
   },
-  entities: true
+  multiset: true
 });
 
-const component = ecs.newComponent('Health', {
-  hp: 30,
-  entity: 1
+const entity = ecs.createEntity({
+  components: {
+    Health: [{ hp: 10 }],
+    Storage: [{ size: 20 }],
+  }
 });
 
-const component2 = ecs.newComponent('Storage');
-console.log(component2);
-console.log(component2.stringify());
+const entity2 = ecs.createEntity({
+  components: {
+    Health: [{ hp: 10 }],
+  }
+});
 
-
-console.log('--------------------');
-console.log(component);
-console.log('--------------------');
-console.log(component.stringify());
-console.log('.............');
-const comp2 =  component.clone();
-comp2.hp = 10;
-comp2.type = 'Bill';
-console.log(component.stringify());
-console.log(comp2.stringify());
-console.log(ecs.entities);
-console.log(ecs.entityTypes);
+console.log(entity);
+console.log(ecs.queryEntities({has: ['Health']}).length);
+const withstorage = ecs.queryEntities({has: ['Health', 'Storage']});
+console.log('withstorage', withstorage.length);
+const nostorage = ecs.queryEntities({has: ['Health'], hasnt: ['Storage'], cache: 'nostorage'});
+console.log('nostorage', nostorage.length);
+console.log('.....');
+const nostorage2 = ecs.queryEntities('nostorage');
+console.log('nostorage cache', nostorage2.length);
+entity.clearComponents('Storage');
+const nostorage3 = ecs.queryEntities('nostorage');
+console.log('nostorage cache2', nostorage3.length);
+const withstorage2 = ecs.queryEntities({has: ['Health', 'Storage']});
+console.log('withstorage2', withstorage2.length);
+*/

@@ -4,93 +4,109 @@ let componentId = 0;
 
 class BaseComponent {
 
-  constructor(ecs, initialValues) {
+  constructor(ecs, entity, initialValues) {
 
+    delete initialValues.type;
+    delete initialValues.entity;
     Object.defineProperty(this, 'ecs', { enumerable: false, value: ecs });
+    Object.defineProperty(this, 'entity', { enumerable: true, value: entity });
     Object.defineProperty(this, 'type', { enumerable: false, value: this.constructor.name });
     Object.defineProperty(this, '_values', { enumerable: false, value: {} });
-    Object.defineProperty(this, 'id', { enumerable: true, value: componentId });
-    this.lastTick = this.ecs.ticks;
+    Object.defineProperty(this, 'id', { enumerable: false, value: componentId });
+    Object.defineProperty(this, 'lastTick', { enumerable: false, writable: true, value: this.ecs.ticks });
     componentId++;
 
     //loop through inheritance by way of prototypes
     //avoiding constructor->super() boilerplate for every component
     //also avoiding proxies just for a simple setter on properties
+    const definitions = [];
     for (var c = this.constructor; c !== null && c.name; c = Object.getPrototypeOf(c)) {
-
-      // set component properties from Component.properties
       if (!c.definition) continue;
-      if (c.definition.properties) {
-        const properties = c.definition.properties;
-        const keys = Object.keys(properties);
-        for (let idx = 0, l = keys.length; idx < l; idx++) {
-          const property = keys[idx];
-          if (property === 'id' || property === 'type') {
-            throw new Error(`Cannot override property in Component definition: ${property}`);
-          }
-          const value = properties[property];
-          if (this._values.hasOwnProperty(property)) {
-            this[property] = value;
-            continue;
-          }
-          Object.defineProperty(this, property, {
-            enumerable: true,
-            writeable: true,
-            set: (value) => {
-              this.lastTick = this.ecs.ticks;
-              return Reflect.set(this._values, property, value);
-            },
-            get: () => {
-              return Reflect.get(this._values, property);
-            }
-          });
-          this._values[property] = value;
-        }
-      }
+      definitions.push(c.definition);
+    }
+    //we want to inherit deep prototype defintions first
+    definitions.reverse();
 
-      // set component properties that are references to entities
-      if (Array.isArray(c.definition.entityRefs)) {
-        const entityRefs = c.definition.entityRefs;
-        for (let idx = 0, l = entityRefs.length; idx < l; idx++) {
-          const property = entityRefs[idx];
-          if (this.hasOwnProperty(property)) {
-            continue;
-          }
-          Object.defineProperty(this, property, {
-            enumerable: true,
-            writeable: true,
-            set: (value) => {
-              this.lastTick = this.ecs.ticks;
-              return Reflect.set(this._values, property, value);
-            },
-            get: () => {
-              this.getEntityRef(property);
-            }
-          });
-          this._values[property] = null;
-        }
-      }
+    for (let idx = 0, l = definitions.length; idx < l; idx++) {
 
-      if (c.definition.entities) {
-        // entities array
-        this.entities = EntityArray([], this);
+      const definition = definitions[idx];
+      // set component properties from Component.properties
+      if (!definition.properties) {
+        continue;
+      }
+      const properties = definition.properties;
+      const keys = Object.keys(properties);
+      for (let idx = 0, l = keys.length; idx < l; idx++) {
+        const property = keys[idx];
+        if (property === 'id' || property === 'type') {
+          throw new Error(`Cannot override property in Component definition: ${property}`);
+        }
+        const value = properties[property];
+        if (this._values.hasOwnProperty(property)) {
+          this[property] = value;
+          continue;
+        }
+        if (this.hasOwnProperty(property)) {
+          continue;
+        }
+        switch (value) {
+          case '<EntityArray>':
+            Object.defineProperty(this, property, {
+              writable: false,
+              enumerable: true,
+              value: EntityArray([], this)
+            });
+            break;
+          case '<EntityObject>':
+            Object.defineProperty({}, property, {
+              writable: false,
+              enumerable: true,
+              value: EntityArray([], this)
+            });
+            break;
+          case '<Entity>':
+            Object.defineProperty(this, property, {
+              enumerable: true,
+              writeable: true,
+              set: (value) => {
+
+                this.lastTick = this.ecs.ticks;
+                return Reflect.set(this._values, property, value);
+              },
+              get: () => {
+
+                return this.ecs.getEntity(this._values[property]);
+              }
+            });
+            this._values[property] = null;
+            break;
+          default:
+            Object.defineProperty(this, property, {
+              enumerable: true,
+              writeable: true,
+              set: (value) => {
+                this.lastTick = this.ecs.ticks;
+                return Reflect.set(this._values, property, value);
+              },
+              get: () => {
+                return Reflect.get(this._values, property);
+              }
+            });
+            this._values[property] = value;
+            break;
+        }
       }
     }
 
     // don't allow new properties
     Object.seal(this);
     Object.seal(this._values);
-    Object.assign(this._values, initialValues);
+    Object.assign(this, initialValues);
   }
 
   stringify() {
 
     return JSON.stringify(this.getObject());
-  }
-
-  getEntityRef(property) {
-
-    return this.ecs.getEntity(this._values[property]);
   }
 
   clone() {
@@ -114,6 +130,9 @@ class BaseComponent {
 }
 
 BaseComponent.definition = {
+  properties: {
+  },
+  multiset: false
 };
 
 module.exports = BaseComponent;
