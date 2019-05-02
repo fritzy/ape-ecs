@@ -12,10 +12,11 @@ class Entity {
     } else {
       this.id = definition.entity;
     }
-    this.components = {}
+    this.components = {};
+    this.componentMap = {};
 
-    this.lastUpdate = this.ecs.ticks;
-    this.lastComponentUpdate = this.ecs.ticks;
+    this.updatedComponents = this.ecs.ticks;
+    this.updatedValues = this.ecs.ticks;
 
     for (const type of Object.keys(definition.components)) {
       const cdefs = definition.components[type];
@@ -54,11 +55,12 @@ class Entity {
     ecs.components.get(component.type).add(component);
 
 
-    this.lastUpdate = this.ecs.ticks;
+    this.updatedComponents = this.ecs.ticks;
     if (!delayCache) {
       this.ecs._updateCache(this);
     }
 
+    this.componentMap[component.id] = component;
     return component;
   }
 
@@ -101,7 +103,8 @@ class Entity {
       this.ecs._updateCache(this);
     }
 
-    this.lastUpdate = this.ecs.ticks;
+    delete this.componentMap[component.id];
+    this.updatedComponents = this.ecs.ticks;
   }
 
 }

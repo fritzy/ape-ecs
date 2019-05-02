@@ -1,4 +1,5 @@
 const EntityArray = require('./entityarray');
+const ComponentRefs = require('./componentrefs');
 
 let componentId = 0;
 
@@ -13,7 +14,7 @@ class BaseComponent {
     Object.defineProperty(this, 'type', { enumerable: false, value: this.constructor.name });
     Object.defineProperty(this, '_values', { enumerable: false, value: {} });
     Object.defineProperty(this, 'id', { enumerable: false, value: componentId });
-    Object.defineProperty(this, 'lastTick', { enumerable: false, writable: true, value: this.ecs.ticks });
+    Object.defineProperty(this, 'updated', { enumerable: false, writable: true, value: this.ecs.ticks });
     componentId++;
 
     //loop through inheritance by way of prototypes
@@ -38,7 +39,7 @@ class BaseComponent {
       const keys = Object.keys(properties);
       for (let idx = 0, l = keys.length; idx < l; idx++) {
         const property = keys[idx];
-        if (property === 'id' || property === 'type') {
+        if (this.hasOwnProperty(property)) {
           throw new Error(`Cannot override property in Component definition: ${property}`);
         }
         const value = properties[property];
@@ -54,14 +55,14 @@ class BaseComponent {
             Object.defineProperty(this, property, {
               writable: false,
               enumerable: true,
-              value: EntityArray([], this)
+              value: ComponentRefs.EntityObject([], this)
             });
             break;
           case '<EntityObject>':
-            Object.defineProperty({}, property, {
+            Object.defineProperty(this, property, {
               writable: false,
               enumerable: true,
-              value: EntityArray([], this)
+              value: ComponentRefs.EntityObject({}, this)
             });
             break;
           case '<Entity>':
@@ -70,8 +71,13 @@ class BaseComponent {
               writeable: true,
               set: (value) => {
 
-                this.lastTick = this.ecs.ticks;
-                return Reflect.set(this._values, property, value);
+                if (typeof value === object) {
+                  value = object.id;
+                }
+                const old = Reflect.get(this._values, property);
+                const result = Reflect.set(this._values, property, value);
+                this.ecs._sendChange(this, 'setEntity', property, old, value);
+                return result;
               },
               get: () => {
 
@@ -80,13 +86,50 @@ class BaseComponent {
             });
             this._values[property] = null;
             break;
+          case '<ComponentArray>':
+            Object.defineProperty(this, property, {
+              writable: false,
+              enumerable: true,
+              value: ComponentRefs.ComponentObject([], this)
+            });
+            break;
+          case '<ComponentObject>':
+            Object.defineProperty(this, property, {
+              writable: false,
+              enumerable: true,
+              value: ComponentRefs.ComponentObject({}, this)
+            });
+            break;
+          case '<Component>':
+            Object.defineProperty(this, property, {
+              enumerable: true,
+              writeable: true,
+              set: (value) => {
+
+                if (typeof value === object) {
+                  value = object.id;
+                }
+                const old = Reflect.get(this._values, property);
+                const result = Reflect.set(this._values, property, value);
+                this.ecs._sendChange(this, 'setComponent', property, old, value);
+                return result;
+              },
+              get: () => {
+
+                return this.entity.componentsMap(this._values[property]);
+              }
+            });
+            this._values[property] = null;
           default:
             Object.defineProperty(this, property, {
               enumerable: true,
               writeable: true,
               set: (value) => {
-                this.lastTick = this.ecs.ticks;
-                return Reflect.set(this._values, property, value);
+
+                const old = Reflect.get(this._values, property, value);
+                const result = Reflect.set(this._values, property, value);
+                this.ecs._sendChange(this, 'set', property, old, value);
+                return result;
               },
               get: () => {
                 return Reflect.get(this._values, property);
@@ -103,6 +146,7 @@ class BaseComponent {
     Object.seal(this._values);
     Object.assign(this, initialValues);
   }
+
 
   stringify() {
 

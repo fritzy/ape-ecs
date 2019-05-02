@@ -77,14 +77,14 @@ class QueryCache {
     this.results.add(entity);
   }
 
-  query(lastUpdated, lastComponentUpdated) {
+  query(updatedValues, updatedComponents) {
 
     const output = [...this.results];
-    if (lastUpdated > 0) {
-      output.filter(entity => entity.lastUpdated < lastUpdated);
+    if (updatedValues > 0) {
+      output.filter(entity => entity.updatedValues < updatedValues);
     }
-    if (lastComponentUpdated > 0) {
-      output.filter(entity => entity.lastComponentUpdated < lastComponentUpdated);
+    if (updatedComponents > 0) {
+      output.filter(entity => entity.updatedComponents < updatedComponents);
     }
 
     return output;
