@@ -1,4 +1,3 @@
-const EntityArray = require('./entityarray');
 const ComponentRefs = require('./componentrefs');
 
 let componentId = 0;
@@ -13,6 +12,7 @@ class BaseComponent {
     Object.defineProperty(this, 'entity', { enumerable: true, value: entity });
     Object.defineProperty(this, 'type', { enumerable: false, value: this.constructor.name });
     Object.defineProperty(this, '_values', { enumerable: false, value: {} });
+    Object.defineProperty(this, '_ready', { writable: true, enumerable: false, value: false });
     Object.defineProperty(this, 'id', { enumerable: false, value: componentId });
     Object.defineProperty(this, 'updated', { enumerable: false, writable: true, value: this.ecs.ticks });
     componentId++;
@@ -71,8 +71,8 @@ class BaseComponent {
               writeable: true,
               set: (value) => {
 
-                if (typeof value === object) {
-                  value = object.id;
+                if (typeof value === 'object' && value !== null) {
+                  value = value.id;
                 }
                 const old = Reflect.get(this._values, property);
                 const result = Reflect.set(this._values, property, value);
@@ -145,6 +145,7 @@ class BaseComponent {
     Object.seal(this);
     Object.seal(this._values);
     Object.assign(this, initialValues);
+    this._ready = true;
   }
 
 

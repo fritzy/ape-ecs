@@ -4,18 +4,21 @@
   "description": "Entity-Component-System library for game development.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "lab -cv tests"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fritzy/barbican.git"
+    "url": "git+https://github.com/fritzy/ecs-js.git"
   },
   "author": "Nathanael Fritz",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/fritzy/barbican/issues"
+    "url": "https://github.com/fritzy/ecs-js/issues"
   },
-  "homepage": "https://github.com/fritzy/barbican#readme",
-  "dependencies": {
+  "homepage": "https://github.com/fritzy/ecs-js#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "@hapi/code": "^5.3.1",
+    "@hapi/lab": "^18.1.2"
   }
 }

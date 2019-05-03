@@ -15,7 +15,7 @@ module.exports = {
 
         component.lastTick = component.ecs.ticks;
         const old = Reflect.get(obj, prop);
-        if (typeof vaue === 'object') {
+        if (typeof value === 'object') {
           const result = Reflect.set(obj, prop, value.id);
           component.ecs._sendChange(component, 'setEntityObject', prop, old, value.id);
           return result;
@@ -42,7 +42,7 @@ module.exports = {
 
         component.lastTick = component.ecs.ticks;
         const old = Reflect.get(obj, prop);
-        if (typeof vaue === 'object') {
+        if (typeof value === 'object') {
           const result = Reflect.set(obj, prop, value.id);
           component.ecs._sendChange(component, 'setComponentObject', prop, old, value.id);
           return result;
