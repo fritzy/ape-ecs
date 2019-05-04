@@ -95,6 +95,13 @@ lab.experiment('express components', () => {
 
     expect(entity.components.Storage.pockets.items[0].id).to.equal(food.id);
 
+    ecs.removeEntity(food);
+
+    expect(ecs.getEntity(food.id)).to.be.undefined();
+    ecs.removeEntity(entity.id);
+
+    expect(ecs.getEntity(entity.id)).to.be.undefined();
+
   });
 
   lab.test('system subscriptions', () => {
@@ -124,16 +131,15 @@ lab.experiment('express components', () => {
                   components.push(component);
                 }
                 if (components.length > 0) {
-                  const effect = parent.addComponent({ equipment: value }, 'EquipmentEffect');
+                  const effect = parent.addComponent({ equipment: value.id }, 'EquipmentEffect');
                   for (const c of components) {
                     effect.effects.push(c);
                   }
                 }
               }
             } else if (change.old !== null && change.value !== change.old) {
-              const value = this.ecs.getEntity(change.old);
               for (const effect of parent.EquipmentEffect) {
-                if (effect.equipment.id === value.id) {
+                if (effect.equipment === change.old) {
                   for (const comp of effect.effects) {
                     parent.removeComponent(comp);
                   }
@@ -149,7 +155,7 @@ lab.experiment('express components', () => {
 
     ecs.registerComponent('EquipmentEffect', {
       properties: {
-        equipment: '<Entity>',
+        equipment: '',
         effects: '<ComponentArray>'
       },
       multiset: true
@@ -212,12 +218,89 @@ lab.experiment('express components', () => {
     expect(changes[0].value).to.equal(pants.id);
     expect(changes[0].old).to.equal(null);
 
-    entity.EquipmentSlot.pants.slot = null;
+    //entity.EquipmentSlot.pants.slot = null;
+    pants.destroy();
     ecs.runSystemGroup('equipment');
 
+    expect(changes.length).to.be.greaterThan(0);
     expect(changes[0].value).to.be.null();
     expect(entity.EquipmentEffect).to.not.exist();
     expect(entity.Burning).to.not.exist();
+
+  });
+
+});
+
+
+lab.experiment('component inheritance', () => {
+
+  const ecs = new ECS();
+
+  lab.test('register component class', () => {
+
+    class Component1 extends BaseComponent {
+    }
+    Component1.definition = {};
+    ecs.registerComponentClass(Component1);
+
+    const entity = ecs.createEntity({
+      Component1: {}
+    });
+
+    expect(entity.Component1).to.exist()
+  });
+
+  lab.test('override core properties', { plan: 1 }, (flags) => {
+
+    class Component3 extends BaseComponent {
+    }
+    Component3.definition = {};
+
+    ecs.registerComponentClass(Component3);
+    class Component4 extends Component3 {}
+    Component4.definition = {
+      properties: {
+        id: 'hi',
+        entity: 'whatever'
+      }
+    };
+
+    ecs.registerComponentClass(Component4);
+
+    try {
+      ecs.createEntity({
+        Component4: {}
+      });
+    } catch (err) {
+      expect(err).to.be.an.error();
+    }
+  });
+
+  lab.test('override inherited properties', () => {
+
+    class Component6 extends BaseComponent {
+    }
+    Component6.definition = {
+      properties: {
+        greeting: 'hi'
+      }
+    };
+
+    class Component7 extends Component6 {
+    }
+    Component7.definition = {
+      properties: {
+        greeting: 'hello'
+      }
+    };
+
+    ecs.registerComponentClass(Component7);
+
+    const entity = ecs.createEntity({
+      Component7: {}
+    });
+
+    expect(entity.Component7.greeting).to.equal('hello');
 
   });
 

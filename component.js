@@ -1,4 +1,8 @@
 const ComponentRefs = require('./componentrefs');
+const CoreProperties = new Set([
+  'ecs', 'entity', 'type', '_values', '_ready', 'id',
+  'updated', 'constructor', 'stringify', 'clone', 'getObject'
+]);
 
 let componentId = 0;
 
@@ -13,7 +17,7 @@ class BaseComponent {
     Object.defineProperty(this, 'type', { enumerable: false, value: this.constructor.name });
     Object.defineProperty(this, '_values', { enumerable: false, value: {} });
     Object.defineProperty(this, '_ready', { writable: true, enumerable: false, value: false });
-    Object.defineProperty(this, 'id', { enumerable: false, value: componentId });
+    Object.defineProperty(this, 'id', { enumerable: true, value: componentId });
     Object.defineProperty(this, 'updated', { enumerable: false, writable: true, value: this.ecs.ticks });
     componentId++;
 
@@ -21,7 +25,7 @@ class BaseComponent {
     //avoiding constructor->super() boilerplate for every component
     //also avoiding proxies just for a simple setter on properties
     const definitions = [];
-    for (var c = this.constructor; c !== null && c.name; c = Object.getPrototypeOf(c)) {
+    for (var c = this.constructor; c !== null; c = Object.getPrototypeOf(c)) {
       if (!c.definition) continue;
       definitions.push(c.definition);
     }
@@ -39,7 +43,7 @@ class BaseComponent {
       const keys = Object.keys(properties);
       for (let idx = 0, l = keys.length; idx < l; idx++) {
         const property = keys[idx];
-        if (this.hasOwnProperty(property)) {
+        if (CoreProperties.has(property)) {
           throw new Error(`Cannot override property in Component definition: ${property}`);
         }
         const value = properties[property];
@@ -55,14 +59,14 @@ class BaseComponent {
             Object.defineProperty(this, property, {
               writable: false,
               enumerable: true,
-              value: ComponentRefs.EntityObject([], this)
+              value: ComponentRefs.EntityObject([], this, property)
             });
             break;
           case '<EntityObject>':
             Object.defineProperty(this, property, {
               writable: false,
               enumerable: true,
-              value: ComponentRefs.EntityObject({}, this)
+              value: ComponentRefs.EntityObject({}, this, property)
             });
             break;
           case '<Entity>':
@@ -75,6 +79,12 @@ class BaseComponent {
                   value = value.id;
                 }
                 const old = Reflect.get(this._values, property);
+                if (old && old !== value) {
+                  this.ecs.getEntity(old).remRef(this.entity.id, this.id, property);
+                }
+                if (value && value !== old) {
+                  this.ecs.getEntity(value).addRef(this.entity.id, this.id, property);
+                }
                 const result = Reflect.set(this._values, property, value);
                 this.ecs._sendChange(this, 'setEntity', property, old, value);
                 return result;

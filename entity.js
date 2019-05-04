@@ -12,8 +12,10 @@ class Entity {
     } else {
       this.id = definition.id;
     }
+    this.id = `${this.id}`;
     Object.defineProperty(this, 'components', { enumerable: false, value: {} });
     Object.defineProperty(this, 'componentMap', { enumerable: false, value: {} });
+    Object.defineProperty(this, 'refs', { enumerable: false, value: new Set() });
 
     this.updatedComponents = this.ecs.ticks;
     this.updatedValues = this.ecs.ticks;
@@ -38,6 +40,14 @@ class Entity {
     }
     this.ecs.entities.set(this.id, this);
     this.ecs._updateCache(this);
+  }
+
+  addRef(entity, component, prop, sub) {
+    this.refs.add([entity, component, prop, sub].join('...'));
+  }
+
+  remRef(entity, component, prop, sub) {
+    this.refs.add([entity, component, prop, sub].join('...'));
   }
 
   addComponent(definition, type, delayCache) {
@@ -153,6 +163,22 @@ class Entity {
 
     delete this.componentMap[component.id];
     this.updatedComponents = this.ecs.ticks;
+  }
+
+  destroy() {
+    for (const ref of this.refs) {
+      const [entityId, componentId, prop, sub] = ref.split('...');
+      const entity = this.ecs.getEntity(entityId);
+      if (!entity) continue;
+      const component = entity.componentMap[componentId];
+      if (!component) continue;
+      if (!sub) {
+        component[prop] = null;
+      } else {
+        component[prop][sub] = null;
+      }
+    }
+    this.ecs.entities.delete(this.id);
   }
 
 }

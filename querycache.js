@@ -77,6 +77,11 @@ class QueryCache {
     this.results.add(entity);
   }
 
+  clearEntity(entity) {
+
+    this.results.delete(entity);
+  }
+
   query(updatedValues, updatedComponents) {
 
     const output = [...this.results];

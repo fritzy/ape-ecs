@@ -4,7 +4,7 @@
   "description": "Entity-Component-System library for game development.",
   "main": "index.js",
   "scripts": {
-    "test": "lab -cv tests"
+    "test": "lab -a \"@hapi/code\" -cv tests"
   },
   "repository": {
     "type": "git",

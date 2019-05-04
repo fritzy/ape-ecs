@@ -45,16 +45,22 @@ class ECS {
     return new Entity(this, definition);
   }
 
-  rmeoveEntity(entity) {
-    if (entity instanceof Entity) {
-      entity = entity.id
+  removeEntity(id) {
+
+    let entity;
+    if (id instanceof Entity) {
+      entity = id;
+      id = entity.id;
+    } else {
+      entity = this.getEntity(id);
     }
-    this.entities.delete(entity.id);
+    this._clearEntityFromCache(entity);
+    entity.destroy();
   }
 
   getEntity(entityId) {
 
-    return this.entities.get(entityId);
+    return this.entities.get(`${entityId}`);
   }
 
   queryEntities(args) {
@@ -144,6 +150,14 @@ class ECS {
         }
       }
     }
+  }
+
+  _clearEntityFromCache(entity) {
+
+    for (const query of this.queryCache) {
+      query[1].clearEntity(entity);
+    }
+
   }
 
   _updateCache(entity) {
