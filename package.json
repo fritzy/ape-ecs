@@ -2,7 +2,10 @@
   "name": "@fritzy/ecs",
   "version": "0.1.0",
   "description": "Entity-Component-System library for game development.",
-  "main": "index.js",
+  "main": "./src/index.js",
+  "files": [
+    "/src"
+  ],
   "scripts": {
     "test": "lab -a \"@hapi/code\" -cv tests --coverage-exclude tests"
   },

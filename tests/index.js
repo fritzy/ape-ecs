@@ -2,9 +2,9 @@ const { expect } = require('@hapi/code');
 const Lab = require('@hapi/lab');
 const lab = exports.lab = Lab.script();
 
-const ECS = require('../index');
-const BaseSystem = require('../system');
-const BaseComponent = require('../component');
+const ECS = require('../src/index');
+const BaseSystem = require('../src/system');
+const BaseComponent = require('../src/component');
 
 lab.experiment('express components', () => {
 
