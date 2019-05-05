@@ -65,36 +65,25 @@ class ECS {
 
   queryEntities(args) {
 
-    if (typeof args === 'string') {
-      args = {
-        cache: args
-      };
-    }
-    const { has, hasnt, cache, updatedValues, updatedComponents } = Object.assign({
+    const { has, hasnt, persist, updatedValues, updatedComponents } = Object.assign({
       has: [],
       hasnt: [],
-      cache: false,
+      persist: false,
       updatedValues: 0,
       updatedComponents: 0
     }, args);
 
     let query;
-    if (cache) {
-      query = this.queryCache.get(cache);
+    if (persist) {
+      query = this.queryCache.get(persist);
     }
     if (!query) {
       query = new QueryCache(this, has, hasnt);
     }
-    if (cache) {
-      this.queryCache.set(cache, query);
+    if (persist) {
+      this.queryCache.set(persist, query);
     }
     return query.query(updatedValues, updatedComponents);
-  }
-
-  setQuery(system, has, hasnt) {
-
-    const query = new QueryCache(this, has, hasnt);
-    this.queryCache.set(system, query);
   }
 
   getComponents(name) {
@@ -110,14 +99,6 @@ class ECS {
     this.subscriptions.get(type).add(system);
   }
 
-  unsubscribe(system, type) {
-
-    const systems = this.subscriptions.get(type);
-    if (systems) {
-      systems.delete(system);
-    }
-  }
-
   addSystem(group, system) {
 
     if (!this.systems.has(group)) {
@@ -126,28 +107,19 @@ class ECS {
     this.systems.get(group).add(system);
   }
 
-  removeSystem(group, system) {
-
-    const systems = this.systems.get(group);
-    if (systems) {
-      systems.delete(system);
-    }
-  }
-
   runSystemGroup(group) {
 
     const systems = this.systems.get(group);
-    if (systems) {
-      for (const system of systems) {
-        let entities;
-        if (this.queryCache.has(system)) {
-          entities = this.queryCache.get(system).query();
-        }
-        system.update(this.ticks, entities);
-        system.lastTick = this.ticks;
-        if (system.changes.length !== 0) {
-          system.changes = [];
-        }
+    if (!systems) return;
+    for (const system of systems) {
+      let entities;
+      if (this.queryCache.has(system)) {
+        entities = this.queryCache.get(system).query();
+      }
+      system.update(this.ticks, entities);
+      system.lastTick = this.ticks;
+      if (system.changes.length !== 0) {
+        system.changes = [];
       }
     }
   }

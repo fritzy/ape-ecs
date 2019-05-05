@@ -102,7 +102,7 @@ class Entity {
     return component;
   }
 
-  clearComponents(cname) {
+  removeComponentByName(cname) {
 
     if (!this.components.hasOwnProperty(cname)) {
       return;
@@ -165,6 +165,8 @@ class Entity {
   }
 
   destroy() {
+
+    this.ecs._clearEntityFromCache(this);
     for (const ref of this.refs) {
       const [entityId, componentId, prop, sub] = ref.split('...');
       const entity = this.ecs.getEntity(entityId);

@@ -9,7 +9,7 @@ class System {
 
   setQuery(args) {
 
-    args.cache = this;
+    args.persist = this;
     this.ecs.queryEntities(args);
   }
 

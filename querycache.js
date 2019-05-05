@@ -10,6 +10,10 @@ class QueryCache {
 
   _initial() {
 
+    if (this.has.length === 1 && this.hasnt.length === 0) {
+      return new Set(this.ecs.getComponents(this.has[0])
+        .map(component => component.entity));
+    }
     const hasSet = [];
     const hasntSet = [];
     for (const cname of this.has) {
@@ -84,12 +88,12 @@ class QueryCache {
 
   query(updatedValues, updatedComponents) {
 
-    const output = [...this.results];
+    let output = [...this.results];
     if (updatedValues > 0) {
-      output.filter(entity => entity.updatedValues < updatedValues);
+      output = output.filter(entity => entity.updatedValues >= updatedValues);
     }
     if (updatedComponents > 0) {
-      output.filter(entity => entity.updatedComponents < updatedComponents);
+      output = output.filter(entity => entity.updatedComponents >= updatedComponents);
     }
 
     return output;

@@ -107,6 +107,7 @@ lab.experiment('express components', () => {
   lab.test('system subscriptions', () => {
 
     let changes = [];
+    let changes2 = [];
     /* $lab:coverage:off$ */
     class System extends BaseSystem {
 
@@ -152,6 +153,24 @@ lab.experiment('express components', () => {
         }
       }
     }
+
+    class System2 extends BaseSystem {
+
+      constructor(ecs) {
+
+        super(ecs);
+        this.ecs.subscribe(this, 'EquipmentSlot');
+      }
+
+      update(tick) {
+
+        if (this.changes.length > 0) {
+          //make sure it is a separate object
+          this.changes[0] = null;
+        }
+        changes2 = this.changes;
+      }
+    }
     /* $lab:coverage:on */
 
     ecs.registerComponent('EquipmentEffect', {
@@ -177,8 +196,10 @@ lab.experiment('express components', () => {
     });
 
     const system = new System(ecs);
+    const system2 = new System2(ecs);
 
     ecs.addSystem('equipment', system);
+    ecs.addSystem('equipment', system2);
 
     ecs.runSystemGroup('equipment');
 
@@ -223,6 +244,10 @@ lab.experiment('express components', () => {
     pants.destroy();
     ecs.runSystemGroup('equipment');
 
+    ecs.runSystemGroup('asdf'); //code path for non-existant system
+
+    expect(changes2.length).to.be.greaterThan(0);
+    expect(changes2[0]).to.be.null();
     expect(changes.length).to.be.greaterThan(0);
     expect(changes[0].value).to.be.null();
     expect(entity.EquipmentEffect).to.not.exist();
@@ -433,10 +458,100 @@ lab.experiment('system queries', () => {
     expect(resultSet.has(tile5)).to.be.false();
 
   });
+
+  lab.test('filter by updatedValues', () => {
+
+    this.ecs = new ECS();
+    this.ecs.registerComponent('Comp1', {
+      properties: {
+        greeting: 'hi'
+      }
+    });
+
+    this.ecs.tick();
+
+    const entity1 = this.ecs.createEntity({
+      Comp1: {}
+    });
+
+    const entity2 = this.ecs.createEntity({
+      Comp1: {
+        greeting: 'hullo'
+      }
+    });
+
+    this.ecs.tick();
+    const ticks = this.ecs.ticks;
+    const results1 = new Set(this.ecs.queryEntities({ has: ['Comp1'], persist: 'test' }));
+    expect(results1.has(entity1)).to.be.true();
+    expect(results1.has(entity2)).to.be.true();
+
+    entity1.Comp1.greeting = 'Gutten Tag';
+
+    const results2 = new Set(this.ecs.queryEntities({ persist: 'test', updatedValues: ticks }));
+    expect(results2.has(entity1)).to.be.true();
+    expect(results2.has(entity2)).to.be.false();
+  });
+
+  lab.test('filter by updatedComponents', () => {
+
+    this.ecs = new ECS();
+    this.ecs.registerComponent('Comp1', {
+      properties: {
+        greeting: 'hi'
+      }
+    });
+    this.ecs.registerComponent('Comp2', {});
+
+    this.ecs.tick();
+
+    const entity1 = this.ecs.createEntity({
+      Comp1: {}
+    });
+
+    const entity2 = this.ecs.createEntity({
+      Comp1: {
+        greeting: 'hullo'
+      }
+    });
+
+    this.ecs.tick();
+    const ticks = this.ecs.ticks;
+    const results1 = new Set(this.ecs.queryEntities({ has: ['Comp1'], persist: 'test' }));
+    expect(results1.has(entity1)).to.be.true();
+    expect(results1.has(entity2)).to.be.true();
+
+    entity1.Comp1.greeting = 'Gutten Tag';
+    entity2.addComponent('Comp2', {});
+
+    const results2 = new Set(this.ecs.queryEntities({ persist: 'test', updatedComponents: ticks }));
+    expect(results2.has(entity1)).to.be.false();
+    expect(results2.has(entity2)).to.be.true();
+
+  });
+
+  lab.test('destroyed entity should be cleared', () => {
+
+    this.ecs = new ECS();
+    this.ecs.registerComponent('Comp1', {});
+
+    const entity1 = this.ecs.createEntity({
+      Comp1: {}
+    });
+
+    const results1 = new Set(this.ecs.queryEntities({ has: ['Comp1'], persist: 'test' }));
+    expect(results1.has(entity1)).to.be.true();
+
+    entity1.destroy();
+
+    const results2 = new Set(this.ecs.queryEntities({ persist: 'test' }));
+    expect(results2.has(entity1)).to.be.false();
+
+  });
 });
 
 
-lab.experiment('component refs', () => {
+lab.experiment('entity & component refs', () => {
 
   const ecs = new ECS();
 
@@ -472,7 +587,7 @@ lab.experiment('component refs', () => {
 
   });
 
-  lab.test('Enitity Array', {}, () => {
+  lab.test('Entity Array', {}, () => {
 
     ecs.registerComponent('BeltSlots2', {
       properties: {
@@ -522,6 +637,4 @@ lab.experiment('component refs', () => {
     expect(cryer.ExpireObject.comps.a).to.equal(cryer.Crying);
 
   });
-
-
 });
