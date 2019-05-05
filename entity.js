@@ -26,16 +26,16 @@ class Entity {
       const mapBy = ecs.types[type].definition.mapBy;
       if (Array.isArray(cdefs)) {
         for (const def of cdefs) {
-          this.addComponent(def, type, true);
+          this.addComponent(type, def, true);
         }
       } else if (mapBy && typeof cdefs === 'object') {
         for (const key of Object.keys(cdefs)) {
           const def = cdefs[key];
           def[mapBy] = key;
-          this.addComponent(def, type, true);
+          this.addComponent(type, def, true);
         }
       } else {
-        this.addComponent(cdefs, type, true);
+        this.addComponent(type, cdefs, true);
       }
     }
     this.ecs.entities.set(this.id, this);
@@ -50,15 +50,14 @@ class Entity {
     this.refs.add([entity, component, prop, sub].join('...'));
   }
 
-  addComponent(definition, type, delayCache) {
+  addComponent(type, definition, delayCache) {
 
     const ecs = this.ecs;
-    const name = definition.type || type;
-    const component = new ecs.types[name](ecs, this, definition);
+    const component = new ecs.types[type](ecs, this, definition);
 
     let addedType = false;
-    if (ecs.types[name].definition.multiset) {
-      const mapBy = ecs.types[name].definition.mapBy;
+    if (ecs.types[type].definition.multiset) {
+      const mapBy = ecs.types[type].definition.mapBy;
       if (mapBy) {
         if (!this.components.hasOwnProperty(component.type)) {
           this.components[component.type] = {};

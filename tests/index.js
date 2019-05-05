@@ -107,6 +107,7 @@ lab.experiment('express components', () => {
   lab.test('system subscriptions', () => {
 
     let changes = [];
+    /* $lab:coverage:off$ */
     class System extends BaseSystem {
 
       constructor(ecs) {
@@ -127,11 +128,11 @@ lab.experiment('express components', () => {
               if (value.hasOwnProperty('Wearable')) {
                 const components = [];
                 for (const ctype of Object.keys(value.Wearable.effects)) {
-                  const component = parent.addComponent(value.Wearable.effects[ctype], ctype);
+                  const component = parent.addComponent(ctype, value.Wearable.effects[ctype]);
                   components.push(component);
                 }
                 if (components.length > 0) {
-                  const effect = parent.addComponent({ equipment: value.id }, 'EquipmentEffect');
+                  const effect = parent.addComponent('EquipmentEffect', { equipment: value.id });
                   for (const c of components) {
                     effect.effects.push(c);
                   }
@@ -149,9 +150,9 @@ lab.experiment('express components', () => {
             }
           }
         }
-
       }
     }
+    /* $lab:coverage:on */
 
     ecs.registerComponent('EquipmentEffect', {
       properties: {
@@ -303,5 +304,224 @@ lab.experiment('component inheritance', () => {
     expect(entity.Component7.greeting).to.equal('hello');
 
   });
+
+});
+
+lab.experiment('system queries', () => {
+
+  const ecs = new ECS();
+
+  lab.test('add and remove forbidden component', () => {
+
+    ecs.registerComponent('Tile', {
+      properties: {
+        x: 0,
+        y: 0,
+        level: 0
+      }
+    });
+
+    ecs.registerComponent('Hidden', {
+      properties: {}
+    });
+
+    class TileSystem extends BaseSystem {
+
+      constructor(ecs) {
+        super(ecs);
+
+        this.setQuery({
+          has: ['Tile'],
+          hasnt: ['Hidden']
+        });
+        this.lastResults =[];
+      }
+
+      update(tick, entities) {
+        this.lastResults = entities;
+      }
+    }
+
+    const tileSystem = new TileSystem(ecs);
+    ecs.addSystem('map', tileSystem);
+
+    ecs.runSystemGroup('map');
+
+    expect(tileSystem.lastResults.length).to.equal(0);
+
+    const tile1 = ecs.createEntity({
+      Tile: {
+        x: 10,
+        y: 0,
+        level: 0
+      }
+    });
+
+    const tile2 = ecs.createEntity({
+      Tile: {
+        x: 11,
+        y: 0,
+        level: 0
+      },
+      Hidden: {}
+    });
+
+    ecs.runSystemGroup('map');
+
+    expect(tileSystem.lastResults.length).to.equal(1);
+    expect(tileSystem.lastResults[0]).to.equal(tile1);
+
+    tile2.removeComponent(tile2.Hidden);
+
+    ecs.runSystemGroup('map');
+
+    expect(tileSystem.lastResults.length).to.equal(2);
+    expect(tileSystem.lastResults[0]).to.equal(tile1);
+    expect(tileSystem.lastResults[1]).to.equal(tile2);
+
+    tile1.addComponent('Hidden', {});
+
+    ecs.runSystemGroup('map');
+
+    expect(tileSystem.lastResults.length).to.equal(1);
+    expect(tileSystem.lastResults[0]).to.equal(tile2);
+
+
+  });
+
+  lab.test('multiple has and hasnt', () => {
+    ecs.registerComponent('Billboard', {});
+    ecs.registerComponent('Sprite', {});
+
+    const tile1 = ecs.createEntity({
+      Tile: {},
+      Billboard: {},
+      Sprite: {},
+      Hidden: {}
+    });
+
+    const tile2 = ecs.createEntity({
+      Tile: {},
+      Billboard: {},
+    });
+
+    const tile3 = ecs.createEntity({
+      Tile: {},
+      Billboard: {},
+      Sprite: {}
+    });
+
+    const tile4 = ecs.createEntity({
+      Tile: {},
+    });
+
+    const tile5 = ecs.createEntity({
+      Billboard: {},
+    });
+
+    const result = ecs.queryEntities({
+      has: ['Tile', 'Billboard'],
+      hasnt: ['Sprite', 'Hidden']
+    });
+
+    const resultSet = new Set([...result]);
+
+    expect(resultSet.has(tile1)).to.be.false();
+    expect(resultSet.has(tile2)).to.be.true();
+    expect(resultSet.has(tile3)).to.be.false();
+    expect(resultSet.has(tile4)).to.be.false();
+    expect(resultSet.has(tile5)).to.be.false();
+
+  });
+});
+
+
+lab.experiment('component refs', () => {
+
+  const ecs = new ECS();
+
+  lab.test('Enitity Object', {}, () => {
+
+    ecs.registerComponent('BeltSlots', {
+      properties: {
+        slots: '<EntityObject>',
+      }
+    });
+    ecs.registerComponent('Potion', {});
+
+    const belt = ecs.createEntity({
+      BeltSlots: {}
+    });
+
+    const slots = ['a', 'b', 'c'];
+    const potions = [];
+    for (const slot of slots) {
+      const potion = ecs.createEntity({
+        Potion: {}
+      });
+      belt.BeltSlots.slots[slot] = potion;
+      potions.push(potion);
+    }
+
+    expect(belt.BeltSlots.slots[Symbol.iterator]).to.not.exist();
+
+    expect(belt.BeltSlots.slots.a).to.equal(potions[0]);
+    expect(belt.BeltSlots.slots.b).to.equal(potions[1]);
+    expect(belt.BeltSlots.slots.c).to.equal(potions[2]);
+
+
+  });
+
+  lab.test('Enitity Array', {}, () => {
+
+    ecs.registerComponent('BeltSlots2', {
+      properties: {
+        slots: '<EntityArray>',
+      }
+    });
+
+    const belt = ecs.createEntity({
+      BeltSlots2: {}
+    });
+
+    const slots = ['a', 'b', 'c'];
+    const potions = [];
+    for (const slot of slots) {
+      const potion = ecs.createEntity({
+        Potion: {}
+      });
+      belt.BeltSlots2.slots.push(potion);
+      potions.push(potion);
+    }
+
+    expect(belt.BeltSlots2.slots[Symbol.iterator]).to.exist();
+
+    expect(belt.BeltSlots2.slots[0]).to.equal(potions[0]);
+    expect(belt.BeltSlots2.slots[1]).to.equal(potions[1]);
+    expect(belt.BeltSlots2.slots[2]).to.equal(potions[2]);
+  });
+
+  lab.test('Component Object', {}, () => {
+
+
+    ecs.registerComponent('Crying', {});
+
+    ecs.registerComponent('ExpireObject', {
+      properties: {
+        comps: '<ComponentObject>'
+      }
+    });
+
+    const cryer = ecs.createEntity({
+      Crying: {}
+    });
+    cryer.addComponent('ExpireObject', {});
+    cryer.ExpireObject.comps.a = cryer.Crying;
+
+    expect(cryer.ExpireObject.comps[Symbol.iterator]).to.not.exist();
+    expect(cryer.ExpireObject.comps.a).to.equal(cryer.Crying);
+
+  });
+
 
 });

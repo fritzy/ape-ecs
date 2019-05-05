@@ -2,11 +2,12 @@ module.exports = {
 
   EntityObject: (object, component, reference) => {
 
+    const isArray = Array.isArray(object);
     return new Proxy(object, {
       get: (obj, prop, prox) => {
 
         const value = Reflect.get(obj, prop, prox);
-        if ((typeof prop === 'string' || typeof prop === 'number') && !isNaN(prop)) {
+        if ((isArray && typeof prop !== 'symbol' && !isNaN(prop)) || !isArray) {
           return component.ecs.getEntity(value);
         }
         return value;
@@ -33,11 +34,12 @@ module.exports = {
 
   ComponentObject: (object, component) => {
 
+    const isArray = Array.isArray(object);
     return new Proxy(object, {
       get: (obj, prop, prox) => {
 
         const value = Reflect.get(obj, prop, prox);
-        if ((typeof prop === 'string' || typeof prop === 'number') && !isNaN(prop)) {
+        if ((isArray && typeof prop !== 'symbol' && !isNaN(prop)) || !isArray) {
           return component.entity.componentMap[value];
         }
         return value;

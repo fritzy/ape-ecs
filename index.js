@@ -141,7 +141,7 @@ class ECS {
       for (const system of systems) {
         let entities;
         if (this.queryCache.has(system)) {
-          entities = this.queryChache.get(system);
+          entities = this.queryCache.get(system).query();
         }
         system.update(this.ticks, entities);
         system.lastTick = this.ticks;

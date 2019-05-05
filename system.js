@@ -7,7 +7,7 @@ class System {
     this.lastTick = this.ecs.ticks;
   }
 
-  setQuery(has, hasnt) {
+  setQuery(args) {
 
     args.cache = this;
     this.ecs.queryEntities(args);
