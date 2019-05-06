@@ -54,7 +54,6 @@ class ECS {
     } else {
       entity = this.getEntity(id);
     }
-    this._clearEntityFromCache(entity);
     entity.destroy();
   }
 

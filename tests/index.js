@@ -73,6 +73,7 @@ lab.experiment('express components', () => {
     });
 
     const food = ecs.createEntity({
+      id: 'sandwich10', // to exersize custom id
       Food: {}
     });
 
@@ -461,70 +462,70 @@ lab.experiment('system queries', () => {
 
   lab.test('filter by updatedValues', () => {
 
-    this.ecs = new ECS();
-    this.ecs.registerComponent('Comp1', {
+    const ecs = new ECS();
+    ecs.registerComponent('Comp1', {
       properties: {
         greeting: 'hi'
       }
     });
 
-    this.ecs.tick();
+    ecs.tick();
 
-    const entity1 = this.ecs.createEntity({
+    const entity1 = ecs.createEntity({
       Comp1: {}
     });
 
-    const entity2 = this.ecs.createEntity({
+    const entity2 = ecs.createEntity({
       Comp1: {
         greeting: 'hullo'
       }
     });
 
-    this.ecs.tick();
-    const ticks = this.ecs.ticks;
-    const results1 = new Set(this.ecs.queryEntities({ has: ['Comp1'], persist: 'test' }));
+    ecs.tick();
+    const ticks = ecs.ticks;
+    const results1 = new Set(ecs.queryEntities({ has: ['Comp1'], persist: 'test' }));
     expect(results1.has(entity1)).to.be.true();
     expect(results1.has(entity2)).to.be.true();
 
     entity1.Comp1.greeting = 'Gutten Tag';
 
-    const results2 = new Set(this.ecs.queryEntities({ persist: 'test', updatedValues: ticks }));
+    const results2 = new Set(ecs.queryEntities({ persist: 'test', updatedValues: ticks }));
     expect(results2.has(entity1)).to.be.true();
     expect(results2.has(entity2)).to.be.false();
   });
 
   lab.test('filter by updatedComponents', () => {
 
-    this.ecs = new ECS();
-    this.ecs.registerComponent('Comp1', {
+    const ecs = new ECS();
+    ecs.registerComponent('Comp1', {
       properties: {
         greeting: 'hi'
       }
     });
-    this.ecs.registerComponent('Comp2', {});
+    ecs.registerComponent('Comp2', {});
 
-    this.ecs.tick();
+    ecs.tick();
 
-    const entity1 = this.ecs.createEntity({
+    const entity1 = ecs.createEntity({
       Comp1: {}
     });
 
-    const entity2 = this.ecs.createEntity({
+    const entity2 = ecs.createEntity({
       Comp1: {
         greeting: 'hullo'
       }
     });
 
-    this.ecs.tick();
-    const ticks = this.ecs.ticks;
-    const results1 = new Set(this.ecs.queryEntities({ has: ['Comp1'], persist: 'test' }));
+    ecs.tick();
+    const ticks = ecs.ticks;
+    const results1 = new Set(ecs.queryEntities({ has: ['Comp1'], persist: 'test' }));
     expect(results1.has(entity1)).to.be.true();
     expect(results1.has(entity2)).to.be.true();
 
     entity1.Comp1.greeting = 'Gutten Tag';
     entity2.addComponent('Comp2', {});
 
-    const results2 = new Set(this.ecs.queryEntities({ persist: 'test', updatedComponents: ticks }));
+    const results2 = new Set(ecs.queryEntities({ persist: 'test', updatedComponents: ticks }));
     expect(results2.has(entity1)).to.be.false();
     expect(results2.has(entity2)).to.be.true();
 
@@ -532,19 +533,19 @@ lab.experiment('system queries', () => {
 
   lab.test('destroyed entity should be cleared', () => {
 
-    this.ecs = new ECS();
-    this.ecs.registerComponent('Comp1', {});
+    const ecs = new ECS();
+    ecs.registerComponent('Comp1', {});
 
-    const entity1 = this.ecs.createEntity({
+    const entity1 = ecs.createEntity({
       Comp1: {}
     });
 
-    const results1 = new Set(this.ecs.queryEntities({ has: ['Comp1'], persist: 'test' }));
+    const results1 = new Set(ecs.queryEntities({ has: ['Comp1'], persist: 'test' }));
     expect(results1.has(entity1)).to.be.true();
 
     entity1.destroy();
 
-    const results2 = new Set(this.ecs.queryEntities({ persist: 'test' }));
+    const results2 = new Set(ecs.queryEntities({ persist: 'test' }));
     expect(results2.has(entity1)).to.be.false();
 
   });
@@ -618,7 +619,6 @@ lab.experiment('entity & component refs', () => {
 
   lab.test('Component Object', {}, () => {
 
-
     ecs.registerComponent('Crying', {});
 
     ecs.registerComponent('ExpireObject', {
@@ -636,5 +636,343 @@ lab.experiment('entity & component refs', () => {
     expect(cryer.ExpireObject.comps[Symbol.iterator]).to.not.exist();
     expect(cryer.ExpireObject.comps.a).to.equal(cryer.Crying);
 
+  });
+
+  lab.test('Assign entity ref by id', () => {
+
+    ecs.registerComponent('Ref', {
+      properties: {
+        other: '<Entity>'
+      }
+    });
+
+    const entity = ecs.createEntity({
+      Crying: {}
+    });
+
+    const entity2 = ecs.createEntity({
+      Ref: { other: entity.id }
+    });
+
+    expect(entity2.Ref.other).to.equal(entity);
+  });
+
+  lab.test('Reassign same entity ref', () => {
+
+    const entity = ecs.createEntity({
+      Crying: {}
+    });
+
+    const entity2 = ecs.createEntity({
+      Ref: { other: entity.id }
+    });
+
+    entity2.Ref.other = entity;
+
+    expect(entity2.Ref.other).to.equal(entity);
+  });
+
+  lab.test('Plain Component ref', () => {
+
+    ecs.registerComponent('Mate', {
+      properties: {
+        other: '<Component>'
+      }
+    });
+
+    const entity = ecs.createEntity({
+      Crying: {},
+      Mate: {}
+    });
+
+    entity.Mate.other = entity.Crying;
+
+    expect(entity.Mate.other).to.equal(entity.Crying);
+  });
+
+  lab.test('Plain Component ref by id', () => {
+
+    ecs.registerComponent('Mate', {
+      properties: {
+        other: '<Component>'
+      }
+    });
+
+    const entity = ecs.createEntity({
+      Crying: {},
+      Mate: {}
+    });
+
+    entity.Mate.other = entity.Crying.id;
+
+    expect(entity.Mate.other).to.equal(entity.Crying);
+  });
+
+});
+
+lab.experiment('entity restore', () => {
+
+  lab.test('restore maped object', {}, () => {
+
+    const ecs = new ECS();
+    ecs.registerComponent('Potion');
+    ecs.registerComponent('EquipmentSlot', {
+      properties: {
+        name: 'finger',
+        slot: '<Entity>'
+      },
+      multiset: true,
+      mapBy: 'name'
+    });
+
+
+    const potion1 = ecs.createEntity({
+      Potion: {}
+    });
+    const potion2 = ecs.createEntity({
+      Potion: {}
+    });
+
+    const entity = ecs.createEntity({
+      EquipmentSlot: {
+        'main': { slot: potion1 },
+        'secondary': { slot: potion2 }
+      }
+    });
+
+    expect(entity.EquipmentSlot.main.slot).to.equal(potion1);
+    expect(entity.EquipmentSlot.secondary.slot).to.equal(potion2);
+    expect(potion1).to.not.equal(potion2);
+  });
+
+  lab.test('restore unmapped object', {}, () => {
+
+    const ecs = new ECS();
+    ecs.registerComponent('Potion');
+    ecs.registerComponent('EquipmentSlot', {
+      properties: {
+        name: 'finger',
+        slot: '<Entity>'
+      },
+      multiset: true
+    });
+
+
+    const potion1 = ecs.createEntity({
+      Potion: {}
+    });
+    const potion2 = ecs.createEntity({
+      Potion: {}
+    });
+    const potion3 = ecs.createEntity({
+      Potion: {}
+    });
+
+    const entity = ecs.createEntity({
+      EquipmentSlot: [
+        { name: 'slot1', slot: potion1 },
+        { name: 'slot2', slot: potion2 }
+      ]
+    });
+    entity.addComponent('EquipmentSlot', {
+      name: 'slot3',
+      slot: potion3
+    });
+
+    const slots = [...entity.EquipmentSlot]
+
+    expect(slots[0].slot).to.equal(potion1);
+    expect(slots[0].name).to.equal('slot1');
+    expect(slots[1].slot).to.equal(potion2);
+    expect(slots[1].name).to.equal('slot2');
+    expect(slots[2].slot).to.equal(potion3);
+    expect(slots[2].name).to.equal('slot3');
+  });
+
+  lab.test('2nd component on non-multiset component throws', { plan: 1 }, () => {
+
+    const ecs = new ECS();
+    ecs.registerComponent('Potion');
+
+    const entity = ecs.createEntity({
+      Potion: {}
+    });
+
+    try {
+      entity.addComponent('Potion', {});
+    } catch (err) {
+      expect(err).to.be.an.error();
+    }
+  });
+
+  lab.test('Unregistered component throws', { plan: 1 }, () => {
+
+    const ecs = new ECS();
+    ecs.registerComponent('Potion');
+
+    let entity;
+    try {
+      entity = ecs.createEntity({
+        Posion: {} //misspelled
+      });
+    } catch (err) {
+      expect(err).to.be.an.error();
+    }
+  });
+
+  lab.test('removeComponentByName single', () => {
+    const ecs = new ECS();
+    ecs.registerComponent('NPC');
+    ecs.registerComponent('Cat');
+
+    const entity = ecs.createEntity({
+      NPC: {},
+      Cat: {}
+    });
+
+    expect(entity.Cat).to.exist();
+
+    entity.removeComponentByName('Cat');
+    expect(entity.Cat).to.not.exist();
+
+    entity.removeComponentByName('Cat');
+    expect(entity.Cat).to.not.exist();
+
+  });
+
+  lab.test('removeComponentByName multiset', () => {
+
+    const ecs = new ECS();
+    ecs.registerComponent('NPC');
+    ecs.registerComponent('Other', {
+      multiset: true
+    });
+    ecs.registerComponent('Armor', {
+      properties: { 'amount': 5 },
+      multiset: true
+    });
+
+    const entity = ecs.createEntity({
+      NPC: {},
+      Armor: [{ amount: 10 }, { amount: 30 }]
+    });
+    const entity2 = ecs.createEntity({
+      Other: [{}],
+    });
+
+    expect(entity.NPC).to.exist();
+    expect(entity.Armor).to.exist();
+    expect(entity.Armor.size).to.equal(2);
+    expect([...entity.Armor][0].amount).to.equal(10);
+    expect([...entity.Armor][1].amount).to.equal(30);
+
+    entity.removeComponentByName('Armor');
+    expect(entity.Armor).to.not.exist();
+
+    entity.removeComponent([...entity2.Other][0]);
+  });
+
+  lab.test('remove mapped by id', () => {
+
+    const ecs = new ECS();
+    ecs.registerComponent('NPC');
+
+    const entity = ecs.createEntity({
+      NPC: {}
+    });
+    const id = entity.NPC.id;
+    entity.removeComponent(id);
+
+    expect(entity.NPC).to.not.exist();
+  });
+
+  lab.test('remove mapped component', () => {
+    const ecs = new ECS();
+    ecs.registerComponent('AI', {
+      properties: {
+        order: 'sun'
+      },
+      multiset: true,
+      mapBy: 'order'
+    });
+    ecs.registerComponent('EquipmentSlot', {
+      properties: {
+        name: 'mainhand',
+        slot: '<Entity>'
+      },
+      multiset: true,
+      mapBy: 'name'
+    });
+
+    const entity = ecs.createEntity({
+      EquipmentSlot: {
+        righthand: {},
+        lefthand: {}
+      }
+    });
+
+    const entity2 = ecs.createEntity({
+      AI: {
+        sun: {},
+        moon: {}
+      },
+      EquipmentSlot: {
+        righthand: {},
+        lefthand: {}
+      }
+    });
+
+    expect(entity.EquipmentSlot.righthand).to.exist();
+    expect(entity.EquipmentSlot.righthand.name).to.equal('righthand');
+    expect(entity.EquipmentSlot.lefthand.name).to.equal('lefthand');
+
+    entity.removeComponent(entity.EquipmentSlot.righthand);
+
+    expect(entity.EquipmentSlot.righthand).to.not.exist();
+
+    entity.removeComponent(entity2.EquipmentSlot.lefthand);
+
+    expect(entity.EquipmentSlot.lefthand).to.exist();
+    expect(entity2.EquipmentSlot.righthand).to.exist();
+
+    entity.removeComponent(entity2.EquipmentSlot.righthand);
+
+    expect(entity.EquipmentSlot.righthand).to.not.exist();
+    expect(entity2.EquipmentSlot.righthand).to.exist();
+
+    entity.removeComponent(entity2.AI.sun);
+
+    expect(entity.EquipmentSlot.lefthand).to.exist();
+    expect(entity2.AI.sun).to.exist();
+
+    entity.removeComponent(entity.EquipmentSlot.lefthand);
+
+    expect(entity.EquipmentSlot).to.not.exist();
+
+  });
+
+});
+
+lab.experiment('component serialization', () => {
+
+  lab.test('get object and stringify component', () => {
+
+    const ecs = new ECS();
+    ecs.registerComponent('AI', {
+      properties: {
+        order: 'sun'
+      },
+      multiset: true,
+      mapBy: 'order'
+    });
+
+    const entity = ecs.createEntity({
+      AI: [{ order: 'moon' }, { order: 'jupiter' }]
+    });
+
+    const obj = JSON.parse(entity.AI.moon.stringify());
+
+    expect(obj.type).to.equal('AI');
+    expect(obj.id).to.equal(entity.AI.moon.id);
   });
 });

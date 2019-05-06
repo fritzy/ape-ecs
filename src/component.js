@@ -51,9 +51,6 @@ class BaseComponent {
           this[property] = value;
           continue;
         }
-        if (this.hasOwnProperty(property)) {
-          continue;
-        }
         switch (value) {
           case '<EntityArray>':
             Object.defineProperty(this, property, {
@@ -116,8 +113,9 @@ class BaseComponent {
               writeable: true,
               set: (value) => {
 
-                if (typeof value === object) {
-                  value = object.id;
+                console.log('setter');
+                if (typeof value === 'object') {
+                  value = value.id;
                 }
                 const old = Reflect.get(this._values, property);
                 const result = Reflect.set(this._values, property, value);
@@ -126,10 +124,11 @@ class BaseComponent {
               },
               get: () => {
 
-                return this.entity.componentsMap(this._values[property]);
+                return this.entity.componentMap[this._values[property]];
               }
             });
             this._values[property] = null;
+            break;
           default:
             Object.defineProperty(this, property, {
               enumerable: true,
@@ -164,20 +163,7 @@ class BaseComponent {
     return JSON.stringify(this.getObject());
   }
 
-  clone() {
-
-    const obj = Object.assign({}, this._values);
-    obj.entity = null;
-    return this.ecs.newComponent(this.constructor.name, obj)
-  }
-
-  [Symbol.iterator]() {
-
-    return Object.keys(this._values);
-  }
-
   getObject() {
-
 
     return Object.assign({ id: this.id, type: this.type }, this._values);
   }

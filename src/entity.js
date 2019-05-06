@@ -23,12 +23,13 @@ class Entity {
     for (const type of Object.keys(definition)) {
       if (type === 'id') continue;
       const cdefs = definition[type];
+      if (!ecs.types.hasOwnProperty(type)) throw new Error(`No component type named "${type}". Did you misspell it?`)
       const mapBy = ecs.types[type].definition.mapBy;
       if (Array.isArray(cdefs)) {
         for (const def of cdefs) {
           this.addComponent(type, def, true);
         }
-      } else if (mapBy && typeof cdefs === 'object') {
+      } else if (mapBy) {
         for (const key of Object.keys(cdefs)) {
           const def = cdefs[key];
           def[mapBy] = key;
@@ -129,12 +130,17 @@ class Entity {
     if (ecs.types[name].definition.multiset) {
       const mapBy = ecs.types[name].definition.mapBy;
       if (mapBy) {
+        const mapValue = component[mapBy]
         if (this.components.hasOwnProperty(component.type)
-          && this.components[component.type].hasOwnProperty(mapBy)) {
-          delete this.components[component.type][mapBy];
-          if (Object.entries(obj).length === 0) {
+          && this.components[component.type].hasOwnProperty(mapValue)
+          && this.components[component.type][mapValue].id === component.id
+        ) {
+          delete this.components[component.type][mapValue];
+          if (Object.entries(this.components[component.type]).length === 0) {
             removedType = true;
           }
+        } else {
+          return;
         }
       } else {
         if (this.components.hasOwnProperty(component.type)) {
@@ -143,6 +149,8 @@ class Entity {
           if (cset.size === 0) {
             removedType = true;
           }
+        } else {
+          return;
         }
       }
     } else {
@@ -153,7 +161,6 @@ class Entity {
       delete this.components[component.type];
       delete this[component.type];
     }
-
 
     ecs.components.get(component.type).delete(component);
     if (!delayCache) {
@@ -170,9 +177,12 @@ class Entity {
     for (const ref of this.refs) {
       const [entityId, componentId, prop, sub] = ref.split('...');
       const entity = this.ecs.getEntity(entityId);
+      // remove coverage because I can't think of how this would go wrng
+      /* $lab:coverage:off$ */
       if (!entity) continue;
       const component = entity.componentMap[componentId];
       if (!component) continue;
+      /* $lab:coverage:on$ */
       if (!sub) {
         component[prop] = null;
       } else {
