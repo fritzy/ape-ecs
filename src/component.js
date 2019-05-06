@@ -113,7 +113,6 @@ class BaseComponent {
               writeable: true,
               set: (value) => {
 
-                console.log('setter');
                 if (typeof value === 'object') {
                   value = value.id;
                 }
