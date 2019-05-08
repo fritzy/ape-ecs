@@ -17,8 +17,9 @@ class BaseComponent {
     Object.defineProperty(this, 'type', { enumerable: false, value: this.constructor.name });
     Object.defineProperty(this, '_values', { enumerable: false, value: {} });
     Object.defineProperty(this, '_ready', { writable: true, enumerable: false, value: false });
-    Object.defineProperty(this, 'id', { enumerable: true, value: componentId });
+    Object.defineProperty(this, 'id', { enumerable: true, value: initialValues.id || componentId });
     Object.defineProperty(this, 'updated', { enumerable: false, writable: true, value: this.ecs.ticks });
+    delete initialValues.id;
     componentId++;
 
     //loop through inheritance by way of prototypes
@@ -164,7 +165,19 @@ class BaseComponent {
 
   getObject() {
 
-    return Object.assign({ id: this.id, type: this.type }, this._values);
+    const serialize  = this.constructor.definition.serialize;
+    let values = this._values;
+    if (serialize) {
+      if (serialize.skip) return null;
+      if (serialize.properties.length > 0) {
+        values = {}
+        const props = new Set([...serialize.properties]);
+        for (const prop of Object.keys(values).filter(prop => props.has(prop))) {
+          values[prop] = this._values[prop];
+        }
+      }
+    }
+    return Object.assign({ id: this.id, type: this.type }, values);
   }
 
 }
@@ -172,7 +185,11 @@ class BaseComponent {
 BaseComponent.definition = {
   properties: {
   },
-  multiset: false
+  multiset: false,
+  serialize: {
+    skip: false,
+    properties: [],
+  }
 };
 
 module.exports = BaseComponent;

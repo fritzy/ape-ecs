@@ -171,6 +171,24 @@ class Entity {
     this.updatedComponents = this.ecs.ticks;
   }
 
+  getObject() {
+
+    const result = {};
+    for (const type of Object.keys(this.components)) {
+      let next;
+      if (Array.isArray(this.components[type])) {
+        next = [];
+        for (const component of this.components[type]) {
+          next.push(component.getObject());
+        }
+      } else {
+        next = this.components[type].getObject();
+      }
+      result[type] = next;
+    }
+    return Object.assign({ id: this.id}, result);
+  }
+
   destroy() {
 
     this.ecs._clearEntityFromCache(this);

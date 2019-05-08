@@ -976,3 +976,36 @@ lab.experiment('component serialization', () => {
     expect(obj.id).to.equal(entity.AI.moon.id);
   });
 });
+
+lab.experiment('serializing and restoring', () => {
+
+  lab.test('getObject on entity', () => {
+
+    const ecs = new ECS();
+    ecs.registerComponent('EquipmentSlot', {
+      properties: {
+        slot: '<Entity>'
+      }
+    });
+    ecs.registerComponent('Bottle', {});
+
+    const bottle = ecs.createEntity({ Bottle: {} });
+    let npc = ecs.createEntity({
+      EquipmentSlot: {
+        slot: bottle
+      }
+    });
+
+    const old = npc.getObject();
+
+    npc.destroy();
+    npc = undefined;
+
+    npc = ecs.createEntity(old);
+
+    const old2 = npc.getObject();
+
+    expect(npc.EquipmentSlot.slot).to.equal(bottle);
+  });
+
+});
