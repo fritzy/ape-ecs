@@ -1,18 +1,12 @@
 const BaseComponent = require('./component');
-
-let ids = 0;
+const UUID = require('uuid/v1');
 
 class Entity {
 
   constructor(ecs, definition = {}) {
 
     Object.defineProperty(this, 'ecs', { enumerable: false, value: ecs });
-    if (!definition.id) {
-      this.id = ids++;
-    } else {
-      this.id = definition.id;
-    }
-    this.id = `${this.id}`;
+    this.id = definition.id || UUID();
     Object.defineProperty(this, 'components', { enumerable: false, value: {} });
     Object.defineProperty(this, 'componentMap', { enumerable: false, value: {} });
     Object.defineProperty(this, 'refs', { enumerable: false, value: new Set() });

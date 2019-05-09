@@ -1,10 +1,9 @@
 const ComponentRefs = require('./componentrefs');
+const UUID = require('UUID/v1');
 const CoreProperties = new Set([
   'ecs', 'entity', 'type', '_values', '_ready', 'id',
   'updated', 'constructor', 'stringify', 'clone', 'getObject'
 ]);
-
-let componentId = 0;
 
 class BaseComponent {
 
@@ -17,10 +16,9 @@ class BaseComponent {
     Object.defineProperty(this, 'type', { enumerable: false, value: this.constructor.name });
     Object.defineProperty(this, '_values', { enumerable: false, value: {} });
     Object.defineProperty(this, '_ready', { writable: true, enumerable: false, value: false });
-    Object.defineProperty(this, 'id', { enumerable: true, value: initialValues.id || componentId });
+    Object.defineProperty(this, 'id', { enumerable: true, value: initialValues.id || UUID() });
     Object.defineProperty(this, 'updated', { enumerable: false, writable: true, value: this.ecs.ticks });
     delete initialValues.id;
-    componentId++;
 
     //loop through inheritance by way of prototypes
     //avoiding constructor->super() boilerplate for every component
