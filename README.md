@@ -29,10 +29,12 @@ ECS
   * subscribe
   * addSystem
   * runSystemGroup
+
 Component
   * Using Components
   * constructor
   * getObject
+
 Entity
   * Using Entities
   * constructor
@@ -41,6 +43,7 @@ Entity
   * removeComponentByName
   * getObject
   * destroy
+
 System
   * Using Systems
   * constructor
