@@ -953,7 +953,7 @@ lab.experiment('entity restore', () => {
 
 });
 
-lab.experiment('component serialization', () => {
+lab.experiment('exporting and restoring', () => {
 
   lab.test('get object and stringify component', () => {
 
@@ -975,25 +975,34 @@ lab.experiment('component serialization', () => {
     expect(obj.type).to.equal('AI');
     expect(obj.id).to.equal(entity.AI.moon.id);
   });
-});
-
-lab.experiment('serializing and restoring', () => {
 
   lab.test('getObject on entity', () => {
 
     const ecs = new ECS();
     ecs.registerComponent('EquipmentSlot', {
       properties: {
+        name: 'ring',
         slot: '<Entity>'
-      }
+      },
+      multiset: true,
+      mapBy: 'name'
     });
     ecs.registerComponent('Bottle', {});
+    ecs.registerComponent('AI', {});
+    ecs.registerComponent('Effect', {
+      properties: {
+        name: 'fire'
+      },
+      multiset: true
+    });
 
     const bottle = ecs.createEntity({ Bottle: {} });
     let npc = ecs.createEntity({
       EquipmentSlot: {
-        slot: bottle
-      }
+        ring: { slot: bottle }
+      },
+      Effect: [{ name: 'wet' }, { name: 'annoyed' }],
+      AI: {}
     });
 
     const old = npc.getObject();
@@ -1005,7 +1014,62 @@ lab.experiment('serializing and restoring', () => {
 
     const old2 = npc.getObject();
 
-    expect(npc.EquipmentSlot.slot).to.equal(bottle);
+    expect(npc.EquipmentSlot.ring.slot).to.equal(bottle);
+    expect(npc.Effect.size).to.equal(2);
+    expect([...npc.Effect][0].name).to.equal('wet');
+    expect([...npc.Effect][1].name).to.equal('annoyed');
+    expect([...npc.Effect][1].id).to.equal(old.Effect[1].id);
+    expect([...npc.Effect][0].id).to.equal(old.Effect[0].id);
+    expect(npc.AI.id).to.equal(old.AI.id);
   });
 
+  lab.test('property skipping', () => {
+
+    const ecs = new ECS();
+    ecs.registerComponent('Effect', {
+      properties: {
+        name: 'fire',
+        started: ''
+      },
+      serialize: {
+        skip: false,
+        ignore: ['started']
+      }
+    });
+    ecs.registerComponent('AI', {
+      properties: {
+        name: 'thingy',
+      },
+      serialize: {
+        skip: true,
+        ignore: []
+      }
+    });
+
+    ecs.registerComponent('Liquid', {
+      properties: {},
+      serialize: {
+        ignore: []
+      }
+    });
+
+    const entity = ecs.createEntity({
+      Effect: {
+        name: 'fire',
+        started: Date.now()
+      },
+      AI: {},
+      Liquid: {}
+    });
+
+    const old = entity.getObject();
+
+    const entity2 = ecs.createEntity(old);
+
+    expect(old.AI).to.not.exist();
+    expect(old.Effect.started).to.not.exist();
+    expect(old.Effect.name).to.equal('fire');
+    expect(old.Liquid).to.exist();
+    expect(entity2.Liquid).to.exist();
+  });
 });

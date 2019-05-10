@@ -9,8 +9,6 @@ class BaseComponent {
 
   constructor(ecs, entity, initialValues) {
 
-    delete initialValues.type;
-    delete initialValues.entity;
     Object.defineProperty(this, 'ecs', { enumerable: false, value: ecs });
     Object.defineProperty(this, 'entity', { enumerable: true, value: entity });
     Object.defineProperty(this, 'type', { enumerable: false, value: this.constructor.name });
@@ -18,7 +16,6 @@ class BaseComponent {
     Object.defineProperty(this, '_ready', { writable: true, enumerable: false, value: false });
     Object.defineProperty(this, 'id', { enumerable: true, value: initialValues.id || UUID() });
     Object.defineProperty(this, 'updated', { enumerable: false, writable: true, value: this.ecs.ticks });
-    delete initialValues.id;
 
     //loop through inheritance by way of prototypes
     //avoiding constructor->super() boilerplate for every component
@@ -151,7 +148,11 @@ class BaseComponent {
     // don't allow new properties
     Object.seal(this);
     Object.seal(this._values);
-    Object.assign(this, initialValues);
+    const values = { ...initialValues };
+    delete values.type;
+    delete values.entity;
+    delete values.id;
+    Object.assign(this, values);
     this._ready = true;
   }
 
@@ -166,11 +167,13 @@ class BaseComponent {
     const serialize  = this.constructor.definition.serialize;
     let values = this._values;
     if (serialize) {
-      if (serialize.skip) return null;
-      if (serialize.properties.length > 0) {
+      /* $lab:coverage:off$ */
+      if (serialize.skip) return undefined;
+      /* $lab:coverage:on$ */
+      if (serialize.ignore.length > 0) {
         values = {}
-        const props = new Set([...serialize.properties]);
-        for (const prop of Object.keys(values).filter(prop => props.has(prop))) {
+        const props = new Set([...serialize.ignore]);
+        for (const prop of Object.keys(this._values).filter(prop => !props.has(prop))) {
           values[prop] = this._values[prop];
         }
       }
@@ -186,7 +189,7 @@ BaseComponent.definition = {
   multiset: false,
   serialize: {
     skip: false,
-    properties: [],
+    ignore: [],
   }
 };
 

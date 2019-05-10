@@ -169,11 +169,18 @@ class Entity {
 
     const result = {};
     for (const type of Object.keys(this.components)) {
+      const definition = this.ecs.types[type].definition;
+      if (definition.serialize && definition.serialize.skip) continue;
       let next;
-      if (Array.isArray(this.components[type])) {
+      if (this.components[type] instanceof Set) {
         next = [];
         for (const component of this.components[type]) {
           next.push(component.getObject());
+        }
+      } else if (definition.mapBy) {
+        next = {};
+        for (const key of Object.keys(this.components[type])) {
+          next[key] = this.components[type][key].getObject();
         }
       } else {
         next = this.components[type].getObject();
