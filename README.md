@@ -14,37 +14,43 @@ Features:
 * Systems can subscribe to component change logs by component type.
 * Systems have default entity queries that are persisted.
 * Persisted queries are updated as entities change.
+* Export/import support for saving state.
 * 100% Test Coverage.
 
 ECS
   * Using ECS
   * constructor
-  * registerComponent
-  * registerComponentClass
-  * createEntity
-  * removeEntity
-  * getEntity
-  * queryEntities
-  * getComponents
-  * subscribe
-  * addSystem
-  * runSystemGroup
+  * registerComponent method
+  * registerComponentClass method
+  * createEntity method
+  * removeEntity method
+  * getEntity method
+  * queryEntities method
+  * getComponents method
+  * subscribe method
+  * addSystem method
+  * runSystemGroup method
+  * tick method
 
 Component
   * Using Components
+  * definition
+    * primitive properties
+    * Entity and Component References
+    * serialize
   * constructor
-  * getObject
+  * getObject method
 
 Entity
   * Using Entities
   * constructor
-  * addComponent
-  * removeComponent
-  * removeComponentByName
-  * getObject
-  * destroy
+  * addComponent method
+  * removeComponent method
+  * removeComponentByName method
+  * getObject method
+  * destroy method
 
 System
   * Using Systems
   * constructor
-  * update
+  * update method
