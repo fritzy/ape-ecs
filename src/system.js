@@ -1,16 +1,15 @@
 class System {
 
-  constructor(ecs) {
+  constructor(ecs, query) {
 
     this.ecs = ecs;
     this.changes = [];
     this.lastTick = this.ecs.ticks;
-  }
-
-  setQuery(args) {
-
-    args.persist = this;
-    this.ecs.queryEntities(args);
+    this.query = query;
+    if (this.query) {
+      this.query.persist = this;
+      this.ecs.queryEntities(this.query);
+    }
   }
 
   update(tick, entities) {

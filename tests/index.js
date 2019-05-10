@@ -354,12 +354,11 @@ lab.experiment('system queries', () => {
     class TileSystem extends BaseSystem {
 
       constructor(ecs) {
-        super(ecs);
-
-        this.setQuery({
+        super(ecs, {
           has: ['Tile'],
           hasnt: ['Hidden']
         });
+
         this.lastResults =[];
       }
 
