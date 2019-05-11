@@ -3,12 +3,10 @@ const Lab = require('@hapi/lab');
 const lab = exports.lab = Lab.script();
 
 const ECS = require('../src/index');
-const BaseSystem = require('../src/system');
-const BaseComponent = require('../src/component');
 
 lab.experiment('express components', () => {
 
-  const ecs = new ECS();
+  const ecs = new ECS.ECS();
   ecs.registerComponent('Health', {
     properties: {
       max: 25,
@@ -110,7 +108,7 @@ lab.experiment('express components', () => {
     let changes = [];
     let changes2 = [];
     /* $lab:coverage:off$ */
-    class System extends BaseSystem {
+    class System extends ECS.System {
 
       constructor(ecs) {
 
@@ -155,7 +153,7 @@ lab.experiment('express components', () => {
       }
     }
 
-    class System2 extends BaseSystem {
+    class System2 extends ECS.System {
 
       constructor(ecs) {
 
@@ -261,11 +259,11 @@ lab.experiment('express components', () => {
 
 lab.experiment('component inheritance', () => {
 
-  const ecs = new ECS();
+  const ecs = new ECS.ECS();
 
   lab.test('register component class', () => {
 
-    class Component1 extends BaseComponent {
+    class Component1 extends ECS.Component {
     }
     Component1.definition = {};
     ecs.registerComponentClass(Component1);
@@ -279,7 +277,7 @@ lab.experiment('component inheritance', () => {
 
   lab.test('override core properties', { plan: 1 }, (flags) => {
 
-    class Component3 extends BaseComponent {
+    class Component3 extends ECS.Component {
     }
     Component3.definition = {};
 
@@ -305,7 +303,7 @@ lab.experiment('component inheritance', () => {
 
   lab.test('override inherited properties', () => {
 
-    class Component6 extends BaseComponent {
+    class Component6 extends ECS.Component {
     }
     Component6.definition = {
       properties: {
@@ -335,7 +333,7 @@ lab.experiment('component inheritance', () => {
 
 lab.experiment('system queries', () => {
 
-  const ecs = new ECS();
+  const ecs = new ECS.ECS();
 
   lab.test('add and remove forbidden component', () => {
 
@@ -351,7 +349,7 @@ lab.experiment('system queries', () => {
       properties: {}
     });
 
-    class TileSystem extends BaseSystem {
+    class TileSystem extends ECS.System {
 
       constructor(ecs) {
         super(ecs, {
@@ -461,7 +459,7 @@ lab.experiment('system queries', () => {
 
   lab.test('filter by updatedValues', () => {
 
-    const ecs = new ECS();
+    const ecs = new ECS.ECS();
     ecs.registerComponent('Comp1', {
       properties: {
         greeting: 'hi'
@@ -495,7 +493,7 @@ lab.experiment('system queries', () => {
 
   lab.test('filter by updatedComponents', () => {
 
-    const ecs = new ECS();
+    const ecs = new ECS.ECS();
     ecs.registerComponent('Comp1', {
       properties: {
         greeting: 'hi'
@@ -532,7 +530,7 @@ lab.experiment('system queries', () => {
 
   lab.test('destroyed entity should be cleared', () => {
 
-    const ecs = new ECS();
+    const ecs = new ECS.ECS();
     ecs.registerComponent('Comp1', {});
 
     const entity1 = ecs.createEntity({
@@ -553,7 +551,7 @@ lab.experiment('system queries', () => {
 
 lab.experiment('entity & component refs', () => {
 
-  const ecs = new ECS();
+  const ecs = new ECS.ECS();
 
   lab.test('Enitity Object', {}, () => {
 
@@ -713,7 +711,7 @@ lab.experiment('entity restore', () => {
 
   lab.test('restore maped object', {}, () => {
 
-    const ecs = new ECS();
+    const ecs = new ECS.ECS();
     ecs.registerComponent('Potion');
     ecs.registerComponent('EquipmentSlot', {
       properties: {
@@ -746,7 +744,7 @@ lab.experiment('entity restore', () => {
 
   lab.test('restore unmapped object', {}, () => {
 
-    const ecs = new ECS();
+    const ecs = new ECS.ECS();
     ecs.registerComponent('Potion');
     ecs.registerComponent('EquipmentSlot', {
       properties: {
@@ -790,7 +788,7 @@ lab.experiment('entity restore', () => {
 
   lab.test('2nd component on non-multiset component throws', { plan: 1 }, () => {
 
-    const ecs = new ECS();
+    const ecs = new ECS.ECS();
     ecs.registerComponent('Potion');
 
     const entity = ecs.createEntity({
@@ -806,7 +804,7 @@ lab.experiment('entity restore', () => {
 
   lab.test('Unregistered component throws', { plan: 1 }, () => {
 
-    const ecs = new ECS();
+    const ecs = new ECS.ECS();
     ecs.registerComponent('Potion');
 
     let entity;
@@ -820,7 +818,7 @@ lab.experiment('entity restore', () => {
   });
 
   lab.test('removeComponentByName single', () => {
-    const ecs = new ECS();
+    const ecs = new ECS.ECS();
     ecs.registerComponent('NPC');
     ecs.registerComponent('Cat');
 
@@ -841,7 +839,7 @@ lab.experiment('entity restore', () => {
 
   lab.test('removeComponentByName multiset', () => {
 
-    const ecs = new ECS();
+    const ecs = new ECS.ECS();
     ecs.registerComponent('NPC');
     ecs.registerComponent('Other', {
       multiset: true
@@ -873,7 +871,7 @@ lab.experiment('entity restore', () => {
 
   lab.test('remove mapped by id', () => {
 
-    const ecs = new ECS();
+    const ecs = new ECS.ECS();
     ecs.registerComponent('NPC');
 
     const entity = ecs.createEntity({
@@ -886,7 +884,7 @@ lab.experiment('entity restore', () => {
   });
 
   lab.test('remove mapped component', () => {
-    const ecs = new ECS();
+    const ecs = new ECS.ECS();
     ecs.registerComponent('AI', {
       properties: {
         order: 'sun'
@@ -956,7 +954,7 @@ lab.experiment('exporting and restoring', () => {
 
   lab.test('get object and stringify component', () => {
 
-    const ecs = new ECS();
+    const ecs = new ECS.ECS();
     ecs.registerComponent('AI', {
       properties: {
         order: 'sun'
@@ -977,7 +975,7 @@ lab.experiment('exporting and restoring', () => {
 
   lab.test('getObject on entity', () => {
 
-    const ecs = new ECS();
+    const ecs = new ECS.ECS();
     ecs.registerComponent('EquipmentSlot', {
       properties: {
         name: 'ring',
@@ -1024,7 +1022,7 @@ lab.experiment('exporting and restoring', () => {
 
   lab.test('property skipping', () => {
 
-    const ecs = new ECS();
+    const ecs = new ECS.ECS();
     ecs.registerComponent('Effect', {
       properties: {
         name: 'fire',
