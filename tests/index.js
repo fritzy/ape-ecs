@@ -27,7 +27,7 @@ lab.experiment('express components', () => {
 
     const results = ecs.queryEntities({ has: ['Health'] });
 
-    expect(results.length).to.equal(1);
+    expect(results.size).to.equal(1);
   });
 
   lab.test('create entity without array', () => {
@@ -38,7 +38,7 @@ lab.experiment('express components', () => {
 
     const results = ecs.queryEntities({ has: ['Health'] });
 
-    expect(results.length).to.equal(2);
+    expect(results.size).to.equal(2);
   });
 
   lab.test('entity refs', () => {
@@ -195,10 +195,10 @@ lab.experiment('express components', () => {
     });
 
     const system = new System(ecs);
-    const system2 = new System2(ecs);
+    //const system2 = new System2(ecs);
 
     ecs.addSystem('equipment', system);
-    ecs.addSystem('equipment', system2);
+    ecs.addSystem('equipment', System2);
 
     ecs.runSystemGroup('equipment');
 
@@ -352,11 +352,7 @@ lab.experiment('system queries', () => {
     class TileSystem extends ECS.System {
 
       constructor(ecs) {
-        super(ecs, {
-          has: ['Tile'],
-          hasnt: ['Hidden']
-        });
-
+        super(ecs);
         this.lastResults =[];
       }
 
@@ -364,13 +360,17 @@ lab.experiment('system queries', () => {
         this.lastResults = entities;
       }
     }
+    TileSystem.query = {
+      has: ['Tile'],
+      hasnt: ['Hidden']
+    };
 
     const tileSystem = new TileSystem(ecs);
     ecs.addSystem('map', tileSystem);
 
     ecs.runSystemGroup('map');
 
-    expect(tileSystem.lastResults.length).to.equal(0);
+    expect(tileSystem.lastResults.size).to.equal(0);
 
     const tile1 = ecs.createEntity({
       Tile: {
@@ -391,23 +391,23 @@ lab.experiment('system queries', () => {
 
     ecs.runSystemGroup('map');
 
-    expect(tileSystem.lastResults.length).to.equal(1);
-    expect(tileSystem.lastResults[0]).to.equal(tile1);
+    expect(tileSystem.lastResults.size).to.equal(1);
+    expect(tileSystem.lastResults.has(tile1)).to.be.true();
 
     tile2.removeComponent(tile2.Hidden);
 
     ecs.runSystemGroup('map');
 
-    expect(tileSystem.lastResults.length).to.equal(2);
-    expect(tileSystem.lastResults[0]).to.equal(tile1);
-    expect(tileSystem.lastResults[1]).to.equal(tile2);
+    expect(tileSystem.lastResults.size).to.equal(2);
+    expect(tileSystem.lastResults.has(tile1)).to.be.true();
+    expect(tileSystem.lastResults.has(tile1)).to.be.true();
 
     tile1.addComponent('Hidden', {});
 
     ecs.runSystemGroup('map');
 
-    expect(tileSystem.lastResults.length).to.equal(1);
-    expect(tileSystem.lastResults[0]).to.equal(tile2);
+    expect(tileSystem.lastResults.size).to.equal(1);
+    expect(tileSystem.lastResults.has(tile2)).to.be.true();
 
 
   });

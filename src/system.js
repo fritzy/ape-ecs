@@ -1,14 +1,16 @@
 class System {
 
-  constructor(ecs, query) {
+  constructor(ecs) {
 
     this.ecs = ecs;
     this.changes = [];
     this.lastTick = this.ecs.ticks;
-    this.query = query;
-    if (this.query) {
-      this.query.persist = this;
-      this.ecs.queryEntities(this.query);
+    /* $lab:coverage:off$ */
+    if (this.constructor.query && (this.constructor.query.has || this.constructor.query.hasnt)) {
+    /* $lab:coverage:on$ */
+      const query = { persist: this, ... this.constructor.query };
+      this.ecs.queryEntities(query);
+      this.query = this.ecs.queryCache.get(this);
     }
   }
 

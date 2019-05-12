@@ -86,17 +86,24 @@ class QueryCache {
     this.results.delete(entity);
   }
 
-  query(updatedValues, updatedComponents) {
+  filter(updatedValues, updatedComponents) {
 
-    let output = [...this.results];
+    let output;
     if (updatedValues > 0) {
-      output = output.filter(entity => entity.updatedValues >= updatedValues);
-    }
-    if (updatedComponents > 0) {
-      output = output.filter(entity => entity.updatedComponents >= updatedComponents);
+      output = [];
+      for (const entity of this.results) {
+        if (entity.updatedValues >= updatedValues) output.push(entity);
+      }
+    } else if (updatedComponents > 0) {
+      output = [];
+      for (const entity of this.results) {
+        if (entity.updatedComponents >= updatedComponents) output.push(entity);
+      }
+    } else {
+      return this.results;
     }
 
-    return output;
+    return new Set(output);
   }
 }
 

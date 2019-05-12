@@ -82,7 +82,7 @@ class ECS {
     if (persist) {
       this.queryCache.set(persist, query);
     }
-    return query.query(updatedValues, updatedComponents);
+    return query.filter(updatedValues, updatedComponents);
   }
 
   getComponents(name) {
@@ -100,6 +100,9 @@ class ECS {
 
   addSystem(group, system) {
 
+    if (typeof system === 'function') {
+      system = new system(this);
+    }
     if (!this.systems.has(group)) {
       this.systems.set(group, new Set());
     }
@@ -113,7 +116,7 @@ class ECS {
     for (const system of systems) {
       let entities;
       if (this.queryCache.has(system)) {
-        entities = this.queryCache.get(system).query();
+        entities = this.queryCache.get(system).filter();
       }
       system.update(this.ticks, entities);
       system.lastTick = this.ticks;

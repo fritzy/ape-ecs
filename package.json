@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Entity-Component-System library for game development.",
   "main": "./src/index.js",
+  "source": true,
   "files": [
     "/src"
   ],
