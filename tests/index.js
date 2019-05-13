@@ -582,7 +582,11 @@ lab.experiment('entity & component refs', () => {
     expect(belt.BeltSlots.slots.b).to.equal(potions[1]);
     expect(belt.BeltSlots.slots.c).to.equal(potions[2]);
 
+    potions[1].destroy();
+    expect(belt.BeltSlots.slots.b).to.equal(null);
 
+    delete belt.BeltSlots.slots.c;
+    expect(belt.BeltSlots.slots.c).to.not.exist();
   });
 
   lab.test('Entity Array', {}, () => {

@@ -33,7 +33,9 @@ class ECS {
   }
 
   deleteRef(target, entity, component, prop, sub) {
+    /* $lab:coverage:off$ */
     if (!this.refs[target]) return;
+    /* $lab:coverage:on$ */
     this.refs[target].delete([entity, component, prop, sub].join('...'));
     if (this.refs[target].size === 0) {
       delete this.refs[target];

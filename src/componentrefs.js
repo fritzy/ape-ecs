@@ -6,7 +6,7 @@ module.exports = {
     const ecs = component.ecs;
 
     return new Proxy(object, {
-      get: (obj, prop, prox) => {
+      get(obj, prop, prox) {
 
         const value = Reflect.get(obj, prop, prox);
         if (typeof value === 'string') {
@@ -14,11 +14,11 @@ module.exports = {
         }
         return value;
       },
-      set: (obj, prop, value) => {
+      set(obj, prop, value) {
 
         component.updated = component.ecs.ticks;
         const old = Reflect.get(obj, prop);
-        if (value !== null && value.id) {
+        if (value && value.id) {
           value = value.id;
         }
         const result = Reflect.set(obj, prop, value);
@@ -30,7 +30,19 @@ module.exports = {
           ecs.addRef(value, entity.id, component.id, reference, prop);
         }
         return result;
+      },
+
+      deleteProperty(obj, prop) {
+
+        const old = Reflect.get(obj, prop);
+        if (old) {
+          ecs.deleteRef(old, entity.id, component.id, reference, prop);
+        }
+        if (prop in obj) {
+          delete obj[prop];
+        }
       }
+
     });
   },
 
