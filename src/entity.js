@@ -9,7 +9,6 @@ class Entity {
     this.id = definition.id || UUID();
     Object.defineProperty(this, 'components', { enumerable: false, value: {} });
     Object.defineProperty(this, 'componentMap', { enumerable: false, value: {} });
-    Object.defineProperty(this, 'refs', { enumerable: false, value: new Set() });
 
     this.updatedComponents = this.ecs.ticks;
     this.updatedValues = this.ecs.ticks;

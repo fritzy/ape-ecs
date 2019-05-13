@@ -985,6 +985,7 @@ lab.experiment('entity restore', () => {
     const def = container.getObject();
     const defS = JSON.stringify(def);
     const def2 = JSON.parse(defS);
+    delete def2.id;
 
     const container2 = ecs.createEntity(def2);
     expect(container2.SetInventory.slots.has(bottle1)).to.be.true();
@@ -1008,8 +1009,11 @@ lab.experiment('entity restore', () => {
     container2.SetInventory.slots.delete(bottle2.id);
     expect(container2.SetInventory.slots.has(bottle2)).to.be.false();
 
-    container.SetInventory.slots.clear()
+    bottle1.destroy();
     expect(container.SetInventory.slots.has(bottle1)).to.be.false();
+    expect(container.SetInventory.slots.has(bottle2)).to.be.true();
+
+    container.SetInventory.slots.clear()
     expect(container.SetInventory.slots.has(bottle2)).to.be.false();
 
   });
