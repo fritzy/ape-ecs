@@ -16,12 +16,28 @@ class ECS {
     this.queryCache = new Map();
     this.subscriptions = new Map();
     this.systems = new Map();
+    this.refs = {};
   }
 
   tick() {
 
     this.ticks++;
     return this.ticks;
+  }
+
+  addRef(target, entity, component, prop, sub) {
+    if (!this.refs[target]) {
+      this.refs[target] = new Set();
+    }
+    this.refs[target].add([entity, component, prop, sub].join('...'));
+  }
+
+  deleteRef(target, entity, component, prop, sub) {
+    if (!this.refs[target]) return;
+    this.refs[target].delete([entity, component, prop, sub].join('...'));
+    if (this.refs[target].size === 0) {
+      delete this.refs[target];
+    }
   }
 
   registerComponent(name, definition = {}) {

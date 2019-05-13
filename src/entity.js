@@ -37,14 +37,6 @@ class Entity {
     this.ecs._updateCache(this);
   }
 
-  addRef(entity, component, prop, sub) {
-    this.refs.add([entity, component, prop, sub].join('...'));
-  }
-
-  remRef(entity, component, prop, sub) {
-    this.refs.add([entity, component, prop, sub].join('...'));
-  }
-
   addComponent(type, definition, delayCache) {
 
     const ecs = this.ecs;
@@ -193,19 +185,23 @@ class Entity {
   destroy() {
 
     this.ecs._clearEntityFromCache(this);
-    for (const ref of this.refs) {
-      const [entityId, componentId, prop, sub] = ref.split('...');
-      const entity = this.ecs.getEntity(entityId);
-      // remove coverage because I can't think of how this would go wrng
-      /* $lab:coverage:off$ */
-      if (!entity) continue;
-      const component = entity.componentMap[componentId];
-      if (!component) continue;
-      /* $lab:coverage:on$ */
-      if (!sub) {
-        component[prop] = null;
-      } else {
-        component[prop][sub] = null;
+    if (this.ecs.refs[this.id]) {
+      for (const ref of this.ecs.refs[this.id]) {
+        const [entityId, componentId, prop, sub] = ref.split('...');
+        const entity = this.ecs.getEntity(entityId);
+        // remove coverage because I can't think of how this would go wrng
+        /* $lab:coverage:off$ */
+        if (!entity) continue;
+        const component = entity.componentMap[componentId];
+        if (!component) continue;
+        /* $lab:coverage:on$ */
+        if (!sub) {
+          component[prop] = null;
+        } else if (sub === '__set__') {
+          component[prop].delete(this);
+        } else {
+          component[prop][sub] = null;
+        }
       }
     }
     this.ecs.entities.delete(this.id);

@@ -13,6 +13,7 @@ class BaseComponent {
     Object.defineProperty(this, 'entity', { enumerable: true, value: entity });
     Object.defineProperty(this, 'type', { enumerable: false, value: this.constructor.name });
     Object.defineProperty(this, '_values', { enumerable: false, value: {} });
+    Object.defineProperty(this, '_refs', { enumerable: false, value: {} });
     Object.defineProperty(this, '_ready', { writable: true, enumerable: false, value: false });
     Object.defineProperty(this, 'id', { enumerable: true, value: initialValues.id || UUID() });
     Object.defineProperty(this, 'updated', { enumerable: false, writable: true, value: this.ecs.ticks });
@@ -48,12 +49,19 @@ class BaseComponent {
           continue;
         }
         switch (value) {
-          case '<EntityArray>':
+          case '<EntitySet>':
             Object.defineProperty(this, property, {
-              writable: false,
+              //writable: true,
               enumerable: true,
-              value: ComponentRefs.EntityObject([], this, property)
+              set: (value) => {
+                Reflect.set(this._values, property, ComponentRefs.EntitySet(value, this, property));
+              },
+              get: () => {
+                return Reflect.get(this._values, property);
+              }
             });
+            //this._refs[property] = this[property];
+            this[property] = [];
             break;
           case '<EntityObject>':
             Object.defineProperty(this, property, {
@@ -61,6 +69,7 @@ class BaseComponent {
               enumerable: true,
               value: ComponentRefs.EntityObject({}, this, property)
             });
+            this._refs[property] = this[property];
             break;
           case '<Entity>':
             Object.defineProperty(this, property, {
@@ -68,15 +77,15 @@ class BaseComponent {
               writeable: true,
               set: (value) => {
 
-                if (typeof value === 'object' && value !== null) {
+                if (value && value.id) {
                   value = value.id;
                 }
                 const old = Reflect.get(this._values, property);
                 if (old && old !== value) {
-                  this.ecs.getEntity(old).remRef(this.entity.id, this.id, property);
+                  this.ecs.deleteRef(old, this.entity.id, this.id, property);
                 }
                 if (value && value !== old) {
-                  this.ecs.getEntity(value).addRef(this.entity.id, this.id, property);
+                  this.ecs.addRef(value, this.entity.id, this.id, property);
                 }
                 const result = Reflect.set(this._values, property, value);
                 this.ecs._sendChange(this, 'setEntity', property, old, value);
@@ -89,19 +98,27 @@ class BaseComponent {
             });
             this._values[property] = null;
             break;
-          case '<ComponentArray>':
-            Object.defineProperty(this, property, {
-              writable: false,
-              enumerable: true,
-              value: ComponentRefs.ComponentObject([], this)
-            });
-            break;
           case '<ComponentObject>':
             Object.defineProperty(this, property, {
               writable: false,
               enumerable: true,
               value: ComponentRefs.ComponentObject({}, this)
             });
+            this._refs[property] = this[property];
+            break;
+          case '<ComponentSet>':
+            Object.defineProperty(this, property, {
+              //writable: true,
+              enumerable: true,
+              set: (value) => {
+                Reflect.set(this._values, property, ComponentRefs.ComponentSet(value, this, property));
+              },
+              get: () => {
+                return Reflect.get(this._values, property);
+              }
+            });
+            //this._refs[property] = this[property];
+            this[property] = [];
             break;
           case '<Component>':
             Object.defineProperty(this, property, {
@@ -178,7 +195,7 @@ class BaseComponent {
         }
       }
     }
-    return Object.assign({ id: this.id, type: this.type }, values);
+    return Object.assign({ id: this.id, type: this.type }, values, this._refs);
   }
 
 }

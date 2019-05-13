@@ -47,7 +47,7 @@ lab.experiment('express components', () => {
       properties: {
         name: 'inventory',
         size: 20,
-        items: '<EntityArray>'
+        items: '<EntitySet>'
       },
       multiset: true,
       mapBy: 'name'
@@ -57,7 +57,7 @@ lab.experiment('express components', () => {
       properties: {
         name: 'finger',
         slot: '<Entity>',
-        effects: '<ComponentArray>'
+        effects: '<ComponentSet>'
       },
       multiset: true,
       mapBy: 'name'
@@ -90,9 +90,9 @@ lab.experiment('express components', () => {
       }
     });
 
-    entity.components.Storage.pockets.items.push(food);
+    entity.components.Storage.pockets.items.add(food);
 
-    expect(entity.components.Storage.pockets.items[0].id).to.equal(food.id);
+    expect(entity.components.Storage.pockets.items.has(food)).to.be.true();
 
     ecs.removeEntity(food);
 
@@ -134,7 +134,7 @@ lab.experiment('express components', () => {
                 if (components.length > 0) {
                   const effect = parent.addComponent('EquipmentEffect', { equipment: value.id });
                   for (const c of components) {
-                    effect.effects.push(c);
+                    effect.effects.add(c);
                   }
                 }
               }
@@ -175,7 +175,7 @@ lab.experiment('express components', () => {
     ecs.registerComponent('EquipmentEffect', {
       properties: {
         equipment: '',
-        effects: '<ComponentArray>'
+        effects: '<ComponentSet>'
       },
       multiset: true
     });
@@ -589,7 +589,7 @@ lab.experiment('entity & component refs', () => {
 
     ecs.registerComponent('BeltSlots2', {
       properties: {
-        slots: '<EntityArray>',
+        slots: '<EntitySet>',
       }
     });
 
@@ -603,15 +603,15 @@ lab.experiment('entity & component refs', () => {
       const potion = ecs.createEntity({
         Potion: {}
       });
-      belt.BeltSlots2.slots.push(potion);
+      belt.BeltSlots2.slots.add(potion);
       potions.push(potion);
     }
 
     expect(belt.BeltSlots2.slots[Symbol.iterator]).to.exist();
 
-    expect(belt.BeltSlots2.slots[0]).to.equal(potions[0]);
-    expect(belt.BeltSlots2.slots[1]).to.equal(potions[1]);
-    expect(belt.BeltSlots2.slots[2]).to.equal(potions[2]);
+    expect(belt.BeltSlots2.slots.has(potions[0])).to.be.true();
+    expect(belt.BeltSlots2.slots.has(potions[1])).to.be.true();
+    expect(belt.BeltSlots2.slots.has(potions[2])).to.be.true();
   });
 
   lab.test('Component Object', {}, () => {
@@ -945,6 +945,72 @@ lab.experiment('entity restore', () => {
     entity.removeComponent(entity.EquipmentSlot.lefthand);
 
     expect(entity.EquipmentSlot).to.not.exist();
+
+  });
+
+  lab.test('EntitySet', () => {
+
+    const ecs = new ECS.ECS();
+    ecs.registerComponent('SetInventory', {
+      properties: {
+        slots: '<EntitySet>'
+      }
+    })
+    ecs.registerComponent('Bottle', {
+     properties: {
+      }
+    })
+
+    const container = ecs.createEntity({
+      SetInventory: {},
+    });
+
+    const bottle1 = ecs.createEntity({
+      Bottle: {}
+    });
+    const bottle2 = ecs.createEntity({
+      Bottle: {}
+    });
+    const bottle3 = ecs.createEntity({
+      Bottle: {}
+    });
+
+    container.SetInventory.slots.add(bottle1);
+    container.SetInventory.slots.add(bottle2);
+
+    expect(container.SetInventory.slots.has(bottle1)).to.be.true();
+    expect(container.SetInventory.slots.has(bottle2)).to.be.true();
+    expect(container.SetInventory.slots.has(bottle3)).to.be.false();
+
+    const def = container.getObject();
+    const defS = JSON.stringify(def);
+    const def2 = JSON.parse(defS);
+
+    const container2 = ecs.createEntity(def2);
+    expect(container2.SetInventory.slots.has(bottle1)).to.be.true();
+    expect(container2.SetInventory.slots.has(bottle2)).to.be.true();
+    expect(container2.SetInventory.slots.has(bottle3)).to.be.false();
+
+    let idx = 0;
+    for (const entity of container2.SetInventory.slots) {
+      if (idx === 0) {
+        expect(entity).to.equal(bottle1);
+      } else if (idx === 1) {
+        expect(entity).to.equal(bottle2);
+      }
+      idx++;
+    }
+    expect(idx).to.equal(2);
+
+    container2.SetInventory.slots.delete(bottle1);
+    expect(container2.SetInventory.slots.has(bottle1)).to.be.false();
+    expect(container2.SetInventory.slots.has(bottle2)).to.be.true();
+    container2.SetInventory.slots.delete(bottle2.id);
+    expect(container2.SetInventory.slots.has(bottle2)).to.be.false();
+
+    container.SetInventory.slots.clear()
+    expect(container.SetInventory.slots.has(bottle1)).to.be.false();
+    expect(container.SetInventory.slots.has(bottle2)).to.be.false();
 
   });
 

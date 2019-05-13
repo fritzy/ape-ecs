@@ -2,34 +2,180 @@ module.exports = {
 
   EntityObject: (object, component, reference) => {
 
-    const isArray = Array.isArray(object);
+    const entity = component.entity;
+    const ecs = component.ecs;
+
     return new Proxy(object, {
       get: (obj, prop, prox) => {
 
         const value = Reflect.get(obj, prop, prox);
-        if ((isArray && typeof prop !== 'symbol' && !isNaN(prop)) || !isArray) {
+        if (typeof value === 'string') {
           return component.ecs.getEntity(value);
         }
         return value;
       },
       set: (obj, prop, value) => {
 
-        component.lastTick = component.ecs.ticks;
+        component.updated = component.ecs.ticks;
         const old = Reflect.get(obj, prop);
-        if (typeof value === 'object' && value !== null) {
+        if (value !== null && value.id) {
           value = value.id;
         }
         const result = Reflect.set(obj, prop, value);
-        component.ecs._sendChange(component, 'setEntityObject', prop, old, value);
+        ecs._sendChange(component, 'setEntityObject', prop, old, value);
         if (old && old !== value) {
-          component.ecs.getEntity(old).remRef(component.entity.id, component.id, reference, prop);
+          ecs.deleteRef(old, entity.id, component.id, reference, prop);
         }
         if (value && value !== old) {
-          component.ecs.getEntity(value).addRef(component.entity.id, component.id, reference, prop);
+          ecs.addRef(value, entity.id, component.id, reference, prop);
         }
         return result;
       }
     });
+  },
+
+  EntitySet: (object, component, reference) => {
+    const ecs = component.ecs;
+    const entity = component.entity;
+
+    class EntitySet extends Set {
+
+      static get [Symbol.species]() { return this.constructor; }
+
+      add(value) {
+
+        if (value !== null && value.id) {
+          value = value.id;
+        }
+        ecs.addRef(value, entity.id, component.id, reference, '__set__');
+        component.updated = component.ecs.ticks;
+        component.ecs._sendChange(component, 'addEntitySet', reference, undefined, value);
+        return super.add(value);
+      }
+
+      delete(value) {
+
+        if (value.id) {
+          value = value.id;
+        }
+        ecs.deleteRef(value, entity.id,component.id, reference, '__set__');
+        component.updated = component.ecs.ticks;
+        component.ecs._sendChange(component, 'deleteEntitySet', reference, undefined, value);
+        return super.delete(value);
+      }
+
+      clear() {
+
+        component.updated = component.ecs.ticks;
+        component.ecs._sendChange(component, 'clearEntitySet', reference, undefined, undefined);
+        for (const entity of this) {
+          this.delete(entity);
+        }
+      }
+
+      has(value) {
+
+        if (value.id) {
+          value = value.id;
+        }
+        const has = super.has(value);
+        return has;
+      }
+
+      [Symbol.iterator]() {
+
+        const that = this;
+        const siterator = super[Symbol.iterator]();
+        return {
+          next() {
+
+            const result = siterator.next();
+            if (typeof result.value === 'string') {
+              result.value = component.ecs.getEntity(result.value);
+            }
+            return result;
+          }
+        }
+      }
+
+      toJSON() {
+
+        return [...this].map(entity => entity.id);
+      }
+    }
+
+    return new EntitySet(object);
+  },
+
+  ComponentSet: (object, component, reference) => {
+    const ecs = component.ecs;
+    const entity = component.entity;
+
+    class ComonentSet extends Set {
+
+      static get [Symbol.species]() { return this.constructor; }
+
+      add(value) {
+
+        if (value !== null && value.id) {
+          value = value.id;
+        }
+        component.updated = component.ecs.ticks;
+        component.ecs._sendChange(component, 'addComponentSet', reference, undefined, value);
+        return super.add(value);
+      }
+
+      delete(value) {
+
+        if (value.id) {
+          value = value.id;
+        }
+        component.updated = component.ecs.ticks;
+        component.ecs._sendChange(component, 'deleteComponentSet', reference, undefined, value);
+        return super.delete(value);
+      }
+
+      clear() {
+
+        component.updated = component.ecs.ticks;
+        component.ecs._sendChange(component, 'clearComponentSet', reference, undefined, undefined);
+        for (const entity of this) {
+          this.delete(entity);
+        }
+      }
+
+      has(value) {
+
+        if (value.id) {
+          value = value.id;
+        }
+        const has = super.has(value);
+        return has;
+      }
+
+      [Symbol.iterator]() {
+
+        const that = this;
+        const siterator = super[Symbol.iterator]();
+        return {
+          next() {
+
+            const result = siterator.next();
+            if (typeof result.value === 'string') {
+              result.value = entity.componentMap[result.value];
+            }
+            return result;
+          }
+        }
+      }
+
+      toJSON() {
+
+        return [...this].map(entity => entity.id);
+      }
+    }
+
+    return new ComonentSet(object);
   },
 
   ComponentObject: (object, component) => {
