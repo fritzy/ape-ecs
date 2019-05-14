@@ -192,12 +192,11 @@ module.exports = {
 
   ComponentObject: (object, component) => {
 
-    const isArray = Array.isArray(object);
     return new Proxy(object, {
       get: (obj, prop, prox) => {
 
         const value = Reflect.get(obj, prop, prox);
-        if ((isArray && typeof prop !== 'symbol' && !isNaN(prop)) || !isArray) {
+        if (typeof value === 'string') {
           return component.entity.componentMap[value];
         }
         return value;

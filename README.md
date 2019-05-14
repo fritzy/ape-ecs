@@ -54,3 +54,26 @@ System
   * Using Systems
   * constructor
   * update method
+
+## Example
+
+[Roguelike Example Using @fritzy/ecs + rot.js](https://github.com/fritzy/ecs-js-example)
+
+## Install
+
+I'll publish this when the documentation is done.
+
+```sh
+npm install @fritzy/ecs 
+```
+
+## Tests
+
+The goal is to keep test coverage at 100%.
+
+```sh
+git clone git@github.com/fritzy/ecs-js.git
+cd ecs-js
+npm install
+npm test
+```

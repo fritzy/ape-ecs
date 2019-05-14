@@ -92,7 +92,15 @@ lab.experiment('express components', () => {
 
     entity.components.Storage.pockets.items.add(food);
 
+    const entityObj = entity.getObject();
+    delete entityObj.id;
+    const eJson = JSON.stringify(entityObj);
+    const entityDef = JSON.parse(eJson);
+
+    const entity2 = ecs.createEntity(entityDef);
+
     expect(entity.components.Storage.pockets.items.has(food)).to.be.true();
+    expect(entity2.components.Storage.pockets.items.has(food)).to.be.true();
 
     ecs.removeEntity(food);
 
@@ -621,6 +629,7 @@ lab.experiment('entity & component refs', () => {
   lab.test('Component Object', {}, () => {
 
     ecs.registerComponent('Crying', {});
+    ecs.registerComponent('Angry', {});
 
     ecs.registerComponent('ExpireObject', {
       properties: {
@@ -629,13 +638,16 @@ lab.experiment('entity & component refs', () => {
     });
 
     const cryer = ecs.createEntity({
-      Crying: {}
+      Crying: {},
+      Angry: {}
     });
     cryer.addComponent('ExpireObject', {});
     cryer.ExpireObject.comps.a = cryer.Crying;
+    cryer.ExpireObject.comps.b = cryer.Angry.id;
 
     expect(cryer.ExpireObject.comps[Symbol.iterator]).to.not.exist();
     expect(cryer.ExpireObject.comps.a).to.equal(cryer.Crying);
+    expect(cryer.ExpireObject.comps.b).to.equal(cryer.Angry);
 
   });
 
@@ -1007,13 +1019,13 @@ lab.experiment('entity restore', () => {
     }
     expect(idx).to.equal(2);
 
-    container2.SetInventory.slots.delete(bottle1);
+    expect(container2.SetInventory.slots.has(bottle1)).to.be.true();
+    bottle1.destroy();
     expect(container2.SetInventory.slots.has(bottle1)).to.be.false();
     expect(container2.SetInventory.slots.has(bottle2)).to.be.true();
     container2.SetInventory.slots.delete(bottle2.id);
     expect(container2.SetInventory.slots.has(bottle2)).to.be.false();
 
-    bottle1.destroy();
     expect(container.SetInventory.slots.has(bottle1)).to.be.false();
     expect(container.SetInventory.slots.has(bottle2)).to.be.true();
 
