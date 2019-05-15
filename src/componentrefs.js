@@ -52,11 +52,14 @@ module.exports = {
 
     class EntitySet extends Set {
 
+      /* $lab:coverage:off$ */
+      // lab doesn't detect this being used internally
       static get [Symbol.species]() { return this.constructor; }
+      /* $lab:coverage:on */
 
       add(value) {
 
-        if (value !== null && value.id) {
+        if (value.id) {
           value = value.id;
         }
         ecs.addRef(value, entity.id, component.id, reference, '__set__');
@@ -125,11 +128,14 @@ module.exports = {
 
     class ComonentSet extends Set {
 
+      /* $lab:coverage:off$ */
+      // lab doesn't detect this being used internally
       static get [Symbol.species]() { return this.constructor; }
+      /* $lab:coverage:on */
 
       add(value) {
 
-        if (value !== null && value.id) {
+        if (value.id) {
           value = value.id;
         }
         component.updated = component.ecs.ticks;
@@ -181,10 +187,14 @@ module.exports = {
         }
       }
 
+      /* $lab:coverage:off$ */
+      // code coverage tool is wrong about this for some reason
+      // ¯\_(ツ)_/¯
       toJSON() {
 
         return [...this].map(entity => entity.id);
       }
+      /* $lab:coverage:on$ */
     }
 
     return new ComonentSet(object);

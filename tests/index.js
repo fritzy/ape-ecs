@@ -115,6 +115,7 @@ lab.experiment('express components', () => {
 
     let changes = [];
     let changes2 = [];
+    let effectExt = null;
     /* $lab:coverage:off$ */
     class System extends ECS.System {
 
@@ -143,6 +144,7 @@ lab.experiment('express components', () => {
                   const effect = parent.addComponent('EquipmentEffect', { equipment: value.id });
                   for (const c of components) {
                     effect.effects.add(c);
+                    effectExt = c;
                   }
                 }
               }
@@ -241,6 +243,8 @@ lab.experiment('express components', () => {
     ecs.runSystemGroup('equipment');
 
     expect(entity.EquipmentEffect).to.exist();
+    expect([...entity.EquipmentEffect][0].effects.has(effectExt)).to.be.true();
+    expect([...entity.EquipmentEffect][0].effects.has(effectExt.id)).to.be.true();
     expect(entity.Burning).to.exist();
     expect(changes.length).to.equal(1);
     expect(changes[0].op).to.equal('setEntity');
@@ -584,6 +588,10 @@ lab.experiment('entity & component refs', () => {
       potions.push(potion);
     }
 
+    const potionf = ecs.createEntity({
+      Potion: {}
+    });
+
     expect(belt.BeltSlots.slots[Symbol.iterator]).to.not.exist();
 
     expect(belt.BeltSlots.slots.a).to.equal(potions[0]);
@@ -595,6 +603,15 @@ lab.experiment('entity & component refs', () => {
 
     delete belt.BeltSlots.slots.c;
     expect(belt.BeltSlots.slots.c).to.not.exist();
+
+    //assign again
+    belt.BeltSlots.slots.a = potions[0];
+
+    //asign by id
+    belt.BeltSlots.slots.a = potionf.id;
+    expect(belt.BeltSlots.slots.a).to.equal(potionf);
+
+    delete belt.BeltSlots.slots.d
   });
 
   lab.test('Entity Array', {}, () => {
@@ -719,6 +736,38 @@ lab.experiment('entity & component refs', () => {
     entity.Mate.other = entity.Crying.id;
 
     expect(entity.Mate.other).to.equal(entity.Crying);
+  });
+
+  lab.test('ComponentSet refs', () => {
+
+    const ecs = new ECS.ECS();
+    ecs.registerComponent('IDontKnow', {
+      properties: {
+        stuff: '<ComponentSet>'
+      }
+    });
+    ecs.registerComponent('Shit', {});
+    ecs.registerComponent('Crap', {});
+
+    const entity = ecs.createEntity({
+      IDontKnow: {},
+      Shit: {},
+      Crap: {}
+    });
+
+    entity.IDontKnow.stuff.add(entity.Shit);
+    entity.IDontKnow.stuff.add(entity.Crap.id);
+
+    expect(entity.IDontKnow.stuff.has(entity.Shit)).to.be.true();
+    expect(entity.IDontKnow.stuff.has(entity.Crap)).to.be.true();
+
+    entity.IDontKnow.stuff.delete(entity.Shit.id);
+    expect(entity.IDontKnow.stuff.has(entity.Shit)).to.be.false();
+    expect(entity.IDontKnow.stuff.has(entity.Crap)).to.be.true();
+
+    entity.IDontKnow.stuff.clear();
+    expect(entity.IDontKnow.stuff.has(entity.Crap)).to.be.false();
+    expect(entity.IDontKnow.stuff.has(entity.Shit)).to.be.false();
   });
 
 });
@@ -994,7 +1043,7 @@ lab.experiment('entity restore', () => {
     container.SetInventory.slots.add(bottle1);
     container.SetInventory.slots.add(bottle2);
 
-    expect(container.SetInventory.slots.has(bottle1)).to.be.true();
+    expect(container.SetInventory.slots.has(bottle1.id)).to.be.true();
     expect(container.SetInventory.slots.has(bottle2)).to.be.true();
     expect(container.SetInventory.slots.has(bottle3)).to.be.false();
 
