@@ -145,7 +145,7 @@ for (const component of entity['ComponentName']) {
 
 If multieset is true, and `mapBy` is one of the property names, you can access the multiple instances by the mapBy property value.
 
-``js
+```js
 entity['ComponentName']['value_of_the_mapBy_property']
 ```
 
