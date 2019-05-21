@@ -18,7 +18,7 @@ Features:
 * 100% Test Coverage.
 
 Using This Library
-  * Example Game
+  * [Example Game](#exampleGame)
   * Install
   * Tests
 [ECS](#ecsClass)
@@ -26,15 +26,15 @@ Using This Library
   * [constructor](#ecsConstructor)
   * [registerComponent method](#ecsRegisterComponent)
   * [registerComponentClass method](#ecsRegisterComponentClass)
-  * createEntity method
-  * removeEntity method
-  * getEntity method
-  * queryEntities method
-  * getComponents method
-  * subscribe method
-  * addSystem method
-  * runSystemGroup method
-  * tick method
+  * [createEntity method](#ecsCreateEntity)
+  * [removeEntity method](#ecsRemoveEntity)
+  * [getEntity method](#ecsGetEntity)
+  * [queryEntities method](#ecsQueryEntity)
+  * [getComponents method](#ecsGetComponents)
+  * [subscribe method](#ecsSubscribe)
+  * [addSystem method](#ecsAddSystem)
+  * [runSystemGroup method](#ecsRunSystemGroup)
+  * [tick method](#ecsTick)
 
 Component
   * Using Components
@@ -59,6 +59,7 @@ System
   * constructor
   * update method
 
+<a name="exampleGame"></a>
 ## Example Game
 
 [Roguelike Example Using @fritzy/ecs + rot.js](https://github.com/fritzy/ecs-js-example)
@@ -89,7 +90,7 @@ The main class of this library manages all of the entities and components.
 <a name="ecsConstructor"></a>
 ### constructor
 
-Arguments: None
+__Arguments__: None
 
 ```js
 const ECS = require('@fritzy/ecs');
@@ -103,7 +104,7 @@ ecs.registerComponent('Tile', { });
 
 Register a component type by defining the name, properties, and options for a component.
 
-Arguments:
+__Arguments__:
  * [string] name
  * [object] definition
 
@@ -233,3 +234,56 @@ console.log(player.ControlledByPlayer.numberOfTurns); // 0
 
 <a name="ecsRegisterComponentClass"></a>
 ### registerComponentClass
+
+Instead of passing the definition to `registerComponent` you can extend the `BaseComponent` class directly, and attach your definition object (as described in [registerComponent](#ecsRegisterComponent)) as property directly on the class.
+
+⚠️ There isn't currently a use case (that I can think of) to use this method over using `registerComponent`.
+
+__Arguments__:
+ * [class] klass // class reference (not an instance) that extends BaseComponent and has an attached `definition`.
+
+```js
+const ECS = require('ecs');
+const ecs = new ECS.ECS();
+
+class MyComponent extends ECS.BaseComponent {
+}
+MyComponent.definition = {
+  properties: {
+    name: 'hand',
+    slot: '<Entity>'
+  },
+  multiset: true,
+  mapBy: 'name'
+};
+
+ecs.registerComponentClass(MyComponent);
+```
+
+<a name="ecsCreateEntity"></a>
+### createEntity
+
+<a name="ecsRemoveEntity"></a>
+### removeEntity
+
+<a name="ecsGetEntity"></a>
+### getEntity
+
+<a name="ecsQueryEntities"></a>
+### queryEntities
+
+<a name="ecsGetComponents"></a>
+### getComponents
+
+<a name="ecsSubscribe"></a>
+### subscribe
+
+<a name="ecsAddSystem"></a>
+### addSystem
+
+<a name="ecsRunSystemGroup"></a>
+### runSystemGroup
+
+<a name="ecsTick"></a>
+### tick
+
