@@ -105,7 +105,7 @@ class ECS {
 
   getComponents(name) {
 
-    return [...this.components.get(name)];
+    return this.components.get(name);
   }
 
   subscribe(system, type) {

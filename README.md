@@ -21,6 +21,7 @@ Using This Library
   * [Example Game](#exampleGame)
   * Install
   * Tests
+
 [ECS](#ecsClass)
   * Using ECS
   * [constructor](#ecsConstructor)
@@ -31,7 +32,6 @@ Using This Library
   * [getEntity method](#ecsGetEntity)
   * [queryEntities method](#ecsQueryEntity)
   * [getComponents method](#ecsGetComponents)
-  * [subscribe method](#ecsSubscribe)
   * [addSystem method](#ecsAddSystem)
   * [runSystemGroup method](#ecsRunSystemGroup)
   * [tick method](#ecsTick)
@@ -263,27 +263,90 @@ ecs.registerComponentClass(MyComponent);
 <a name="ecsCreateEntity"></a>
 ### createEntity
 
+Create an entity and populate it's initial componenents with values.
+
+__Arguments__:
+  * [object] definition
+
+The root keys to the definition object must be one of the component type names or `id`. For every component type, you must have previously registered it with [registerComponent](#ecsRegisterComponent) or [registerComponentClass](#ecsRegisterComponentClass). For each component intiialized in the entity definition, you may only use keys that were defined as properties when the component was registered.
+
+If the component was not set with `multiset` as `true`, then the component value is simply an object of component properties with values. If multiset was set to true, and no `mapBy` was defined, then you can defined an array with each entry being an object with properties and values. If `mapBy` was set, you can have an object of string or number values of the property that `mapBy` refers to that each references an object of properties and values, excluding the mapBy property which will be automatically assigned. You can also just use a simple array of objects as if you didn't set `mapBy`, but you will later need to access those components by the mapBy property value as if you had defined them that way.
+
+
 <a name="ecsRemoveEntity"></a>
 ### removeEntity
+
+Removes an entity from the ECS instance by it's id.
+
+__Arguments__:
+ * [string] entity id
 
 <a name="ecsGetEntity"></a>
 ### getEntity
 
+Returns an entity by id.
+
+__Arguments__:
+  * [string] entity id
+
+__Returns__: Entity instance
+
 <a name="ecsQueryEntities"></a>
 ### queryEntities
+
+Query for entites, filtered by various parameters. Queries may be persisted, an optimization which keeps and updates results for the next use.
+
+__Arguments__:
+  * [object]:
+    * has: [array of strings] component types that an entity must have
+    * hasnt: [array of strings] component types that an entity must not have
+    * persist: [boolean] persist and maintain results
+    * updatedValues [number] filter out entities that haven't had component value updates since this tick
+    * updatedComponents [number] filter out entities that haven't had components added/removed since this tick
+
+Default argument object:
+```js
+{
+  has: [],
+  hasnt: [],
+  persist: false,
+  updatedValues: 0,
+  updatedComponents: 0
+}
+```
+
+__Returns__: Set of Entity instances
 
 <a name="ecsGetComponents"></a>
 ### getComponents
 
-<a name="ecsSubscribe"></a>
-### subscribe
+Get a set of all components of a given type.
+
+__Arguments__:
+  * [string] component type
 
 <a name="ecsAddSystem"></a>
 ### addSystem
 
+Add a system to the ECS instance, wihin a group.
+
+__Arguments__:
+  * [string] group name
+  * [System instance]
+
 <a name="ecsRunSystemGroup"></a>
 ### runSystemGroup
 
+Runs the systems of a given group, in the order added.
+
+__Arguments__:
+  * [string] group name
+
 <a name="ecsTick"></a>
 ### tick
+
+Iterate the tick. Useful for for systems to track logical frames and to filter query results. Currently this is equivalent to `ecs.ticks++` but other logic and optimizations may be added in the future, related to frame tracking.
+
+
+__Returns__: [number] new frame tick number
 

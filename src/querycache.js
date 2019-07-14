@@ -11,8 +11,11 @@ class QueryCache {
   _initial() {
 
     if (this.has.length === 1 && this.hasnt.length === 0) {
-      return new Set(this.ecs.getComponents(this.has[0])
-        .map(component => component.entity));
+      const entities = new Set();
+      for (const component of this.ecs.getComponents(this.has[0])) {
+        entities.add(component.entity);
+      }
+      return entities;
     }
     const hasSet = [];
     const hasntSet = [];
