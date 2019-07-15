@@ -17,10 +17,27 @@ __Features__:
 * Export/import support for saving state.
 * 100% Test Coverage.
 
+__About__:
+
+The Entity-Component-System paradigm is great for managing dynamic objects in games and simulations. Instead of binding functionality to data through methods, systems are able to freely manipulate data directly, so long as they have the datatypes it expects and filters for. This encourages dynamic composition of Entities and systems that can freely interact through shared data. 
+
+This arrangement of dynamic data types within an object and freely interacting systems leads to:
+  * more complex types
+  * improved performance due to lack of API methods
+  * [emergent gameplay](https://en.wikipedia.org/wiki/Emergent_gameplay) with logical behaviors that the programmer didn't necessarily directly envision
+
+
+This library is not a strict/pure Entity-Component-System library for a few reasons:
+  * Entities aren't just ids that component can have in common -- they're classes that have properties for all of their components.
+  * Components are a little more advanced than just data, but we try to make it feel that way. Components are models with advanced features.
+  * All of the entities, components, and systems are managed by an ECS class as a sort of registery.
+
+I built this library around the ideas and scenarios best illustrated by this [Overwatch Gameplay Architecture and Netcode](https://www.youtube.com/watch?v=W3aieHjyNvw) video (only the first half is very relevant).
+
 __Using This Library__
   * [Example Game](#exampleGame)
-  * Install
-  * Tests
+  * [Install](#install)
+  * [Tests](#tests)
 
 ## Reference Index
 
@@ -46,7 +63,7 @@ __Using This Library__
 
 [Entity](#entity)
   * [Properties](#entityProperties)
-  * [Component Properties(#entityComponentProperties)
+  * [Component Properties](#entityComponentProperties)
   * [constructor](#entityConstructor)
   * [addComponent method](#entityAddComponent)
   * [removeComponent method](#entityRemoveComponent)
@@ -65,12 +82,14 @@ __Using This Library__
 
 [Roguelike Example Using @fritzy/ecs + rot.js](https://github.com/fritzy/ecs-js-example)
 
+<a name="install"></a>
 ## Install
 
 ```sh
 npm install @fritzy/ecs 
 ```
 
+<a name="tests"></a>
 ## Tests
 
 The goal is to keep test coverage at 100%.
