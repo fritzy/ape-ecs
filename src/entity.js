@@ -88,7 +88,7 @@ class Entity {
     return component;
   }
 
-  removeComponentByName(cname) {
+  removeComponentByType(cname) {
 
     if (!this.components.hasOwnProperty(cname)) {
       return;

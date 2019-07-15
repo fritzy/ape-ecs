@@ -122,7 +122,7 @@ lab.experiment('express components', () => {
       constructor(ecs) {
 
         super(ecs);
-        this.ecs.subscribe(this, 'EquipmentSlot');
+        //this.ecs.subscribe(this, 'EquipmentSlot');
       }
 
       update(tick) {
@@ -162,6 +162,7 @@ lab.experiment('express components', () => {
         }
       }
     }
+    System.subscriptions = ['EquipmentSlot'];
 
     class System2 extends ECS.System {
 
@@ -665,6 +666,9 @@ lab.experiment('entity & component refs', () => {
     expect(cryer.ExpireObject.comps[Symbol.iterator]).to.not.exist();
     expect(cryer.ExpireObject.comps.a).to.equal(cryer.Crying);
     expect(cryer.ExpireObject.comps.b).to.equal(cryer.Angry);
+    delete cryer.ExpireObject.comps.b;
+    expect(cryer.ExpireObject.comps.b).to.not.exist();
+    delete cryer.ExpireObject.comps.c;
 
   });
 
@@ -882,7 +886,7 @@ lab.experiment('entity restore', () => {
     }
   });
 
-  lab.test('removeComponentByName single', () => {
+  lab.test('removeComponentByType single', () => {
     const ecs = new ECS.ECS();
     ecs.registerComponent('NPC');
     ecs.registerComponent('Cat');
@@ -894,10 +898,10 @@ lab.experiment('entity restore', () => {
 
     expect(entity.Cat).to.exist();
 
-    entity.removeComponentByName('Cat');
+    entity.removeComponentByType('Cat');
     expect(entity.Cat).to.not.exist();
 
-    entity.removeComponentByName('Cat');
+    entity.removeComponentByType('Cat');
     expect(entity.Cat).to.not.exist();
 
   });
@@ -928,7 +932,7 @@ lab.experiment('entity restore', () => {
     expect([...entity.Armor][0].amount).to.equal(10);
     expect([...entity.Armor][1].amount).to.equal(30);
 
-    entity.removeComponentByName('Armor');
+    entity.removeComponentByType('Armor');
     expect(entity.Armor).to.not.exist();
 
     entity.removeComponent([...entity2.Other][0]);

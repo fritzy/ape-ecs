@@ -40,6 +40,7 @@ module.exports = {
         }
         if (prop in obj) {
           delete obj[prop];
+          ecs._sendChange(component, 'deleteEntityObject', prop);
         }
       }
 
@@ -223,6 +224,12 @@ module.exports = {
         const result = Reflect.set(obj, prop, value);
         component.ecs._sendChange(component, 'setComponentObject', prop, old, value);
         return result;
+      },
+      deleteProperty(obj, prop) {
+        if (prop in obj) {
+          delete obj[prop];
+          component.ecs._sendChange(component, 'deleteComponentObject', prop);
+        }
       }
     });
   }

@@ -12,6 +12,11 @@ class System {
       this.ecs.queryEntities(query);
       this.query = this.ecs.queryCache.get(this);
     }
+    if (this.constructor.subscriptions) {
+      for (const sub of this.constructor.subscriptions) {
+        this.ecs.subscribe(this, sub);
+      }
+    }
   }
 
   update(tick, entities) {
