@@ -142,6 +142,10 @@ class BaseComponent {
             this._values[property] = null;
             break;
           default:
+            let reflect = null;
+            if (typeof value === 'string' && value.startsWith('<Pointer ')) {
+              reflect = value.substring(9, value.length - 1).trim().split('.')
+            }
             Object.defineProperty(this, property, {
               enumerable: true,
               writeable: true,
@@ -149,11 +153,48 @@ class BaseComponent {
 
                 const old = Reflect.get(this._values, property, value);
                 const result = Reflect.set(this._values, property, value);
+                if (reflect) {
+                  let node = this;
+                  let fail = false;
+                  for (let i = 0; i < reflect.length - 1; i++) {
+                    const subprop = reflect[i];
+                    /* $lab:coverage:off$ */
+                    if (typeof node === 'object' && node !== null && node.hasOwnProperty(subprop)) {
+                    /* $lab:coverage:on */
+                      node = node[subprop];
+                    } else {
+                      fail = true;
+                    }
+                  }
+                  if (!fail) {
+                    Reflect.set(node, reflect[reflect.length - 1], value);
+                    node = value;
+                  }
+                }
                 this.ecs._sendChange(this, 'set', property, old, value);
                 return result;
               },
               get: () => {
-                return Reflect.get(this._values, property);
+                if (!reflect) {
+                  return Reflect.get(this._values, property);
+                }
+                let node = this;
+                let fail = false;
+                for (let i = 0; i < reflect.length - 1; i++) {
+                  const subprop = reflect[i];
+                  /* $lab:coverage:off$ */
+                  if (typeof node === 'object' && node !== null && node.hasOwnProperty(subprop)) {
+                  /* $lab:coverage:on */
+                    node = node[subprop];
+                  } else {
+                    fail = true;
+                  }
+                }
+                if (!fail) {
+                  return Reflect.get(node, reflect[reflect.length - 1]);
+                } else {
+                  return Reflect.get(this._values, property);
+                }
               }
             });
             this._values[property] = value;

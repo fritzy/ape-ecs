@@ -155,6 +155,7 @@ You have have any number of properties. Advanced types are currently:
  * &lt;Component&gt;
  * &lt;ComponentSet&gt;
  * &lt;ComponentObject&gt;
+ * &lt;Pointer path.to.other.value&gt;
 
 If multiset is false (default), then each entity can only have one instance of a component. You'll be able to access the instance in an entity by name like:
 

@@ -267,6 +267,43 @@ lab.experiment('express components', () => {
 
   });
 
+  lab.test('component pointers', () => {
+
+    const ecs = new ECS.ECS();
+
+    ecs.registerComponent('Position', {
+      properties: {
+        x: '<Pointer container.position.x>',
+        y: '<Pointer container.position.y>',
+        container: null
+      }
+    });
+
+    const entity1 = ecs.createEntity({
+      Position: {
+        x: 10,
+        y: 12
+      }
+    });
+
+    expect(entity1.Position.x).to.be.equal(10);
+    expect(entity1.Position.y).to.be.equal(12);
+
+    entity1.Position.container = { position: { x: 33, y: 1 } };
+
+    expect(entity1.Position.x).to.be.equal(33);
+    expect(entity1.Position.y).to.be.equal(1);
+
+    entity1.Position.x = 21;
+    entity1.Position.y = 34;
+
+    expect(entity1.Position.x).to.be.equal(21);
+    expect(entity1.Position.y).to.be.equal(34);
+    expect(entity1.Position.container.position.x).to.be.equal(21);
+    expect(entity1.Position.container.position.y).to.be.equal(34);
+
+  });
+
 });
 
 
