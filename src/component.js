@@ -1,5 +1,5 @@
 const ComponentRefs = require('./componentrefs');
-const UUID = require('UUID/v1');
+const UUID = require('uuid/v1');
 const CoreProperties = new Set([
   'ecs', 'entity', 'type', '_values', '_ready', 'id',
   'updated', 'constructor', 'stringify', 'clone', 'getObject'
