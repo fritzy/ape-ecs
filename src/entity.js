@@ -9,12 +9,20 @@ class Entity {
     this.id = definition.id || UUID();
     Object.defineProperty(this, 'components', { enumerable: false, value: {} });
     Object.defineProperty(this, 'componentMap', { enumerable: false, value: {} });
+    Object.defineProperty(this, 'tags', { enumerable: true, writeable: false, value: new Set() });
 
     this.updatedComponents = this.ecs.ticks;
     this.updatedValues = this.ecs.ticks;
 
     for (const type of Object.keys(definition)) {
       if (type === 'id') continue;
+      if (type === 'tags') {
+        for (const tag of definition[type]) {
+          this.tags.add(tag);
+          this.ecs.entityTags.get(tag).add(this.id);
+        }
+        continue;
+      }
       const cdefs = definition[type];
       if (!ecs.types.hasOwnProperty(type)) throw new Error(`No component type named "${type}". Did you misspell it?`)
       const mapBy = ecs.types[type].definition.mapBy;
@@ -33,6 +41,20 @@ class Entity {
       }
     }
     this.ecs.entities.set(this.id, this);
+    this.ecs._updateCache(this);
+  }
+
+  addTag(tag) {
+
+    this.tags.add(tag);
+    this.updatedComponents = this.ecs.ticks;
+    this.ecs.entityTags.get(tag).add(this.id);
+    this.ecs._updateCache(this);
+  }
+
+  removeTag(tag) {
+    this.updatedComponents = this.ecs.ticks;
+    this.ecs.entityTags.get(tag).delete(this.id);
     this.ecs._updateCache(this);
   }
 

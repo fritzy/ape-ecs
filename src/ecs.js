@@ -11,7 +11,9 @@ class ECS {
     this.ticks = 0;
     this.entities = new Map();
     this.types = {};
+    this.tags = new Set();
     this.entityComponents = new Map();
+    this.entityTags = new Map();
     this.components = new Map();
     this.queryCache = new Map();
     this.subscriptions = new Map();
@@ -40,6 +42,16 @@ class ECS {
     if (this.refs[target].size === 0) {
       delete this.refs[target];
     }
+  }
+
+  registerTags(tags) {
+    if (Array.isArray(tags)) {
+      for (const tag of tags) {
+        this.entityTags.set(tag, new Set());
+      }
+      return;
+    }
+    this.entityTags.set(tags, new Set());
   }
 
   registerComponent(name, definition = {}) {

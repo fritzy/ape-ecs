@@ -507,6 +507,85 @@ lab.experiment('system queries', () => {
 
   });
 
+  lab.test('tags', () => {
+    const ecs = new ECS.ECS();
+    ecs.registerComponent('Tile', {});
+    ecs.registerComponent('Sprite', {});
+    ecs.registerTags(['Billboard']);
+    ecs.registerTags('Hidden');
+
+    const tile1 = ecs.createEntity({
+      tags: ['Billboard', 'Hidden'],
+      Tile: {}
+    });
+
+    const tile2 = ecs.createEntity({
+      tags: ['Billboard'],
+      Tile: {}
+    });
+
+    const tile3 = ecs.createEntity({
+      tags: ['Billboard'],
+      Sprite: {}
+    });
+
+    const tile4 = ecs.createEntity({
+      Tile: {},
+    });
+
+    const tile5 = ecs.createEntity({
+      tags: ['Billboard']
+    });
+
+    const result = ecs.queryEntities({
+      has: ['Tile', 'Billboard'],
+      hasnt: ['Sprite', 'Hidden'],
+      persist: 'bill'
+    });
+
+    const resultSet = new Set([...result]);
+
+    expect(resultSet.has(tile1)).to.be.false();
+    expect(resultSet.has(tile2)).to.be.true();
+    expect(resultSet.has(tile3)).to.be.false();
+    expect(resultSet.has(tile4)).to.be.false();
+    expect(resultSet.has(tile5)).to.be.false();
+
+    const result3 = ecs.queryEntities({
+      has: ['Hidden']
+    });
+    const resultSet3 = new Set([...result3]);
+
+    expect(resultSet3.has(tile1)).to.be.true();
+    expect(resultSet3.has(tile2)).to.be.false();
+    expect(resultSet3.has(tile3)).to.be.false();
+    expect(resultSet3.has(tile4)).to.be.false();
+    expect(resultSet3.has(tile5)).to.be.false();
+
+    tile4.addTag('Billboard');
+    tile2.removeTag('Hidden');
+    tile1.removeTag('Hidden');
+    tile3.addComponent('Tile', {});
+    tile3.addTag('Hidden');
+    tile1.removeTag('Billboard');
+    tile4.addTag('Hidden');
+
+    const result2 = ecs.queryEntities({
+      has: ['Tile', 'Billboard'],
+      hasnt: ['Sprite', 'Hidden'],
+      persist: 'bill'
+    });
+
+    const resultSet2 = new Set([...result2]);
+
+    expect(resultSet2.has(tile1)).to.be.false();
+    expect(resultSet2.has(tile2)).to.be.true();
+    expect(resultSet2.has(tile3)).to.be.false();
+    expect(resultSet2.has(tile4)).to.be.false();
+    expect(resultSet2.has(tile5)).to.be.false();
+
+  });
+
   lab.test('filter by updatedValues', () => {
 
     const ecs = new ECS.ECS();

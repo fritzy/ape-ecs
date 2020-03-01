@@ -45,6 +45,7 @@ __Using This Library__
   * [constructor](#ecsConstructor)
   * [registerComponent method](#ecsRegisterComponent)
   * [registerComponentClass method](#ecsRegisterComponentClass)
+  * [registerTags method](#ecsRegisterTags)
   * [createEntity method](#ecsCreateEntity)
   * [removeEntity method](#ecsRemoveEntity)
   * [getEntity method](#ecsGetEntity)
@@ -68,6 +69,8 @@ __Using This Library__
   * [addComponent method](#entityAddComponent)
   * [removeComponent method](#entityRemoveComponent)
   * [removeComponentByType method](#entityRemoveComponentByType)
+  * [addTag method](#entityAddTag)
+  * [removeTag method](#entityRemoveTag)
   * [getObject method](#entityGetObject)
   * [destroy method](#entityDestroy)
 
@@ -300,6 +303,12 @@ MyComponent.definition = {
 ecs.registerComponentClass(MyComponent);
 ```
 
+<a name="ecsRegisterTags"></a>
+### registerTags method
+
+__Arguments__:
+  * [array of strings]: Allowed tags
+
 <a name="ecsCreateEntity"></a>
 ### createEntity method
 
@@ -311,6 +320,8 @@ __Arguments__:
 The root keys to the definition object must be one of the component type names or `id`. For every component type, you must have previously registered it with [registerComponent](#ecsRegisterComponent) or [registerComponentClass](#ecsRegisterComponentClass). For each component intiialized in the entity definition, you may only use keys that were defined as properties when the component was registered.
 
 If the component was not set with `multiset` as `true`, then the component value is simply an object of component properties with values. If multiset was set to true, and no `mapBy` was defined, then you can defined an array with each entry being an object with properties and values. If `mapBy` was set, you can have an object of string or number values of the property that `mapBy` refers to that each references an object of properties and values, excluding the mapBy property which will be automatically assigned.
+
+If you specify `tags` as an array in the object, then your entity will initialize with those tags. They must have been registered as possible tags.
 
 👀 See [Component Definition](#componentDefinition) for more details.
 👀 See [ecs.registerComponent](#ecsRegisterComponent) for examples.
@@ -342,8 +353,8 @@ If you use this from a system update, set persist to a unique string and it will
 
 __Arguments__:
   * [object]:
-    * has: [array of strings] component types that an entity must have
-    * hasnt: [array of strings] component types that an entity must not have
+    * has: [array of strings] component types or tags that an entity must have
+    * hasnt: [array of strings] component types or tags that an entity must not have
     * persist: [false or string] persist and maintain results
     * updatedValues [number] filter out entities that haven't had component value updates since this tick
     * updatedComponents [number] filter out entities that haven't had components added/removed since this tick
@@ -517,14 +528,6 @@ __Arguments__:
 
 👀 See the [ecs.registerComponent](#ecsRegisterComponent) and [ecs.createEntity](#ecsCreateEntity) sections for more details and examples.
 
-<a name="entityRemoveComponent"></a>
-### removeComponent method
-
-Remove a component from the Entity instance by instance or id.
-
-__Arguments__:
-  * [string] Component id or [Component instance]
-
 <a name="entityRemoveComponentByType"></a>
 ### removeComponentByType method
 
@@ -532,6 +535,30 @@ Remove all Component instances from the Entity instance by the Component type na
 
 __Arguments__:
   * [string] Component type
+
+<a name="entityAddTag"></a>
+### addTag method
+
+Adds a tag to the entity. Must have been registered.
+
+__Arguments__:
+  * [string] Tag
+
+<a name="entityRemoveTag"></a>
+### removeTag method
+
+Removes a tag to the entity.
+
+__Arguments__:
+  * [string] Tag
+
+<a name="entityRemoveComponent"></a>
+### removeComponent method
+
+Remove a component from the Entity instance by instance or id.
+
+__Arguments__:
+  * [string] Component id or [Component instance]
 
 <a name="entityGetObject"></a>
 ### getObject method
@@ -553,7 +580,7 @@ Destroy the Entity instance, it's components, and removing any refrences to it o
 
 Systems are classes that you extend from ECS.System and override the update method to implement your system logic.
 
-System classes can also have a `query` object with `has` and `hasnt` properties, and a `subcriptions` array of component type names attached to the constructor/class.
+System classes can also have a `query` object with `has` and `hasnt` properties, and a `subcriptions` array of component type names or tags attached to the constructor/class.
 
 Here is an example of a simple system:
 
