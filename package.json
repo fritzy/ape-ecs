@@ -1,6 +1,6 @@
 {
   "name": "@fritzy/ecs",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Entity-Component-System library for game development.",
   "main": "./src/index.js",
   "source": true,
