@@ -53,6 +53,7 @@ class Entity {
   }
 
   removeTag(tag) {
+    this.tags.delete(tag);
     this.updatedComponents = this.ecs.ticks;
     this.ecs.entityTags.get(tag).delete(this.id);
     this.ecs._updateCache(this);
