@@ -44,6 +44,14 @@ class Entity {
     this.ecs._updateCache(this);
   }
 
+  has(tagOrComponent) {
+
+    if (this.tags.has(tagOrComponent)) {
+      return true;
+    }
+    return (this.components.hasOwnProperty(tagOrComponent));
+  }
+
   addTag(tag) {
 
     this.tags.add(tag);

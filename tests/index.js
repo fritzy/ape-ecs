@@ -547,6 +547,7 @@ lab.experiment('system queries', () => {
 
     expect(resultSet.has(tile1)).to.be.false();
     expect(resultSet.has(tile2)).to.be.true();
+    expect(tile2.has('Sprite')).to.be.false();
     expect(resultSet.has(tile3)).to.be.false();
     expect(resultSet.has(tile4)).to.be.false();
     expect(resultSet.has(tile5)).to.be.false();
@@ -578,6 +579,8 @@ lab.experiment('system queries', () => {
 
     const resultSet2 = new Set([...result2]);
 
+    expect(tile4.has('Billboard')).to.be.true();
+    expect(tile3.has('Tile')).to.be.true();
     expect(resultSet2.has(tile1)).to.be.false();
     expect(resultSet2.has(tile2)).to.be.true();
     expect(resultSet2.has(tile3)).to.be.false();

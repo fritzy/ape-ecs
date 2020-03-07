@@ -49,7 +49,7 @@ __Using This Library__
   * [createEntity method](#ecsCreateEntity)
   * [removeEntity method](#ecsRemoveEntity)
   * [getEntity method](#ecsGetEntity)
-  * [queryEntities method](#ecsQueryEntity)
+  * [queryEntities method](#ecsQueryEntities)
   * [getComponents method](#ecsGetComponents)
   * [addSystem method](#ecsAddSystem)
   * [runSystemGroup method](#ecsRunSystemGroup)
@@ -71,6 +71,7 @@ __Using This Library__
   * [removeComponentByType method](#entityRemoveComponentByType)
   * [addTag method](#entityAddTag)
   * [removeTag method](#entityRemoveTag)
+  * [has method](#entityHas)
   * [getObject method](#entityGetObject)
   * [destroy method](#entityDestroy)
 
@@ -551,6 +552,16 @@ Removes a tag to the entity.
 
 __Arguments__:
   * [string] Tag
+
+<a name="entityHas"></a>
+### has method
+
+Checks to see if an entity has a given tag or component.
+
+__Arguments__:
+  * [string] Tag or Component name
+
+returns: boolean
 
 <a name="entityRemoveComponent"></a>
 ### removeComponent method
