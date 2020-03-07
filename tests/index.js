@@ -111,6 +111,38 @@ lab.experiment('express components', () => {
 
   });
 
+  lab.test('init and destroy component', () => {
+
+    let hit = false;
+
+    const ecs = new ECS.ECS();
+    ecs.registerComponent('Test', {
+      properties: {
+        x: null,
+        y: 0
+      },
+      destroy() {
+        this.x = null;
+        hit = true;
+      },
+      init() {
+        this.y++;
+      }
+    });
+
+    const entity = ecs.createEntity({
+      Test: {
+      }
+    });
+
+    expect(entity.Test.y).to.equal(1);
+    expect(hit).to.equal(false);
+
+    entity.removeComponent(entity.Test);
+    expect(hit).to.equal(true);
+
+  });
+
   lab.test('system subscriptions', () => {
 
     let changes = [];

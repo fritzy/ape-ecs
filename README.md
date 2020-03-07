@@ -148,6 +148,10 @@ Defintions have the following structure:
   serilize: {
     skip: false,
     serialize.ignore: []
+  },
+  init() {
+  },
+  destroy() {
   }
 }
 ```
@@ -275,6 +279,8 @@ The `serial` section of deals with calling `getObject` and `stringify` either on
 If you had a Sprite component, you might have `path` and `texture` properties. You may want to add `'texture'` to the `skip.ignore` array, so that it isn't serialized, but could be populated after using the serialized object with `createEntity` by loading the texture from the `path` property.
 
 Serialized entities and components are useful for save files, and can be used to restore state with `createEntity`.
+
+`init` and `destroy` functions are called with the component as the `this` context.
 
 <a name="ecsRegisterComponentClass"></a>
 ### registerComponentClass method
@@ -417,7 +423,7 @@ Components are the building blocks and models of the Entity-Component-System par
 <a name="componentDefinition"></a>
 ### definition
 
-👀 See [ecs.registerComponent](#ecsRegisterComponent) for more details.
+👀 See [ecs.registerComponent](#ecsRegisterComponent) for more details.  
 👀 See [ecs.registerComponentClass](#ecsRegisterComponentClass) for more details.
 
 <a name="componentProperties"></a>

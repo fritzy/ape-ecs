@@ -17,6 +17,8 @@ class BaseComponent {
     Object.defineProperty(this, '_ready', { writable: true, enumerable: false, value: false });
     Object.defineProperty(this, 'id', { enumerable: true, value: initialValues.id || UUID() });
     Object.defineProperty(this, 'updated', { enumerable: false, writable: true, value: this.ecs.ticks });
+    Object.defineProperty(this, '_init', { enumerable: false, writable: false, value: [] });
+    Object.defineProperty(this, '_destroy', { enumerable: false, writable: false, value: [] });
 
     //loop through inheritance by way of prototypes
     //avoiding constructor->super() boilerplate for every component
@@ -35,6 +37,12 @@ class BaseComponent {
       // set component properties from Component.properties
       if (!definition.properties) {
         continue;
+      }
+      if (definition.init) {
+        this._init.push(definition.init);
+      }
+      if (definition.destroy) {
+        this._destroy.push(definition.destroy);
       }
       const properties = definition.properties;
       const keys = Object.keys(properties);
@@ -213,8 +221,21 @@ class BaseComponent {
     Object.assign(this, values);
     this.ecs._sendChange(this, 'addComponent');
     this._ready = true;
+    for (const init of this._init) {
+      init.apply(this);
+    }
   }
 
+  destroy(remove=true) {
+
+    for (const destroy of this._destroy) {
+      destroy.apply(this);
+    }
+    if (remove) {
+      this.entity.removeComponent(this, false, false);
+    }
+    this._ready = false;
+  }
 
   stringify() {
 

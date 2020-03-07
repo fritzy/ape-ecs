@@ -135,10 +135,14 @@ class Entity {
     }
   }
 
-  removeComponent(component, delayCache) {
+  removeComponent(component, delayCache, destroy=true) {
 
     if (!(component instanceof BaseComponent)) {
       component = this.componentMap[component];
+    }
+    this.ecs._sendChange(this, 'removeComponent');
+    if (destroy) {
+      component.destroy(false);
     }
     const ecs = this.ecs;
     const name = component.type;
@@ -215,6 +219,9 @@ class Entity {
   destroy() {
 
     this.ecs._clearEntityFromCache(this);
+    for (const key in this.componentMap) {
+      this.componentMap[key].destroy();
+    }
     if (this.ecs.refs[this.id]) {
       for (const ref of this.ecs.refs[this.id]) {
         const [entityId, componentId, prop, sub] = ref.split('...');
