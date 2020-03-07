@@ -140,7 +140,7 @@ class Entity {
     if (!(component instanceof BaseComponent)) {
       component = this.componentMap[component];
     }
-    this.ecs._sendChange(this, 'removeComponent');
+    this.ecs._sendChange(component, 'removeComponent');
     if (destroy) {
       component.destroy(false);
     }
