@@ -41,6 +41,7 @@ module.exports = {
         if (prop in obj) {
           delete obj[prop];
           ecs._sendChange(component, 'deleteEntityObject', prop);
+          return true;
         }
       }
 
@@ -229,6 +230,7 @@ module.exports = {
         if (prop in obj) {
           delete obj[prop];
           component.ecs._sendChange(component, 'deleteComponentObject', prop);
+          return true;
         }
       }
     });

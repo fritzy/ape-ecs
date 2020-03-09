@@ -9,12 +9,20 @@ class Entity {
     this.id = definition.id || UUID();
     Object.defineProperty(this, 'components', { enumerable: false, value: {} });
     Object.defineProperty(this, 'componentMap', { enumerable: false, value: {} });
+    Object.defineProperty(this, 'tags', { enumerable: true, writeable: false, value: new Set() });
 
     this.updatedComponents = this.ecs.ticks;
     this.updatedValues = this.ecs.ticks;
 
     for (const type of Object.keys(definition)) {
       if (type === 'id') continue;
+      if (type === 'tags') {
+        for (const tag of definition[type]) {
+          this.tags.add(tag);
+          this.ecs.entityTags.get(tag).add(this.id);
+        }
+        continue;
+      }
       const cdefs = definition[type];
       if (!ecs.types.hasOwnProperty(type)) throw new Error(`No component type named "${type}". Did you misspell it?`)
       const mapBy = ecs.types[type].definition.mapBy;
@@ -33,6 +41,29 @@ class Entity {
       }
     }
     this.ecs.entities.set(this.id, this);
+    this.ecs._updateCache(this);
+  }
+
+  has(tagOrComponent) {
+
+    if (this.tags.has(tagOrComponent)) {
+      return true;
+    }
+    return (this.components.hasOwnProperty(tagOrComponent));
+  }
+
+  addTag(tag) {
+
+    this.tags.add(tag);
+    this.updatedComponents = this.ecs.ticks;
+    this.ecs.entityTags.get(tag).add(this.id);
+    this.ecs._updateCache(this);
+  }
+
+  removeTag(tag) {
+    this.tags.delete(tag);
+    this.updatedComponents = this.ecs.ticks;
+    this.ecs.entityTags.get(tag).delete(this.id);
     this.ecs._updateCache(this);
   }
 
@@ -104,10 +135,14 @@ class Entity {
     }
   }
 
-  removeComponent(component, delayCache) {
+  removeComponent(component, delayCache, destroy=true) {
 
     if (!(component instanceof BaseComponent)) {
       component = this.componentMap[component];
+    }
+    this.ecs._sendChange(component, 'removeComponent');
+    if (destroy) {
+      component.destroy(false);
     }
     const ecs = this.ecs;
     const name = component.type;
@@ -184,6 +219,9 @@ class Entity {
   destroy() {
 
     this.ecs._clearEntityFromCache(this);
+    for (const key in this.componentMap) {
+      this.componentMap[key].destroy();
+    }
     if (this.ecs.refs[this.id]) {
       for (const ref of this.ecs.refs[this.id]) {
         const [entityId, componentId, prop, sub] = ref.split('...');

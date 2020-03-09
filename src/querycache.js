@@ -12,21 +12,38 @@ class QueryCache {
 
     if (this.has.length === 1 && this.hasnt.length === 0) {
       const entities = new Set();
-      for (const component of this.ecs.getComponents(this.has[0])) {
-        entities.add(component.entity);
+      if (this.ecs.components.has(this.has[0])) {
+        for (const component of this.ecs.getComponents(this.has[0])) {
+          entities.add(component.entity);
+        }
+      }
+      if (this.ecs.entityTags.has(this.has[0])) {
+        for (const eid of this.ecs.entityTags.get(this.has[0])) {
+          entities.add(this.ecs.getEntity(eid));
+        }
       }
       return entities;
     }
     const hasSet = [];
     const hasntSet = [];
     for (const cname of this.has) {
-      hasSet.push(this.ecs.entityComponents.get(cname));
+      if (this.ecs.entityComponents.has(cname)) {
+        hasSet.push(this.ecs.entityComponents.get(cname));
+      }
+      if (this.ecs.entityTags.has(cname)) {
+        hasSet.push(this.ecs.entityTags.get(cname));
+      }
     }
     hasSet.sort((a, b) => {
       return a.size - b.size;
     });
     for (const cname of this.hasnt) {
-      hasntSet.push(this.ecs.entityComponents.get(cname));
+      if (this.ecs.entityComponents.has(cname)) {
+        hasntSet.push(this.ecs.entityComponents.get(cname));
+      }
+      if (this.ecs.entityTags.has(cname)) {
+        hasntSet.push(this.ecs.entityTags.get(cname));
+      }
     }
 
     const results = new Set([...hasSet[0]]);
@@ -58,12 +75,22 @@ class QueryCache {
     const id = entity.id;
     let found = true;
     for (const cname of this.has) {
-      const hasSet = this.ecs.entityComponents.get(cname);
-      if (!hasSet.has(id)) {
-        found = false;
-        break;
+      if (this.ecs.entityComponents.has(cname)) {
+        const hasSet = this.ecs.entityComponents.get(cname);
+        if (!hasSet.has(id)) {
+          found = false;
+          break;
+        }
+      }
+      if (this.ecs.entityTags.has(cname)) {
+        const hasTag = this.ecs.entityTags.get(cname);
+        if (!hasTag.has(id)) {
+          found = false;
+          break;
+        }
       }
     }
+
     if (!found) {
       this.results.delete(entity);
       return;
@@ -71,10 +98,19 @@ class QueryCache {
 
     found = false;
     for (const cname of this.hasnt) {
-      const hasntSet = this.ecs.entityComponents.get(cname);
-      if (hasntSet.has(id)) {
-        found = true;
-        break;
+      if (this.ecs.entityComponents.has(cname)) {
+        const hasntSet = this.ecs.entityComponents.get(cname);
+        if (hasntSet.has(id)) {
+          found = true;
+          break;
+        }
+      }
+      if (this.ecs.entityTags.has(cname)) {
+        const hasntSet = this.ecs.entityTags.get(cname);
+        if (hasntSet.has(id)) {
+          found = true;
+          break;
+        }
       }
     }
     if (found) {
