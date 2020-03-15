@@ -269,7 +269,7 @@ lab.experiment('express components', () => {
     });
 
     ecs.runSystemGroup('equipment');
-    expect(changes.length).to.equal(0);
+    expect(changes.length).to.equal(2);
 
     entity.EquipmentSlot.pants.slot = pants;
 
