@@ -49,7 +49,7 @@ lab.experiment('express components', () => {
         size: 20,
         items: '<EntitySet>'
       },
-      multiset: true,
+      many: true,
       mapBy: 'name'
     });
 
@@ -59,7 +59,7 @@ lab.experiment('express components', () => {
         slot: '<Entity>',
         effects: '<ComponentSet>'
       },
-      multiset: true,
+      many: true,
       mapBy: 'name'
     });
 
@@ -220,7 +220,7 @@ lab.experiment('express components', () => {
         equipment: '',
         effects: '<ComponentSet>'
       },
-      multiset: true
+      many: true
     });
 
     ecs.registerComponent('Wearable', {
@@ -938,7 +938,7 @@ lab.experiment('entity restore', () => {
         name: 'finger',
         slot: '<Entity>'
       },
-      multiset: true,
+      many: true,
       mapBy: 'name'
     });
 
@@ -971,7 +971,7 @@ lab.experiment('entity restore', () => {
         name: 'finger',
         slot: '<Entity>'
       },
-      multiset: true
+      many: true
     });
 
 
@@ -1006,7 +1006,7 @@ lab.experiment('entity restore', () => {
     expect(slots[2].name).to.equal('slot3');
   });
 
-  lab.test('2nd component on non-multiset component throws', { plan: 1 }, () => {
+  lab.test('2nd component on non-many component throws', { plan: 1 }, () => {
 
     const ecs = new ECS.ECS();
     ecs.registerComponent('Potion');
@@ -1057,16 +1057,16 @@ lab.experiment('entity restore', () => {
 
   });
 
-  lab.test('removeComponentByName multiset', () => {
+  lab.test('removeComponentByName many', () => {
 
     const ecs = new ECS.ECS();
     ecs.registerComponent('NPC');
     ecs.registerComponent('Other', {
-      multiset: true
+      many: true
     });
     ecs.registerComponent('Armor', {
       properties: { 'amount': 5 },
-      multiset: true
+      many: true
     });
 
     const entity = ecs.createEntity({
@@ -1109,7 +1109,7 @@ lab.experiment('entity restore', () => {
       properties: {
         order: 'sun'
       },
-      multiset: true,
+      many: true,
       mapBy: 'order'
     });
     ecs.registerComponent('EquipmentSlot', {
@@ -1117,7 +1117,7 @@ lab.experiment('entity restore', () => {
         name: 'mainhand',
         slot: '<Entity>'
       },
-      multiset: true,
+      many: true,
       mapBy: 'name'
     });
 
@@ -1249,7 +1249,7 @@ lab.experiment('exporting and restoring', () => {
       properties: {
         order: 'sun'
       },
-      multiset: true,
+      many: true,
       mapBy: 'order'
     });
 
@@ -1271,7 +1271,7 @@ lab.experiment('exporting and restoring', () => {
         name: 'ring',
         slot: '<Entity>'
       },
-      multiset: true,
+      many: true,
       mapBy: 'name'
     });
     ecs.registerComponent('Bottle', {});
@@ -1280,7 +1280,7 @@ lab.experiment('exporting and restoring', () => {
       properties: {
         name: 'fire'
       },
-      multiset: true
+      many: true
     });
 
     const bottle = ecs.createEntity({ Bottle: {} });

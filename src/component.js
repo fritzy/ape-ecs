@@ -266,7 +266,7 @@ class BaseComponent {
 BaseComponent.definition = {
   properties: {
   },
-  multiset: false,
+  many: false,
   serialize: {
     skip: false,
     ignore: [],

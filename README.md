@@ -143,8 +143,8 @@ Defintions have the following structure:
     property_name2: 'default value',
     some_advanced_property: '<Entity>' // special types are set with <type>.
   },
-  multiset: false // [boolean],
-  mapBy: 'name' // if multiset and set to true, 
+  many: false // [boolean],
+  mapBy: 'name' // if many and set to true, 
   serilize: {
     skip: false,
     serialize.ignore: []
@@ -165,13 +165,13 @@ You have have any number of properties. Advanced types are currently:
  * &lt;ComponentObject&gt;
  * &lt;Pointer path.to.other.value&gt;
 
-If multiset is false (default), then each entity can only have one instance of a component. You'll be able to access the instance in an entity by name like:
+If `many` is false (default), then each entity can only have one instance of a component. You'll be able to access the instance in an entity by name like:
 
 ```js
 entity['ComponentName']
 ```
 
-If multiset is true, then many instances of a the component can be in an component. You'll be able to access them:
+If `many` is true, then many instances of a the component can be in an component. You'll be able to access them:
 
 ```js
 for (const component of entity['ComponentName']) {
@@ -198,7 +198,7 @@ ecs.registerComponent('ControlledByPlayer', {
   }
 });
 
-// multiset = false
+// many = false
 ecs.registerComponent('Weapon', {
   properties: {
     name: 'sword',
@@ -207,7 +207,7 @@ ecs.registerComponent('Weapon', {
   }
 });
 
-// multiset = true
+// many = true
 ecs.registerComponent('StatBonus', {
   properties: {
     from: '',
@@ -215,7 +215,7 @@ ecs.registerComponent('StatBonus', {
     dex: 0,
     int: 0
   },
-  multiset: true
+  many: true
 });
 
 // multislot with  mapBy
@@ -224,7 +224,7 @@ ecs.registerComponent('EquipmentSlot', {
     name: 'hand',
     slot: '<Entity>'
   },
-  multiset: true,
+  many: true,
   mapBy: 'name'
 });
 
@@ -303,7 +303,7 @@ MyComponent.definition = {
     name: 'hand',
     slot: '<Entity>'
   },
-  multiset: true,
+  many: true,
   mapBy: 'name'
 };
 
@@ -326,7 +326,7 @@ __Arguments__:
 
 The root keys to the definition object must be one of the component type names or `id`. For every component type, you must have previously registered it with [registerComponent](#ecsRegisterComponent) or [registerComponentClass](#ecsRegisterComponentClass). For each component intiialized in the entity definition, you may only use keys that were defined as properties when the component was registered.
 
-If the component was not set with `multiset` as `true`, then the component value is simply an object of component properties with values. If multiset was set to true, and no `mapBy` was defined, then you can defined an array with each entry being an object with properties and values. If `mapBy` was set, you can have an object of string or number values of the property that `mapBy` refers to that each references an object of properties and values, excluding the mapBy property which will be automatically assigned.
+If the component was not set with `many` as `true`, then the component value is simply an object of component properties with values. If `many` was set to true, and no `mapBy` was defined, then you can defined an array with each entry being an object with properties and values. If `mapBy` was set, you can have an object of string or number values of the property that `mapBy` refers to that each references an object of properties and values, excluding the mapBy property which will be automatically assigned.
 
 If you specify `tags` as an array in the object, then your entity will initialize with those tags. They must have been registered as possible tags.
 
@@ -475,13 +475,13 @@ Entities also have properties for each component type that has been added.
 ### Component Properties
 <a name="entityComponentProperties"></a>
 
-If the Component defintion has multiset set to false (the default), then you can access the component instance directly off of the component type name.
+If the Component defintion has `many` set to false (the default), then you can access the component instance directly off of the component type name.
 
 ```js
 entity.Position.x = 34; // set the value of x on the Position component of the entity
 ```
 
-If the Component has multiset set to true, then the property will reference a `Set` of components
+If the Component has `many` set to true, then the property will reference a `Set` of components
 
 ```js
 for (const bonus of entity.Bonus) {
@@ -489,7 +489,7 @@ for (const bonus of entity.Bonus) {
 }
 ```
 
-If the Component has multiset to true and mapBy set to a property name, then the property will reference an `Object` with properties of the property of each component referenced by `mapBy`.
+If the Component has `many` to true and mapBy set to a property name, then the property will reference an `Object` with properties of the property of each component referenced by `mapBy`.
 
 ```js
 ecs.registerComponent('EquipmentSlot', {

@@ -73,7 +73,7 @@ class Entity {
     const component = new ecs.types[type](ecs, this, definition);
 
     let addedType = false;
-    if (ecs.types[type].definition.multiset) {
+    if (ecs.types[type].definition.many) {
       const mapBy = ecs.types[type].definition.mapBy;
       if (mapBy) {
         if (!this.components.hasOwnProperty(component.type)) {
@@ -125,7 +125,7 @@ class Entity {
       return;
     }
 
-    if (this.ecs.types[cname].definition.multiset) {
+    if (this.ecs.types[cname].definition.many) {
       for (const component of this.components[cname]) {
         this.removeComponent(component, true);
       }
@@ -147,7 +147,7 @@ class Entity {
     const ecs = this.ecs;
     const name = component.type;
     let removedType = false;
-    if (ecs.types[name].definition.multiset) {
+    if (ecs.types[name].definition.many) {
       const mapBy = ecs.types[name].definition.mapBy;
       if (mapBy) {
         const mapValue = component[mapBy]
