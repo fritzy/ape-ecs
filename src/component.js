@@ -90,10 +90,10 @@ class BaseComponent {
                 }
                 const old = Reflect.get(this._values, property);
                 if (old && old !== value) {
-                  this.ecs.deleteRef(old, this.entity.id, this.id, property);
+                  this.ecs.deleteRef(old, this.entity.id, this.id, property, undefined, this.type);
                 }
                 if (value && value !== old) {
-                  this.ecs.addRef(value, this.entity.id, this.id, property);
+                  this.ecs.addRef(value, this.entity.id, this.id, property, undefined, this.type);
                 }
                 const result = Reflect.set(this._values, property, value);
                 this.ecs._sendChange(this, 'setEntity', property, old, value);

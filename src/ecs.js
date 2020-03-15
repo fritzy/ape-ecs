@@ -13,7 +13,6 @@ class ECS {
     this.types = {};
     this.tags = new Set();
     this.entityComponents = new Map();
-    this.entityTags = new Map();
     this.components = new Map();
     this.queryCache = new Map();
     this.subscriptions = new Map();
@@ -27,16 +26,30 @@ class ECS {
     return this.ticks;
   }
 
-  addRef(target, entity, component, prop, sub) {
+  addRef(target, entity, component, prop, sub, type) {
     if (!this.refs[target]) {
       this.refs[target] = new Set();
+    }
+    const eInst = this.getEntity(entity);
+    if (eInst) {
+      if(!eInst.refs.hasOwnProperty(type)) {
+        eInst.refs[type] = new Set();
+      }
+      eInst.refs[type].add(component);
     }
     this.refs[target].add([entity, component, prop, sub].join('...'));
   }
 
-  deleteRef(target, entity, component, prop, sub) {
+  deleteRef(target, entity, component, prop, sub, type) {
     /* $lab:coverage:off$ */
     if (!this.refs[target]) return;
+    const eInst = this.getEntity(entity);
+    if (eInst && eInst.refs[type]) {
+      eInst.refs[type].delete(component);
+      if (eInst.refs[type].size === 0) {
+        delete eInst.refs[type];
+      }
+    }
     /* $lab:coverage:on$ */
     this.refs[target].delete([entity, component, prop, sub].join('...'));
     if (this.refs[target].size === 0) {
@@ -47,11 +60,11 @@ class ECS {
   registerTags(tags) {
     if (Array.isArray(tags)) {
       for (const tag of tags) {
-        this.entityTags.set(tag, new Set());
+        this.entityComponents.set(tag, new Set());
       }
       return;
     }
-    this.entityTags.set(tags, new Set());
+    this.entityComponents.set(tags, new Set());
   }
 
   registerComponent(name, definition = {}) {
@@ -113,11 +126,6 @@ class ECS {
       this.queryCache.set(persist, query);
     }
     return query.filter(updatedValues, updatedComponents);
-  }
-
-  getComponents(name) {
-
-    return this.components.get(name);
   }
 
   subscribe(system, type) {

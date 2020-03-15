@@ -10,6 +10,7 @@ class Entity {
     Object.defineProperty(this, 'components', { enumerable: false, value: {} });
     Object.defineProperty(this, 'componentMap', { enumerable: false, value: {} });
     Object.defineProperty(this, 'tags', { enumerable: true, writeable: false, value: new Set() });
+    Object.defineProperty(this, 'refs', { enumerable: false, writeable: false, value: {} });
 
     this.updatedComponents = this.ecs.ticks;
     this.updatedValues = this.ecs.ticks;
@@ -19,7 +20,7 @@ class Entity {
       if (type === 'tags') {
         for (const tag of definition[type]) {
           this.tags.add(tag);
-          this.ecs.entityTags.get(tag).add(this.id);
+          this.ecs.entityComponents.get(tag).add(this.id);
         }
         continue;
       }
@@ -56,14 +57,14 @@ class Entity {
 
     this.tags.add(tag);
     this.updatedComponents = this.ecs.ticks;
-    this.ecs.entityTags.get(tag).add(this.id);
+    this.ecs.entityComponents.get(tag).add(this.id);
     this.ecs._updateCache(this);
   }
 
   removeTag(tag) {
     this.tags.delete(tag);
     this.updatedComponents = this.ecs.ticks;
-    this.ecs.entityTags.get(tag).delete(this.id);
+    this.ecs.entityComponents.get(tag).delete(this.id);
     this.ecs._updateCache(this);
   }
 
