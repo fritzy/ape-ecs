@@ -111,6 +111,76 @@ lab.experiment('express components', () => {
 
   });
 
+  lab.test('component refs',
+  /**Test subtlety of the component property reference:
+   * If the preperty defined as an object and been initialized by default, it's
+   * the same instance accross different entity.
+   * E.g. share1 and share2 has referencing the same armor instance
+   */
+  () => {
+    var auid = 1;
+
+    class Armor {
+      constructor() {
+        this.id = ++ auid;
+      }
+    };
+
+    ecs.registerComponent('Share', {
+      properties: {
+        max: 25,
+        hp: 25,
+        armor: new Armor(),
+      }
+    });
+
+    ecs.registerComponent('Exclusive', {
+      properties: {
+        max: 15,
+        hp: 15,
+        armor: undefined
+      }
+    });
+
+    ecs.createEntity({
+      Share: [ { hp: 1 } ]
+    });
+
+    ecs.createEntity({
+      Share: [ { hp: 2 } ]
+    });
+
+    ecs.createEntity({
+      Exclusive: [ { hp: 3 } ]
+    });
+
+    ecs.createEntity({
+      Exclusive: [ { hp: 4, armor: new Armor() } ]
+    });
+
+    // Shares have same armor instance
+    var results = ecs.queryEntities({ has: ['Share'] });
+    expect(results.size).to.equal(2);
+    var itor = results.values();
+    var s1 = itor.next().value;
+    var s2 = itor.next().value;
+    expect(s1.Share.hp).to.equal(1);
+    expect(s2.Share.hp).to.equal(2);
+    expect(s2.Share.armor.id).to.equal(s1.Share.armor.id);
+
+    // Exclusives have different armor
+    results = ecs.queryEntities({ has: ['Exclusive'] });
+    expect(results.size).to.equal(2);
+    itor = results.values();
+    var e1 = itor.next().value;
+    var e2 = itor.next().value;
+
+    expect(e1.Exclusive.armor).to.be.undefined();
+    expect(e1.Exclusive.hp).to.equal(3);
+    expect(e2.Exclusive.hp).to.equal(4);
+    expect(e2.Exclusive.armor.id).to.equal(3);
+  });
+
   lab.test('init and destroy component', () => {
 
     let hit = false;
