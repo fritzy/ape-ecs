@@ -82,7 +82,6 @@ class BaseComponent {
           case '<Entity>':
             Object.defineProperty(this, property, {
               enumerable: true,
-              writeable: true,
               set: (value) => {
 
                 if (value && value.id) {
@@ -131,7 +130,6 @@ class BaseComponent {
           case '<Component>':
             Object.defineProperty(this, property, {
               enumerable: true,
-              writeable: true,
               set: (value) => {
 
                 if (typeof value === 'object') {
@@ -156,7 +154,6 @@ class BaseComponent {
             }
             Object.defineProperty(this, property, {
               enumerable: true,
-              writeable: true,
               set: (value) => {
 
                 const old = Reflect.get(this._values, property, value);

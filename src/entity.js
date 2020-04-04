@@ -9,8 +9,10 @@ class Entity {
     this.id = definition.id || UUID();
     Object.defineProperty(this, 'components', { enumerable: false, value: {} });
     Object.defineProperty(this, 'componentMap', { enumerable: false, value: {} });
-    Object.defineProperty(this, 'tags', { enumerable: true, writeable: false, value: new Set() });
-    Object.defineProperty(this, 'refs', { enumerable: false, writeable: false, value: {} });
+    Object.defineProperty(this, 'tags', { enumerable: true, writable: false, value: new Set() });
+    Object.defineProperty(this, 'refs', { enumerable: false, writable: false, value: {} });
+    Object.defineProperty(this, 'destroyed', { enumerable: false, writable: true, value: false });
+
 
     this.updatedComponents = this.ecs.ticks;
     this.updatedValues = this.ecs.ticks;
@@ -243,6 +245,7 @@ class Entity {
       }
     }
     this.ecs.entities.delete(this.id);
+    this.destroyed = true;
   }
 
 }
