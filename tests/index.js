@@ -25,7 +25,8 @@ lab.experiment('express components', () => {
       Health: [ { hp: 10 } ]
     });
 
-    const results = ecs.queryEntities({ has: ['Health'] });
+    //const results = ecs.queryEntities({ has: ['Health'] });
+    const results = ecs.createQuery({ all: ['Health'] }).execute();
 
     expect(results.size).to.equal(1);
   });
@@ -36,7 +37,7 @@ lab.experiment('express components', () => {
       Health: { hp: 10 }
     });
 
-    const results = ecs.queryEntities({ has: ['Health'] });
+    const results = ecs.createQuery().fromAll(['Health']).execute();
 
     expect(results.size).to.equal(2);
   });
@@ -524,10 +525,10 @@ lab.experiment('system queries', () => {
       Billboard: {},
     });
 
-    const result = ecs.queryEntities({
-      has: ['Tile', 'Billboard'],
-      hasnt: ['Sprite', 'Hidden']
-    });
+    const result = ecs.createQuery()
+      .fromAll(['Tile', 'Billboard'])
+      .not(['Sprite', 'Hidden'])
+      .execute();
 
     const resultSet = new Set([...result]);
 

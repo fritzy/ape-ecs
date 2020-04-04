@@ -2,6 +2,7 @@ const UUID = require('uuid/v1');
 const BaseComponent = require('./component');
 const Entity = require('./entity');
 const QueryCache = require('./querycache');
+const Query = require('./query');
 
 const componentMethods = new Set(['stringify', 'clone', 'getObject', Symbol.iterator]);
 class ECS {
@@ -15,6 +16,7 @@ class ECS {
     this.entityComponents = new Map();
     this.components = new Map();
     this.queryCache = new Map();
+    this.queryIndexes = new Map();
     this.subscriptions = new Map();
     this.systems = new Map();
     this.refs = {};
@@ -105,6 +107,11 @@ class ECS {
     return this.entities.get(`${entityId}`);
   }
 
+  createQuery(init) {
+
+    return new Query(this, init);
+  }
+
   queryEntities(args) {
 
     const { has, hasnt, persist, updatedValues, updatedComponents } = Object.assign({
@@ -176,6 +183,9 @@ class ECS {
 
     for (const query of this.queryCache) {
       query[1].updateEntity(entity);
+    }
+    for (const query of this.queryIndexes) {
+      query.update(entity);
     }
   }
 

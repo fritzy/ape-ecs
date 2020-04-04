@@ -17,23 +17,25 @@ class Query {
     this.indexed = false;
     this.results = new Set();
     this.executed = false;
-    if (init.from) {
-      this.from(init.from);
-    }
-    if (init.reverse) {
-      this.fromReverse(init.reverse.entity, init.reverse.type);
-    }
-    if (init.all) {
-      this.fromAll(init.all);
-    }
-    if (init.any) {
-      this.fromAny(init.any);
-    }
-    if (init.not) {
-      this.not(init.not);
-    }
-    if (init.filter) {
-      this.filter(init.filter);
+    if (init) {
+      if (init.from) {
+        this.from(init.from);
+      }
+      if (init.reverse) {
+        this.fromReverse(init.reverse.entity, init.reverse.type);
+      }
+      if (init.all) {
+        this.fromAll(init.all);
+      }
+      if (init.any) {
+        this.fromAny(init.any);
+      }
+      if (init.not) {
+        this.not(init.not);
+      }
+      if (init.filter) {
+        this.filter(init.filter);
+      }
     }
   }
 
@@ -155,6 +157,7 @@ class Query {
     if (this.query.froms.length === 0) {
       throw new Error('Cannot persistently index query without entity source (fromAll, fromAny, fromReverse).');
     }
+    this.ecs.queryIndexes.set(name, this);
     this.indexed = true;
     return this;
   }
@@ -163,7 +166,7 @@ class Query {
 
     //load in entities using from methods
     this.results = new Set();
-    for (const source of this.froms) {
+    for (const source of this.query.froms) {
       if (source.from === 'from') {
         this.results = SetHelpers.union(this.results, source.entities);
       } else if (source.from === 'all') {
@@ -203,7 +206,7 @@ class Query {
 
   _filter(entity) {
 
-    for (const filter of this.filters) {
+    for (const filter of this.query.filters) {
       if (filter.filter === 'not') {
         for (const type of filter.types) {
           if (entity.has(type)) {
