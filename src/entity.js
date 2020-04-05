@@ -44,7 +44,7 @@ class Entity {
       }
     }
     this.ecs.entities.set(this.id, this);
-    this.ecs._updateCache(this);
+    this.ecs._checkEntity(this);
   }
 
   has(tagOrComponent) {
@@ -60,14 +60,14 @@ class Entity {
     this.tags.add(tag);
     this.updatedComponents = this.ecs.ticks;
     this.ecs.entityComponents.get(tag).add(this.id);
-    this.ecs._updateCache(this);
+    this.ecs._checkEntity(this);
   }
 
   removeTag(tag) {
     this.tags.delete(tag);
     this.updatedComponents = this.ecs.ticks;
     this.ecs.entityComponents.get(tag).delete(this.id);
-    this.ecs._updateCache(this);
+    this.ecs._checkEntity(this);
   }
 
   addComponent(type, definition, delayCache) {
@@ -115,7 +115,7 @@ class Entity {
 
     this.updatedComponents = this.ecs.ticks;
     if (!delayCache) {
-      this.ecs._updateCache(this);
+      this.ecs._checkEntity(this);
     }
 
     this.componentMap[component.id] = component;
@@ -132,7 +132,7 @@ class Entity {
       for (const component of this.components[cname]) {
         this.removeComponent(component, true);
       }
-      this.ecs._updateCache(this);
+      this.ecs._checkEntity(this);
     } else {
       this.removeComponent(this.components[cname]);
     }
@@ -187,7 +187,7 @@ class Entity {
 
     ecs.components.get(component.type).delete(component);
     if (!delayCache) {
-      this.ecs._updateCache(this);
+      this.ecs._checkEntity(this);
     }
 
     delete this.componentMap[component.id];
@@ -221,7 +221,6 @@ class Entity {
 
   destroy() {
 
-    this.ecs._clearEntityFromCache(this);
     for (const key in this.componentMap) {
       this.componentMap[key].destroy();
     }

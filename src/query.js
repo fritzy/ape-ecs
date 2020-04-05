@@ -33,17 +33,17 @@ class Query {
       if (init.not) {
         this.not(init.not);
       }
-      if (init.filter) {
-        this.filter(init.filter);
+      if (init.index) {
+        this.index(init.index);
       }
     }
   }
 
   from(entities) {
 
-    if (!(entities instanceof Set)) {
-      entities = new Set(entities);
-    }
+    /* $lab:coverage:off$ */
+    entities = entities.map((e) => (typeof e !== 'string') ? e.id : e);
+    /* $lab:coverage:on$ */
     this.query.froms.push({
       from: 'from',
       entities
@@ -54,9 +54,11 @@ class Query {
 
   fromReverse(entity, componentName) {
 
+    /* $lab:coverage:off$ */
     if(typeof entity !== 'object') {
       entity = this.ecs.getEntity(entity);
     }
+    /* $lab:coverage:on$ */
     this.query.froms.push({
       from: 'reverse',
       entity,
@@ -67,6 +69,7 @@ class Query {
 
   fromAll(types) {
 
+    if (typeof types === 'string') types = [types];
     this.query.froms.push({
       from: 'all',
       types
@@ -74,7 +77,7 @@ class Query {
     return this;
   }
 
-  fromAny(any) {
+  fromAny(types) {
 
     this.query.froms.push({
       from: 'any',
@@ -92,20 +95,11 @@ class Query {
     return this;
   }
 
-  filter(func) {
-
-    this.query.filters.push({
-      filter: 'func',
-      func
-    });
-    return this;
-  }
-
   update(entity) {
 
     let inFrom = false;
     this.results.delete(entity);
-    if (entity.destroy) return;
+    if (entity.destroyed) return;
     for (const source of this.query.froms) {
       if(source.from === 'all') {
         const potential = [];
@@ -115,7 +109,7 @@ class Query {
         potential.sort((a, b) => a.size - b.size);
         let found = true;
         for (const entities of potential) {
-          if (!entities.has(entity)) {
+          if (!entities.has(entity.id)) {
             found = false;
             break;
           }
@@ -132,7 +126,7 @@ class Query {
         potential.sort((a, b) => b.size - a.size);
         let found = false;
         for (const entities of potential) {
-          if (entities.has(entity)) {
+          if (entities.has(entity.id)) {
             found = true;
             break;
           }
@@ -140,6 +134,15 @@ class Query {
         if (found) {
           inFrom = true;
           break;
+        }
+      /* $lab:coverage:off$ */
+      } else if (source.from === 'reverse') {
+      /* $lab:coverage:on$ */
+        if (source.entity.refs.hasOwnProperty(source.type)) {
+          if (new Set(source.entity.refs[source.type].keys()).has(entity.id)) {
+            inFrom = true;
+            break;
+          }
         }
       }
     }
@@ -151,12 +154,14 @@ class Query {
 
   index(name) {
 
+    /* $lab:coverage:off$ */
     if (this.hasStatic) {
       throw new Error('Cannot persistently index query with static list of entities.');
     }
     if (this.query.froms.length === 0) {
       throw new Error('Cannot persistently index query without entity source (fromAll, fromAny, fromReverse).');
     }
+    /* $lab:coverage:on$ */
     this.ecs.queryIndexes.set(name, this);
     this.indexed = true;
     return this;
@@ -165,37 +170,57 @@ class Query {
   refresh() {
 
     //load in entities using from methods
-    this.results = new Set();
+    let results = new Set();
     for (const source of this.query.froms) {
       if (source.from === 'from') {
-        this.results = SetHelpers.union(this.results, source.entities);
+        results = SetHelpers.union(results, source.entities);
       } else if (source.from === 'all') {
-        const comps = [];
-        for (const type of source.types) {
-          const entities = this.ecs.entityComponents.get(type);
-          if (entities === undefined) {
-            throw new Error(`${type} is not a registered Component/Tag`);
+        if (source.types.length === 1) {
+          /* $lab:coverage:off$ */
+          if (!this.ecs.entityComponents.has(source.types[0])) {
+            throw new Error(`${source.types[0]} is not a registered Component/Tag`);
           }
-          comps.push(entities);
+          /* $lab:coverage:on$ */
+          results = SetHelpers.union(results, this.ecs.entityComponents.get(source.types[0]));
+        } else {
+          const comps = [];
+          for (const type of source.types) {
+            const entities = this.ecs.entityComponents.get(type);
+            /* $lab:coverage:off$ */
+            if (entities === undefined) {
+              throw new Error(`${type} is not a registered Component/Tag`);
+            }
+            /* $lab:coverage:on$ */
+            comps.push(entities);
+          }
+          results = SetHelpers.union(results, SetHelpers.intersection(...comps));
         }
-        this.results = SetHelpers.union(this.results, SetHelpers.intersection(...comps));
       } else if (source.from === 'any') {
         const comps = [];
         for (const type of source.types) {
           const entities = this.ecs.entityComponents.get(type);
+          /* $lab:coverage:off$ */
           if (entities === undefined) {
             throw new Error(`${type} is not a registered Component/Tag`);
           }
+          /* $lab:coverage:on$ */
           comps.push(entities);
         }
-        this.results = SetHelpers.union(this.results, ...comps);
+        results = SetHelpers.union(results, ...comps);
+      /* $lab:coverage:off$ */
       } else if (source.from === 'reverse') {
-        const entity = this.ecs.getEntity(source.entity);
-        if (entity.refs.hasOwnProperty(type)) {
-          this.results = SetHelpers.union(this.results, entity.refs[type]);
+        if (source.entity.refs.hasOwnProperty(source.type)) {
+      /* $lab:coverage:on$ */
+          results = SetHelpers.union(results, new Set(source.entity.refs[source.type].keys()));
         }
       }
     }
+
+    this.results = new Set([...results]
+      .map(id => this.ecs.entities.get(id))
+      .filter(entity => !!entity)
+    );
+
 
     //filter results
     for (const entity of this.results) {
@@ -207,16 +232,14 @@ class Query {
   _filter(entity) {
 
     for (const filter of this.query.filters) {
+      /* $lab:coverage:off$ */
       if (filter.filter === 'not') {
+      /* $lab:coverage:on$ */
         for (const type of filter.types) {
           if (entity.has(type)) {
             this.results.delete(entity);
             break;
           }
-        }
-      } else if (filter.filter === 'func') {
-        if(!filter.func.apply(this.ecs, [entity])) {
-          this.results.delete(entity);
         }
       }
     }
@@ -234,8 +257,8 @@ class Query {
     const output = [];
     for (const entity of this.results) {
       if (
-        !(filter.updatedComponents && entity.updatedComponents < entity.updatedComponents)
-        && !(filter.updatedValues && entity.updatedValues < entity.updatedValues)
+        !(filter.updatedComponents && entity.updatedComponents < filter.updatedComponents)
+        && !(filter.updatedValues && entity.updatedValues < filter.updatedValues)
       ) {
         output.push(entity)
       }

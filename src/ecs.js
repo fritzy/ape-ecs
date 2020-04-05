@@ -1,7 +1,6 @@
 const UUID = require('uuid/v1');
 const BaseComponent = require('./component');
 const Entity = require('./entity');
-const QueryCache = require('./querycache');
 const Query = require('./query');
 
 const componentMethods = new Set(['stringify', 'clone', 'getObject', Symbol.iterator]);
@@ -14,8 +13,8 @@ class ECS {
     this.types = {};
     this.tags = new Set();
     this.entityComponents = new Map();
+    this.checkIndexEntities = new Set();
     this.components = new Map();
-    this.queryCache = new Map();
     this.queryIndexes = new Map();
     this.subscriptions = new Map();
     this.systems = new Map();
@@ -25,6 +24,7 @@ class ECS {
   tick() {
 
     this.ticks++;
+    this.updateIndexes();
     return this.ticks;
   }
 
@@ -32,26 +32,36 @@ class ECS {
     if (!this.refs[target]) {
       this.refs[target] = new Set();
     }
-    const eInst = this.getEntity(entity);
-    if (eInst) {
-      if(!eInst.refs.hasOwnProperty(type)) {
-        eInst.refs[type] = new Set();
-      }
-      eInst.refs[type].add(component);
+    const eInst = this.getEntity(target);
+    if(!eInst.refs.hasOwnProperty(type)) {
+      eInst.refs[type] = new Map();
     }
+    let count = eInst.refs[type].get(entity);
+    if (count === undefined) {
+      count = 0
+    }
+    eInst.refs[type].set(entity, count + 1);
     this.refs[target].add([entity, component, prop, sub].join('...'));
   }
 
   deleteRef(target, entity, component, prop, sub, type) {
-    /* $lab:coverage:off$ */
     if (!this.refs[target]) return;
-    const eInst = this.getEntity(entity);
+    const eInst = this.getEntity(target);
     if (eInst && eInst.refs[type]) {
-      eInst.refs[type].delete(component);
+      let count = eInst.refs[type].get(entity);
+      count--;
+      if (count < 1) {
+        eInst.refs[type].delete(entity);
+      } else {
+        eInst.refs[type].set(entity, count);
+      }
       if (eInst.refs[type].size === 0) {
         delete eInst.refs[type];
       }
+    } else {
+      throw new Error()
     }
+    /* $lab:coverage:off$ */
     /* $lab:coverage:on$ */
     this.refs[target].delete([entity, component, prop, sub].join('...'));
     if (this.refs[target].size === 0) {
@@ -107,32 +117,15 @@ class ECS {
     return this.entities.get(`${entityId}`);
   }
 
+  getEntities(type) {
+
+    const results = [...this.entityComponents.get(type)];
+    return new Set(results.map((id) => this.getEntity(id)));
+  }
+
   createQuery(init) {
 
     return new Query(this, init);
-  }
-
-  queryEntities(args) {
-
-    const { has, hasnt, persist, updatedValues, updatedComponents } = Object.assign({
-      has: [],
-      hasnt: [],
-      persist: false,
-      updatedValues: 0,
-      updatedComponents: 0
-    }, args);
-
-    let query;
-    if (persist) {
-      query = this.queryCache.get(persist);
-    }
-    if (!query) {
-      query = new QueryCache(this, has, hasnt);
-    }
-    if (persist) {
-      this.queryCache.set(persist, query);
-    }
-    return query.filter(updatedValues, updatedComponents);
   }
 
   subscribe(system, type) {
@@ -160,9 +153,6 @@ class ECS {
     if (!systems) return;
     for (const system of systems) {
       let entities;
-      if (this.queryCache.has(system)) {
-        entities = this.queryCache.get(system).filter();
-      }
       system.update(this.ticks, entities);
       system.lastTick = this.ticks;
       if (system.changes.length !== 0) {
@@ -171,22 +161,27 @@ class ECS {
     }
   }
 
-  _clearEntityFromCache(entity) {
+  _checkEntity(entity) {
 
-    for (const query of this.queryCache) {
-      query[1].clearEntity(entity);
-    }
-
+    this.checkIndexEntities.add(entity);
   }
 
-  _updateCache(entity) {
+  updateIndexes(entity) {
 
-    for (const query of this.queryCache) {
-      query[1].updateEntity(entity);
+    if (entity !== undefined) {
+      return this._updateIndexesEntity(entity);
     }
+    for (const entity of this.checkIndexEntities) {
+      this._updateIndexesEntity(entity);
+    }
+  }
+
+  _updateIndexesEntity(entity) {
+
     for (const query of this.queryIndexes) {
-      query.update(entity);
+      query[1].update(entity);
     }
+    this.checkIndexEntities.delete(entity);
   }
 
   _sendChange(component, op, key, old, value) {

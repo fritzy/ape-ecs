@@ -14,6 +14,7 @@ class BaseComponent {
     Object.defineProperty(this, 'type', { enumerable: false, value: this.constructor.name });
     Object.defineProperty(this, '_values', { enumerable: false, value: {} });
     Object.defineProperty(this, '_refs', { enumerable: false, value: {} });
+    Object.defineProperty(this, '_reverse', { enumerable: false, value: [] });
     Object.defineProperty(this, '_ready', { writable: true, enumerable: false, value: false });
     Object.defineProperty(this, 'id', { enumerable: true, value: initialValues.id || UUID() });
     Object.defineProperty(this, 'updated', { enumerable: false, writable: true, value: this.ecs.ticks });
@@ -89,10 +90,10 @@ class BaseComponent {
                 }
                 const old = Reflect.get(this._values, property);
                 if (old && old !== value) {
-                  this.ecs.deleteRef(old, this.entity.id, this.id, property, undefined, this.type);
+                  this._deleteRef(old, this.entity.id, this.id, property, undefined, this.type);
                 }
                 if (value && value !== old) {
-                  this.ecs.addRef(value, this.entity.id, this.id, property, undefined, this.type);
+                  this._addRef(value, this.entity.id, this.id, property, undefined, this.type);
                 }
                 const result = Reflect.set(this._values, property, value);
                 this.ecs._sendChange(this, 'setEntity', property, old, value);
@@ -225,6 +226,9 @@ class BaseComponent {
 
   destroy(remove=true) {
 
+    for (const ref of this._reverse) {
+      this.ecs.deleteRef(...ref);
+    }
     for (const destroy of this._destroy) {
       destroy.apply(this);
     }
@@ -256,6 +260,32 @@ class BaseComponent {
       }
     }
     return Object.assign({ id: this.id, type: this.type }, values, this._refs);
+  }
+
+  _addRef(target, entity, component, prop, sub, type) {
+
+    this._reverse.push([...arguments]);
+    this.ecs.addRef(target, entity, component, prop, sub, type)
+  }
+
+  _deleteRef(target, entity, component, prop, sub, type) {
+
+    let idx = 0;
+    for (const ref of this._reverse) {
+      if (
+        ref[0] === target
+        && ref[1] === entity
+        && ref[2] === component
+        && ref[3] === prop
+        && ref[4] === sub
+        && ref[5] === type
+      ) {
+        const d = this._reverse.splice(idx, 1);
+        break;
+      }
+      idx++;
+    }
+    this.ecs.deleteRef(target, entity, component, prop, sub, type)
   }
 
 }

@@ -25,7 +25,6 @@ lab.experiment('express components', () => {
       Health: [ { hp: 10 } ]
     });
 
-    //const results = ecs.queryEntities({ has: ['Health'] });
     const results = ecs.createQuery({ all: ['Health'] }).execute();
 
     expect(results.size).to.equal(1);
@@ -435,18 +434,20 @@ lab.experiment('system queries', () => {
     class TileSystem extends ECS.System {
 
       constructor(ecs) {
+
         super(ecs);
-        this.lastResults =[];
+        this.lastResults = [];
+        this.query = this.ecs.createQuery({
+          all: 'Tile',
+          not: ['Hidden'],
+          index: this });
       }
 
-      update(tick, entities) {
-        this.lastResults = entities;
+      update(tick) {
+
+        this.lastResults = this.query.execute();
       }
     }
-    TileSystem.query = {
-      has: ['Tile'],
-      hasnt: ['Hidden']
-    };
 
     const tileSystem = new TileSystem(ecs);
     ecs.addSystem('map', tileSystem);
@@ -472,12 +473,15 @@ lab.experiment('system queries', () => {
       Hidden: {}
     });
 
+    ecs.tick()
+
     ecs.runSystemGroup('map');
 
     expect(tileSystem.lastResults.size).to.equal(1);
     expect(tileSystem.lastResults.has(tile1)).to.be.true();
 
     tile2.removeComponent(tile2.Hidden);
+    ecs.tick();
 
     ecs.runSystemGroup('map');
 
@@ -486,6 +490,7 @@ lab.experiment('system queries', () => {
     expect(tileSystem.lastResults.has(tile1)).to.be.true();
 
     tile1.addComponent('Hidden', {});
+    ecs.updateIndexes(tile1);
 
     ecs.runSystemGroup('map');
 
@@ -570,11 +575,10 @@ lab.experiment('system queries', () => {
       tags: ['Billboard']
     });
 
-    const result = ecs.queryEntities({
-      has: ['Tile', 'Billboard'],
-      hasnt: ['Sprite', 'Hidden'],
-      persist: 'bill'
-    });
+    const result = ecs.createQuery({
+      all: ['Tile', 'Billboard'],
+      not: ['Sprite', 'Hidden'],
+    }).index('bill').execute();
 
     const resultSet = new Set([...result]);
 
@@ -585,16 +589,13 @@ lab.experiment('system queries', () => {
     expect(resultSet.has(tile4)).to.be.false();
     expect(resultSet.has(tile5)).to.be.false();
 
-    const result3 = ecs.queryEntities({
-      has: ['Hidden']
-    });
-    const resultSet3 = new Set([...result3]);
+    const result3 = ecs.getEntities('Hidden');
 
-    expect(resultSet3.has(tile1)).to.be.true();
-    expect(resultSet3.has(tile2)).to.be.false();
-    expect(resultSet3.has(tile3)).to.be.false();
-    expect(resultSet3.has(tile4)).to.be.false();
-    expect(resultSet3.has(tile5)).to.be.false();
+    expect(result3.has(tile1)).to.be.true();
+    expect(result3.has(tile2)).to.be.false();
+    expect(result3.has(tile3)).to.be.false();
+    expect(result3.has(tile4)).to.be.false();
+    expect(result3.has(tile5)).to.be.false();
 
     tile4.addTag('Billboard');
     tile2.removeTag('Hidden');
@@ -604,21 +605,15 @@ lab.experiment('system queries', () => {
     tile1.removeTag('Billboard');
     tile4.addTag('Hidden');
 
-    const result2 = ecs.queryEntities({
-      has: ['Tile', 'Billboard'],
-      hasnt: ['Sprite', 'Hidden'],
-      persist: 'bill'
-    });
-
-    const resultSet2 = new Set([...result2]);
+    const result2 = ecs.queryIndexes.get('bill').results;
 
     expect(tile4.has('Billboard')).to.be.true();
     expect(tile3.has('Tile')).to.be.true();
-    expect(resultSet2.has(tile1)).to.be.false();
-    expect(resultSet2.has(tile2)).to.be.true();
-    expect(resultSet2.has(tile3)).to.be.false();
-    expect(resultSet2.has(tile4)).to.be.false();
-    expect(resultSet2.has(tile5)).to.be.false();
+    expect(result2.has(tile1)).to.be.false();
+    expect(result2.has(tile2)).to.be.true();
+    expect(result2.has(tile3)).to.be.false();
+    expect(result2.has(tile4)).to.be.false();
+    expect(result2.has(tile5)).to.be.false();
 
   });
 
@@ -645,13 +640,14 @@ lab.experiment('system queries', () => {
 
     ecs.tick();
     const ticks = ecs.ticks;
-    const results1 = new Set(ecs.queryEntities({ has: ['Comp1'], persist: 'test' }));
+    const testQ = ecs.createQuery().fromAll(['Comp1']).index('test');
+    const results1 = testQ.execute();
     expect(results1.has(entity1)).to.be.true();
     expect(results1.has(entity2)).to.be.true();
 
     entity1.Comp1.greeting = 'Gutten Tag';
 
-    const results2 = new Set(ecs.queryEntities({ persist: 'test', updatedValues: ticks }));
+    const results2 = testQ.execute({updatedValues: ticks});
     expect(results2.has(entity1)).to.be.true();
     expect(results2.has(entity2)).to.be.false();
   });
@@ -680,14 +676,15 @@ lab.experiment('system queries', () => {
 
     ecs.tick();
     const ticks = ecs.ticks;
-    const results1 = new Set(ecs.queryEntities({ has: ['Comp1'], persist: 'test' }));
+    const testQ = ecs.createQuery().fromAll('Comp1').index('test');
+    const results1 = testQ.execute();
     expect(results1.has(entity1)).to.be.true();
     expect(results1.has(entity2)).to.be.true();
 
     entity1.Comp1.greeting = 'Gutten Tag';
     entity2.addComponent('Comp2', {});
 
-    const results2 = new Set(ecs.queryEntities({ persist: 'test', updatedComponents: ticks }));
+    const results2 = testQ.execute({ updatedComponents: ticks });
     expect(results2.has(entity1)).to.be.false();
     expect(results2.has(entity2)).to.be.true();
 
@@ -702,12 +699,15 @@ lab.experiment('system queries', () => {
       Comp1: {}
     });
 
-    const results1 = new Set(ecs.queryEntities({ has: ['Comp1'], persist: 'test' }));
+    const query = ecs.createQuery().fromAll('Comp1').index('test');
+    const results1 = query.execute();
     expect(results1.has(entity1)).to.be.true();
 
     entity1.destroy();
 
-    const results2 = new Set(ecs.queryEntities({ persist: 'test' }));
+    ecs.tick();
+
+    const results2 = query.execute();
     expect(results2.has(entity1)).to.be.false();
 
   });
@@ -1359,5 +1359,105 @@ lab.experiment('exporting and restoring', () => {
     expect(old.Effect.name).to.equal('fire');
     expect(old.Liquid).to.exist();
     expect(entity2.Liquid).to.exist();
+  });
+
+});
+lab.experiment('advanced queries', () => {
+  lab.test('from and reverse queries', () => {
+
+    const ecs = new ECS.ECS();
+
+    ecs.registerTags(['A', 'B', 'C']);
+
+    const entity1 = ecs.createEntity({
+      tags: ['A']
+    });
+    const entity2 = ecs.createEntity({
+      tags: ['B']
+    });
+
+    const entity3 = ecs.createEntity({
+      tags: ['B', 'C']
+    });
+
+    const entity4 = ecs.createEntity({
+      tags: ['B', 'C', 'A']
+    });
+
+    const q = ecs.createQuery({ from: [entity1, entity2, entity3] });
+    const r = q.execute();
+
+    expect(r.has(entity1)).to.be.true();
+    expect(r.has(entity2)).to.be.true();
+    expect(r.has(entity3)).to.be.true();
+
+    ecs.registerComponent('Person', {
+      properties: {
+        name: 'Bill'
+      }
+    });
+    ecs.registerComponent('Item', {
+      properties: {
+        name: 'knife'
+      }
+    });
+
+    ecs.registerComponent('InInventory', {
+      properties: {
+        person: '<Entity>'
+      }
+    });
+
+    const e4 = ecs.createEntity({
+      Person: {
+        name: 'Bob'
+      }
+    });
+
+    const e5 = ecs.createEntity({
+      Item: {
+        name: 'plate'
+      },
+      InInventory: {
+        person: e4
+      }
+    });
+
+    const q2 = ecs.createQuery({ reverse: { entity: e4, type: 'InInventory'}, index: 'reverse-1' } );
+    const r2 = q2.execute();
+
+    expect(r2.size).to.equal(1);
+    expect(r2.has(e5)).to.be.true();
+
+    const q3 = ecs.createQuery({ any: ['B', 'C'], index: 'bc' });
+    const r3 = q3.execute();
+
+    const q4 = ecs.createQuery({ all: ['B', 'C'], index: 'all-bc' });
+    const r3b = q4.execute();
+
+    expect(r3.size).to.equal(3);
+    expect(r3.has(entity2)).to.be.true();
+    expect(r3.has(entity3)).to.be.true();
+    expect(r3b.size).to.equal(2);
+    expect(r3b.has(entity3)).to.be.true();
+    expect(r3b.has(entity4)).to.be.true();
+
+    e5.addTag('A');
+    ecs.tick();
+
+    entity2.removeTag('B');
+    e5.removeComponent(e5.InInventory);
+
+    ecs.tick();
+    const r4 = q3.execute();
+    expect(r3.size).to.equal(2);
+    expect(r3.has(entity2)).to.be.false();
+    expect(r3.has(entity3)).to.be.true();
+
+    const q2r2 = q2.execute();
+    expect(q2r2.size).to.equal(0);
+
+    const r5 = q4.execute();
+    expect(r5.size).to.equal(2);
   });
 });
