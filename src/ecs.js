@@ -2,7 +2,7 @@ const UUID = require('uuid/v1');
 //const BaseComponent = require('./component');
 const Entity = require('./entity');
 const Query = require('./query');
-const BaseComponent = require('./comp2');
+const BaseComponent = require('./component');
 
 const componentMethods = new Set(['stringify', 'clone', 'getObject', Symbol.iterator]);
 class ECS {
@@ -46,21 +46,17 @@ class ECS {
   }
 
   deleteRef(target, entity, component, prop, sub, type) {
-    if (!this.refs[target]) return;
+
     const eInst = this.getEntity(target);
-    if (eInst && eInst.refs[type]) {
-      let count = eInst.refs[type].get(entity);
-      count--;
-      if (count < 1) {
-        eInst.refs[type].delete(entity);
-      } else {
-        eInst.refs[type].set(entity, count);
-      }
-      if (eInst.refs[type].size === 0) {
-        delete eInst.refs[type];
-      }
+    let count = eInst.refs[type].get(entity);
+    count--;
+    if (count < 1) {
+      eInst.refs[type].delete(entity);
     } else {
-      throw new Error()
+      eInst.refs[type].set(entity, count);
+    }
+    if (eInst.refs[type].size === 0) {
+      delete eInst.refs[type];
     }
     /* $lab:coverage:off$ */
     /* $lab:coverage:on$ */
@@ -191,6 +187,7 @@ class ECS {
 
     if (!component._ready) return;
     component.updated = component.entity.updatedValues = this.ticks;
+    if (!component.constructor.subbed) return;
     const systems = this.subscriptions.get(component.type);
     if (systems) {
       const change = { component, op, key, old, value };

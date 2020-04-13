@@ -1,266 +1,146 @@
-const ComponentRefs = require('./componentrefs');
 const UUID = require('uuid/v1');
-const CoreProperties = new Set([
-  'ecs', 'entity', 'type', '_values', '_ready', 'id',
-  'updated', 'constructor', 'stringify', 'clone', 'getObject'
-]);
+const ComponentRefs = require('./componentrefs');
 
-class BaseComponent {
+function walk(target, path) {
+  for (const field of path) {
+    target = target[path];
+  }
+  return target;
+}
 
-  constructor(ecs, entity, initialValues) {
+class ComponentHandler {
 
-    Object.defineProperty(this, 'ecs', { enumerable: false, value: ecs });
-    Object.defineProperty(this, 'entity', { enumerable: true, value: entity });
-    Object.defineProperty(this, 'type', { enumerable: false, value: this.constructor.name });
-    Object.defineProperty(this, '_values', { enumerable: false, value: {} });
-    Object.defineProperty(this, '_refs', { enumerable: false, value: {} });
-    Object.defineProperty(this, '_reverse', { enumerable: false, value: new Set() });
-    Object.defineProperty(this, '_ready', { writable: true, enumerable: false, value: false });
-    Object.defineProperty(this, 'id', { enumerable: true, value: initialValues.id || UUID() });
-    Object.defineProperty(this, 'updated', { enumerable: false, writable: true, value: this.ecs.ticks });
-    Object.defineProperty(this, '_init', { enumerable: false, writable: false, value: [] });
-    Object.defineProperty(this, '_destroy', { enumerable: false, writable: false, value: [] });
+  constructor(ecs, comp, def, path) {
 
-    //loop through inheritance by way of prototypes
-    //avoiding constructor->super() boilerplate for every component
-    //also avoiding proxies just for a simple setter on properties
-    const definitions = [];
-    for (var c = this.constructor; c !== null; c = Object.getPrototypeOf(c)) {
-      if (!c.definition) continue;
-      definitions.push(c.definition);
-    }
-    //we want to inherit deep prototype defintions first
-    definitions.reverse();
-
-    for (let idx = 0, l = definitions.length; idx < l; idx++) {
-
-      const definition = definitions[idx];
-      // set component properties from Component.properties
-      if (!definition.properties) {
-        continue;
+    this.ecs = ecs;
+    this.def = def;
+    this.path = path;
+    this.comp = comp;
+    this.functions = {};
+    this.special = new Set();
+    this.sub = new Set();
+    this.primitive = new Set(['updated', '_ready']);
+    this.setter = new Set();
+    if (!def) return;
+    for (const field of Object.keys(def)) {
+      const proppath = [...path, field].join('.');
+      const target = walk(comp, path);
+      const value = def[field];
+      if (value && value.setter === ComponentRefs.Setter) {
+        target[field] = value({}, comp, proppath)
+        this.functions[field] = value;
+        this.setter.add(field);
+      } else if (typeof value === 'function') {
+        target[field] = value(undefined, comp, proppath)
+        this.functions[field] = value;
+        this.special.add(field);
+      } else if (value !== null && typeof value === 'object') {
+        target[field] = new Proxy(value, new ComponentHandler(ecs, comp, value, [...path, field])),
+        this.sub.add(field);
+      } else {
+        target[field] = value;
+        this.primitive.add(field);
       }
-      if (definition.init) {
-        this._init.push(definition.init);
-      }
-      if (definition.destroy) {
-        this._destroy.push(definition.destroy);
-      }
-      const properties = definition.properties;
-      const keys = Object.keys(properties);
-      for (let idx = 0, l = keys.length; idx < l; idx++) {
-        const property = keys[idx];
-        if (CoreProperties.has(property)) {
-          throw new Error(`Cannot override property in Component definition: ${property}`);
-        }
-        const value = properties[property];
-        if (this._values.hasOwnProperty(property)) {
-          this[property] = value;
-          continue;
-        }
-        switch (value) {
-          case '<EntitySet>':
-            Object.defineProperty(this, property, {
-              //writable: true,
-              enumerable: true,
-              set: (value) => {
-                Reflect.set(this._values, property, ComponentRefs.EntitySet(value, this, property));
-              },
-              get: () => {
-                return Reflect.get(this._values, property);
-              }
-            });
-            //this._refs[property] = this[property];
-            this[property] = [];
-            break;
-          case '<EntityObject>':
-            Object.defineProperty(this, property, {
-              writable: false,
-              enumerable: true,
-              value: ComponentRefs.EntityObject({}, this, property)
-            });
-            this._refs[property] = this[property];
-            break;
-          case '<Entity>':
-            Object.defineProperty(this, property, {
-              enumerable: true,
-              set: (value) => {
-
-                if (value && value.id) {
-                  value = value.id;
-                }
-                const old = Reflect.get(this._values, property);
-                if (old && old !== value) {
-                  this._deleteRef(old, this.entity.id, this.id, property, undefined, this.type);
-                }
-                if (value && value !== old) {
-                  this._addRef(value, this.entity.id, this.id, property, undefined, this.type);
-                }
-                const result = Reflect.set(this._values, property, value);
-                this.ecs._sendChange(this, 'setEntity', property, old, value);
-                return result;
-              },
-              get: () => {
-
-                return this.ecs.getEntity(this._values[property]);
-              }
-            });
-            this._values[property] = null;
-            break;
-          case '<ComponentObject>':
-            Object.defineProperty(this, property, {
-              writable: false,
-              enumerable: true,
-              value: ComponentRefs.ComponentObject({}, this)
-            });
-            this._refs[property] = this[property];
-            break;
-          case '<ComponentSet>':
-            Object.defineProperty(this, property, {
-              //writable: true,
-              enumerable: true,
-              set: (value) => {
-                Reflect.set(this._values, property, ComponentRefs.ComponentSet(value, this, property));
-              },
-              get: () => {
-                return Reflect.get(this._values, property);
-              }
-            });
-            //this._refs[property] = this[property];
-            this[property] = [];
-            break;
-          case '<Component>':
-            Object.defineProperty(this, property, {
-              enumerable: true,
-              set: (value) => {
-
-                if (typeof value === 'object') {
-                  value = value.id;
-                }
-                const old = Reflect.get(this._values, property);
-                const result = Reflect.set(this._values, property, value);
-                this.ecs._sendChange(this, 'setComponent', property, old, value);
-                return result;
-              },
-              get: () => {
-
-                return this.entity.componentMap[this._values[property]];
-              }
-            });
-            this._values[property] = null;
-            break;
-          default:
-            let reflect = null;
-            if (typeof value === 'string' && value.startsWith('<Pointer ')) {
-              reflect = value.substring(9, value.length - 1).trim().split('.')
-            }
-            Object.defineProperty(this, property, {
-              enumerable: true,
-              set: (value) => {
-
-                const old = Reflect.get(this._values, property, value);
-                const result = Reflect.set(this._values, property, value);
-                if (reflect) {
-                  let node = this;
-                  let fail = false;
-                  for (let i = 0; i < reflect.length - 1; i++) {
-                    const subprop = reflect[i];
-                    /* $lab:coverage:off$ */
-                    if (typeof node === 'object' && node !== null && node.hasOwnProperty(subprop)) {
-                    /* $lab:coverage:on */
-                      node = node[subprop];
-                    } else {
-                      fail = true;
-                    }
-                  }
-                  if (!fail) {
-                    Reflect.set(node, reflect[reflect.length - 1], value);
-                    node = value;
-                  }
-                }
-                this.ecs._sendChange(this, 'set', property, old, value);
-                return result;
-              },
-              get: () => {
-                if (!reflect) {
-                  return Reflect.get(this._values, property);
-                }
-                let node = this;
-                let fail = false;
-                for (let i = 0; i < reflect.length - 1; i++) {
-                  const subprop = reflect[i];
-                  /* $lab:coverage:off$ */
-                  if (typeof node === 'object' && node !== null && node.hasOwnProperty(subprop)) {
-                  /* $lab:coverage:on */
-                    node = node[subprop];
-                  } else {
-                    fail = true;
-                  }
-                }
-                if (!fail) {
-                  return Reflect.get(node, reflect[reflect.length - 1]);
-                } else {
-                  return Reflect.get(this._values, property);
-                }
-              }
-            });
-            this._values[property] = value;
-            break;
-        }
-      }
-    }
-
-    // don't allow new properties
-    Object.seal(this);
-    Object.seal(this._values);
-    const values = { ...initialValues };
-    delete values.type;
-    delete values.entity;
-    delete values.id;
-    Object.assign(this, values);
-    this._ready = true;
-    this.ecs._sendChange(this, 'addComponent');
-    for (const init of this._init) {
-      init.apply(this);
     }
   }
 
-  destroy(remove=true) {
+  get(target, prop, receiver) {
 
-    for (const ref of this._reverse) {
-      const args = ref.split('|');
-      this.ecs.deleteRef(...args);
+    let get;
+    if (this.setter.has(prop)) {
+      get = target[prop].value;
+    } else {
+      get = Reflect.get(target, prop, receiver);
     }
-    for (const destroy of this._destroy) {
-      destroy.apply(this);
+    return get;
+  }
+
+  set(target, prop, value) {
+
+    this.comp.updated = this.ecs.ticks;
+    if (this.setter.has(prop)) {
+      target[prop].value = value;
+      return true;
+    } else if (this.sub.has(prop)) {
+      for (const field of Object.keys(value)) {
+        target[prop][field] = value[field];
+      }
+      return true;
+    } else if (this.primitive.has(prop)) {
+      const old = target[prop];
+      const path = [...this.path, prop].join('.');
+      this.comp.ecs._sendChange(this.comp, 'set', path, old, value);
+      return Reflect.set(target, prop, value);
+    } else if (this.special.has(prop)) {
+      target[prop] = this.functions[prop](value, target, [...this.path, prop].join('.'))
+      return true;
+    } else {
+      throw new Error(`Cannot assign undefined field ${[
+        this.comp.type,
+          ...this.path,
+          prop
+        ].join('.')}`);
     }
-    if (remove) {
-      this.entity.removeComponent(this, false, false);
+  }
+}
+
+const components = {};
+
+class BaseComponent {
+
+  constructor(ecs, entity, initial) {
+
+    Object.defineProperty(this, 'ecs', { enumerable: false, value: ecs });
+    Object.defineProperty(this, 'entity', { enumerable: false, value: entity });
+    Object.defineProperty(this, 'type', { enumerable: true, value: this.constructor.name });
+    Object.defineProperty(this, 'id', { enumerable: true, value: initial.id || UUID() });
+    Object.defineProperty(this, '_reverse', { enumerable: false, value: new Set() });
+    Object.defineProperty(this, 'updated', { enumerable: false, writable: true, value: this.ecs.ticks });
+    Object.defineProperty(this, '_ready', { enumerable: false, writable: true, value: false });
+
+    const assign = {...initial};
+    delete assign.id;
+    delete assign.type;
+
+    const def = this.constructor.definition;
+    Object.assign(this, def.properties);
+    const prox = new Proxy(this, new ComponentHandler(ecs, this, def.properties, []));
+    Object.seal(this);
+    Object.assign(prox, assign);
+    this._ready = true;
+    if (this.constructor.definition.init)
+      this.constructor.definition.init.apply(this);
+    if (this.constructor.subbed) {
+      this.ecs._sendChange(this, 'addComponent');
     }
-    this._ready = false;
+    return prox;
+  }
+
+  getObject() {
+
+    let fields = Object.keys(this);
+    if (this.constructor.definition.serialize) {
+      const serialize = this.constructor.definition.serialize;
+      if (serialize.skip) return;
+      if (Array.isArray(serialize.ignore)) {
+        const ignore = new Set(serialize.ignore);
+        fields = fields.filter((field) => !ignore.has(field));
+      }
+    }
+    const out = {};
+    for (const field of fields) {
+      if (this[field] && this[field]._getRaw) {
+        out[field] = this[field]._getRaw();
+      } else {
+        out[field] = this[field];
+      }
+    }
+    return out;
   }
 
   stringify() {
 
     return JSON.stringify(this.getObject());
-  }
-
-  getObject() {
-
-    const serialize  = this.constructor.definition.serialize;
-    let values = this._values;
-    if (serialize) {
-      /* $lab:coverage:off$ */
-      if (serialize.skip) return undefined;
-      /* $lab:coverage:on$ */
-      if (serialize.ignore.length > 0) {
-        values = {}
-        const props = new Set([...serialize.ignore]);
-        for (const prop of Object.keys(this._values).filter(prop => !props.has(prop))) {
-          values[prop] = this._values[prop];
-        }
-      }
-    }
-    return Object.assign({ id: this.id, type: this.type }, values, this._refs);
   }
 
   _addRef(target, entity, component, prop, sub, type) {
@@ -277,16 +157,20 @@ class BaseComponent {
     this.ecs.deleteRef(target, entity, component, prop, sub, type)
   }
 
-}
+  destroy(remove=true) {
 
-BaseComponent.definition = {
-  properties: {
-  },
-  many: false,
-  serialize: {
-    skip: false,
-    ignore: [],
+    for (const ref of this._reverse) {
+      const args = ref.split('|');
+      this.ecs.deleteRef(...args);
+    }
+    if (this.constructor.definition.destroy) {
+      this.constructor.definition.destroy.apply(this);
+    }
+    if (remove) {
+      this.entity.removeComponent(this, false, false);
+    }
+    this._ready = false;
   }
-};
+}
 
 module.exports = BaseComponent;

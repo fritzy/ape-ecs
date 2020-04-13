@@ -1,4 +1,4 @@
-const BaseComponent = require('./comp2');
+const BaseComponent = require('./component');
 const UUID = require('uuid/v1');
 
 class Entity {

@@ -25,8 +25,7 @@ module.exports = {
           const old = target[prop];
           target[prop] = value;
           this.comp.updated = this.comp.ecs.ticks;
-          if (comp.constructor.subbed)
-            comp.ecs._sendChange(comp, 'setPointer', prop, old, value);
+          comp.ecs._sendChange(comp, 'setPointer', prop, old, value);
           return true;
         }
 
@@ -72,8 +71,7 @@ module.exports = {
         }
         this._value = value;
         this.comp.updated = this.comp.ecs.ticks;
-        if (comp.constructor.subbed)
-          comp.ecs._sendChange(comp, 'setEntity', path, old, value);
+        comp.ecs._sendChange(comp, 'setEntity', path, old, value);
         return true;
       }
 
@@ -104,8 +102,7 @@ module.exports = {
         }
         const old = this._value;
         this._value = value;
-        if (comp.constructor.subbed)
-          comp.ecs._sendChange(this, 'setComponent', path, old, value);
+        comp.ecs._sendChange(this, 'setComponent', path, old, value);
         return true;
       }
 
