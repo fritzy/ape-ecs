@@ -1,7 +1,8 @@
 const UUID = require('uuid/v1');
-const BaseComponent = require('./component');
+//const BaseComponent = require('./component');
 const Entity = require('./entity');
 const Query = require('./query');
+const BaseComponent = require('./comp2');
 
 const componentMethods = new Set(['stringify', 'clone', 'getObject', Symbol.iterator]);
 class ECS {
@@ -79,8 +80,8 @@ class ECS {
     this.entityComponents.set(tags, new Set());
   }
 
-  registerComponent(name, definition = {}) {
 
+  registerComponent2(name, definition = {}) {
     const klass = class Component extends BaseComponent {}
     klass.definition = definition;
     Object.defineProperty(klass, 'name', {value: name});
@@ -90,6 +91,7 @@ class ECS {
 
   registerComponentClass(klass) {
 
+    klass.subbed = false;
     this.types[klass.name] = klass;
     this.entityComponents.set(klass.name, new Set());
     this.components.set(klass.name, new Set());
@@ -131,6 +133,7 @@ class ECS {
   subscribe(system, type) {
 
     if (!this.subscriptions.has(type)) {
+      this.types[type].subbed = true;
       this.subscriptions.set(type, new Set());
     }
     this.subscriptions.get(type).add(system);

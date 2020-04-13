@@ -1,11 +1,133 @@
 module.exports = {
 
+  Setter: Symbol('Setter'),
+  Pointer: (path) => {
+    if (!Array.isArray(path)) {
+      path = path.split('.');
+    }
+    const PointerFunc = (obj, comp, prop) => {
+      class Pointer {
+
+        constructor(comp, prop) {
+
+          this.comp = comp;
+          this.prop = prop;
+          this.target = comp;
+          this.field = path[path.length - 1];
+        }
+
+        set value(value) {
+
+          let target = this.target;
+          for (const field of path.slice(0, path.length - 1)) {
+            target = target[field];
+          }
+          const old = target[prop];
+          target[prop] = value;
+          this.comp.updated = this.comp.ecs.ticks;
+          if (comp.constructor.subbed)
+            comp.ecs._sendChange(comp, 'setPointer', prop, old, value);
+          return true;
+        }
+
+        get value() {
+
+          let target = comp;
+          for (const field of path.slice(0, path.length - 1)) {
+            target = target[field];
+          }
+          const result = target[prop];
+          return result;
+        }
+
+        _getRaw() {
+          return this.value;
+        }
+      }
+      return new Pointer(comp, prop);
+    }
+    PointerFunc.setter = module.exports.Setter;
+    return PointerFunc;
+  },
+
+  EntityRef: (obj, comp, path) => {
+    class EntityRef {
+
+      constructor(comp, path) {
+
+        this.comp = comp;
+        this.path = path;
+        this._value = null;
+      }
+
+      set value(value) {
+
+        const old = Reflect.get(this, '_value');
+        value = (value && typeof value !== 'string') ? value.id : value;
+        if (old && old !== value) {
+          comp._deleteRef(old, comp.entity.id, comp.id, path, undefined, comp.type);
+        }
+        if (value && value !== old) {
+          comp._addRef(value, comp.entity.id, comp.id, path, undefined, comp.type);
+        }
+        this._value = value;
+        this.comp.updated = this.comp.ecs.ticks;
+        if (comp.constructor.subbed)
+          comp.ecs._sendChange(comp, 'setEntity', path, old, value);
+        return true;
+      }
+
+      get value() {
+
+        return this.comp.ecs.getEntity(this._value);
+      }
+
+      _getRaw() {
+        return this._value;
+      }
+    }
+    return new EntityRef(comp, path);
+  },
+  ComponentRef: (obj, comp, path) => {
+    class ComponentRef {
+
+      constructor(comp, path) {
+
+        this.comp = comp;
+        this.path = path;
+        this._value = null;
+      }
+      set value(value) {
+
+        if (typeof value === 'object' && value !== null) {
+          value = value.id;
+        }
+        const old = this._value;
+        this._value = value;
+        if (comp.constructor.subbed)
+          comp.ecs._sendChange(this, 'setComponent', path, old, value);
+        return true;
+      }
+
+      get value() {
+
+        const result = comp.entity.componentMap[this._value];
+        return result;
+      }
+
+      _getRaw() {
+        return this._value;
+      }
+    }
+    return new ComponentRef(comp, path);
+  },
+
   EntityObject: (object, component, reference) => {
 
     const entity = component.entity;
     const ecs = component.ecs;
 
-    return new Proxy(object, {
+    return new Proxy({}, {
       get(obj, prop, prox) {
 
         const value = Reflect.get(obj, prop, prox);
@@ -128,7 +250,7 @@ module.exports = {
     const ecs = component.ecs;
     const entity = component.entity;
 
-    class ComonentSet extends Set {
+    class ComponentSet extends Set {
 
       /* $lab:coverage:off$ */
       // lab doesn't detect this being used internally
@@ -199,12 +321,12 @@ module.exports = {
       /* $lab:coverage:on$ */
     }
 
-    return new ComonentSet(object);
+    return new ComponentSet(object);
   },
 
   ComponentObject: (object, component) => {
 
-    return new Proxy(object, {
+    return new Proxy({}, {
       get: (obj, prop, prox) => {
 
         const value = Reflect.get(obj, prop, prox);
@@ -235,5 +357,8 @@ module.exports = {
       }
     });
   }
-
 }
+
+module.exports.EntityRef.setter = module.exports.Setter;
+module.exports.ComponentRef.setter = module.exports.Setter;
+//module.exports.Pointer.setter = module.exports.Setter;
