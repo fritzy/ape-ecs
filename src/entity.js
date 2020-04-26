@@ -234,12 +234,25 @@ class Entity {
         const component = entity.componentMap[componentId];
         if (!component) continue;
         /* $lab:coverage:on$ */
+        const path = prop.split('.');
         if (!sub) {
-          component[prop] = null;
-        } else if (sub === '__set__') {
-          component[prop].delete(this);
+          const last = path[path.length - 1];
+          let t2 = component;
+          for (let i = 0; i < path.length - 1; i++) {
+            t2 = t2[path[i]];
+          }
+          t2[last] = null;
+          continue;
+        }
+
+        let target = component;
+        for (const prop of path) {
+          target = target[prop];
+        }
+        if (sub === '__set__') {
+          target.delete(this);
         } else {
-          component[prop][sub] = null;
+          target[sub] = null;
         }
       }
     }

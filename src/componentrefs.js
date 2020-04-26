@@ -49,6 +49,16 @@ module.exports = {
     return PointerFunc;
   },
 
+  EntityRef2: (obj, comp, path) => {
+
+    const handler = {
+    };
+
+    Object.defineProperty(comp, path, handler);
+
+    return; //returning undefined indicates that the property is already taken care of
+  },
+
   EntityRef: (obj, comp, path) => {
     class EntityRef {
 

@@ -3,10 +3,13 @@ const ComponentRefs = require('./componentrefs');
 
 function walk(target, path) {
   for (const field of path) {
-    target = target[path];
+    target = target[field];
   }
   return target;
 }
+
+
+const NO_EVENTS = new Set(['updated', '_ready']);
 
 class ComponentHandler {
 
@@ -22,10 +25,17 @@ class ComponentHandler {
     this.primitive = new Set(['updated', '_ready']);
     this.setter = new Set();
     if (!def) return;
+
+    const target = walk(comp, path);
+    if (target === undefined) throw new Error('no target at ' + path);
     for (const field of Object.keys(def)) {
       const proppath = [...path, field].join('.');
-      const target = walk(comp, path);
-      const value = def[field];
+      let value;
+      if (typeof def[field] === 'object' && def[field] !== null) {
+        value = Object.assign({}, def[field]);
+      } else {
+        value = def[field];
+      }
       if (value && value.setter === ComponentRefs.Setter) {
         target[field] = value({}, comp, proppath)
         this.functions[field] = value;
@@ -35,7 +45,8 @@ class ComponentHandler {
         this.functions[field] = value;
         this.special.add(field);
       } else if (value !== null && typeof value === 'object') {
-        target[field] = new Proxy(value, new ComponentHandler(ecs, comp, value, [...path, field])),
+        target[field] = {};
+        target[field] = new Proxy(target[field], new ComponentHandler(ecs, comp, def[field], [...path, field])),
         this.sub.add(field);
       } else {
         target[field] = value;
@@ -57,22 +68,27 @@ class ComponentHandler {
 
   set(target, prop, value) {
 
-    this.comp.updated = this.ecs.ticks;
     if (this.setter.has(prop)) {
+      this.comp.updated = this.comp.entity.updatedValues = this.ecs.ticks;
       target[prop].value = value;
       return true;
     } else if (this.sub.has(prop)) {
-      for (const field of Object.keys(value)) {
-        target[prop][field] = value[field];
-      }
+      this.comp.updated = this.comp.entity.updatedValues = this.ecs.ticks;
+      Object.assign(target[prop], value);
       return true;
     } else if (this.primitive.has(prop)) {
-      const old = target[prop];
-      const path = [...this.path, prop].join('.');
-      this.comp.ecs._sendChange(this.comp, 'set', path, old, value);
+      if (!NO_EVENTS.has(prop)) {
+        this.comp.updated = this.comp.entity.updatedValues = this.ecs.ticks;
+        if(this.comp.subbed) {
+          const old = target[prop];
+          const path = [...this.path, prop].join('.');
+          this.comp.ecs._sendChange(this.comp, 'set', path, old, value);
+        }
+      }
       return Reflect.set(target, prop, value);
     } else if (this.special.has(prop)) {
-      target[prop] = this.functions[prop](value, target, [...this.path, prop].join('.'))
+      this.comp.updated = this.comp.entity.updatedValues = this.ecs.ticks;
+      target[prop] = this.functions[prop](value, this.comp, [...this.path, prop].join('.'))
       return true;
     } else {
       throw new Error(`Cannot assign undefined field ${[
@@ -103,7 +119,7 @@ class BaseComponent {
     delete assign.type;
 
     const def = this.constructor.definition;
-    Object.assign(this, def.properties);
+    //Object.assign(this, def.properties);
     const prox = new Proxy(this, new ComponentHandler(ecs, this, def.properties, []));
     Object.seal(this);
     Object.assign(prox, assign);

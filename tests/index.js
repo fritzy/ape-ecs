@@ -15,7 +15,7 @@ const {
 lab.experiment('express components', () => {
 
   const ecs = new ECS.ECS();
-  ecs.registerComponent2('Health', {
+  ecs.registerComponent('Health', {
     properties: {
       max: 25,
       hp: 25,
@@ -51,7 +51,7 @@ lab.experiment('express components', () => {
 
   lab.test('entity refs', () => {
 
-    ecs.registerComponent2('Storage', {
+    ecs.registerComponent('Storage', {
       properties: {
         name: 'inventory',
         size: 20,
@@ -61,7 +61,7 @@ lab.experiment('express components', () => {
       mapBy: 'name'
     });
 
-    ecs.registerComponent2('EquipmentSlot', {
+    ecs.registerComponent('EquipmentSlot', {
       properties: {
         name: 'finger',
         slot: EntityRef,
@@ -71,7 +71,7 @@ lab.experiment('express components', () => {
       mapBy: 'name'
     });
 
-    ecs.registerComponent2('Food', {
+    ecs.registerComponent('Food', {
       properties: {
         rot: 300,
         restore: 2
@@ -124,7 +124,7 @@ lab.experiment('express components', () => {
     let hit = false;
 
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('Test', {
+    ecs.registerComponent('Test', {
       properties: {
         x: null,
         y: 0
@@ -223,7 +223,7 @@ lab.experiment('express components', () => {
     }
     /* $lab:coverage:on */
 
-    ecs.registerComponent2('EquipmentEffect', {
+    ecs.registerComponent('EquipmentEffect', {
       properties: {
         equipment: '',
         effects: ComponentSet
@@ -231,7 +231,7 @@ lab.experiment('express components', () => {
       many: true
     });
 
-    ecs.registerComponent2('Wearable', {
+    ecs.registerComponent('Wearable', {
       properties: {
         name: 'ring',
         effects: {
@@ -240,7 +240,7 @@ lab.experiment('express components', () => {
       },
     });
 
-    ecs.registerComponent2('Burning', {
+    ecs.registerComponent('Burning', {
       properties: {
       },
     });
@@ -297,7 +297,6 @@ lab.experiment('express components', () => {
     ecs.runSystemGroup('equipment');
 
     ecs.runSystemGroup('asdf'); //code path for non-existant system
-
     expect(changes2.length).to.be.greaterThan(0);
     expect(changes2[0]).to.be.null();
     expect(changes.length).to.be.greaterThan(0);
@@ -310,7 +309,7 @@ lab.experiment('express components', () => {
   lab.test('component pointers', () => {
 
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('Position', {
+    ecs.registerComponent('Position', {
       properties: {
         x: Pointer('container.position.x'),
         y: Pointer('container.position.y'),
@@ -352,13 +351,127 @@ lab.experiment('express components', () => {
 
 });
 
+lab.experiment('deep components', () => {
+
+  const ecs = new ECS.ECS();
+  ecs.registerComponent('Health', {
+    properties: {
+      hp: {
+        max: 25,
+        current: 25,
+      },
+      armor: 0
+    }
+  });
+
+  lab.before(({ context }) => {
+
+  });
+
+  lab.test('create entity', () => {
+
+    ecs.createEntity({
+      Health: [ { hp: { current: 10 }} ]
+    });
+
+    const results = ecs.createQuery({ all: ['Health'] }).execute();
+
+    expect(results.size).to.equal(1);
+  });
+
+  lab.test('create entity without array', () => {
+
+    ecs.createEntity({
+      Health: { hp: { current: 10 } }
+    });
+
+    const results = ecs.createQuery().fromAll(['Health']).execute();
+
+    expect(results.size).to.equal(2);
+  });
+
+  lab.test('entity refs', () => {
+
+    ecs.registerComponent('Storage', {
+      properties: {
+        name: 'inventory',
+        size: 20,
+        things: {
+          items: EntitySet
+        }
+      },
+      many: true,
+      mapBy: 'name'
+    });
+
+    ecs.registerComponent('EquipmentSlot', {
+      properties: {
+        name: 'finger',
+        slot: EntityRef,
+        effects: ComponentSet
+      },
+      many: true,
+      mapBy: 'name'
+    });
+
+    ecs.registerComponent('Food', {
+      properties: {
+        rot: 300,
+        restore: 2
+      },
+    });
+
+    const food = ecs.createEntity({
+      id: 'sandwich10', // to exersize custom id
+      Food: {}
+    });
+
+    const entity = ecs.createEntity({
+      Storage: {
+        pockets: { size: 4 },
+        backpack: { size: 25 }
+      },
+      EquipmentSlot: {
+        pants: {},
+        shirt: {}
+      },
+      Health: {
+        hp: {
+          current: 10,
+          max: 10
+        },
+      }
+    });
+
+    entity.Storage.pockets.things.items.add(food);
+
+    const entityObj = entity.getObject();
+    delete entityObj.id;
+    const eJson = JSON.stringify(entityObj);
+    const entityDef = JSON.parse(eJson);
+
+    const entity2 = ecs.createEntity(entityDef);
+
+    expect(entity.Storage.pockets.things.items.has(food)).to.be.true();
+    expect(entity2.Storage.pockets.things.items.has(food)).to.be.true();
+
+    ecs.removeEntity(food);
+
+    expect(ecs.getEntity(food.id)).to.be.undefined();
+    ecs.removeEntity(entity.id);
+
+    expect(ecs.getEntity(entity.id)).to.be.undefined();
+
+  });
+});
+
 lab.experiment('system queries', () => {
 
   const ecs = new ECS.ECS();
 
   lab.test('add and remove forbidden component', () => {
 
-    ecs.registerComponent2('Tile', {
+    ecs.registerComponent('Tile', {
       properties: {
         x: 0,
         y: 0,
@@ -366,7 +479,7 @@ lab.experiment('system queries', () => {
       }
     });
 
-    ecs.registerComponent2('Hidden', {
+    ecs.registerComponent('Hidden', {
       properties: {}
     });
 
@@ -440,8 +553,8 @@ lab.experiment('system queries', () => {
   });
 
   lab.test('multiple has and hasnt', () => {
-    ecs.registerComponent2('Billboard', {});
-    ecs.registerComponent2('Sprite', {});
+    ecs.registerComponent('Billboard', {});
+    ecs.registerComponent('Sprite', {});
 
     const tile1 = ecs.createEntity({
       Tile: {},
@@ -486,8 +599,8 @@ lab.experiment('system queries', () => {
 
   lab.test('tags', () => {
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('Tile', {});
-    ecs.registerComponent2('Sprite', {});
+    ecs.registerComponent('Tile', {});
+    ecs.registerComponent('Sprite', {});
     ecs.registerTags(['Billboard']);
     ecs.registerTags('Hidden');
 
@@ -559,7 +672,7 @@ lab.experiment('system queries', () => {
   lab.test('filter by updatedValues', () => {
 
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('Comp1', {
+    ecs.registerComponent('Comp1', {
       properties: {
         greeting: 'hi'
       }
@@ -594,12 +707,12 @@ lab.experiment('system queries', () => {
   lab.test('filter by updatedComponents', () => {
 
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('Comp1', {
+    ecs.registerComponent('Comp1', {
       properties: {
         greeting: 'hi'
       }
     });
-    ecs.registerComponent2('Comp2', {});
+    ecs.registerComponent('Comp2', {});
 
     ecs.tick();
 
@@ -632,7 +745,7 @@ lab.experiment('system queries', () => {
   lab.test('destroyed entity should be cleared', () => {
 
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('Comp1', {});
+    ecs.registerComponent('Comp1', {});
 
     const entity1 = ecs.createEntity({
       Comp1: {}
@@ -659,12 +772,12 @@ lab.experiment('entity & component refs', () => {
 
   lab.test('Enitity Object', {}, () => {
 
-    ecs.registerComponent2('BeltSlots', {
+    ecs.registerComponent('BeltSlots', {
       properties: {
         slots: EntityObject,
       }
     });
-    ecs.registerComponent2('Potion', {});
+    ecs.registerComponent('Potion', {});
 
     const belt = ecs.createEntity({
       BeltSlots: {}
@@ -708,7 +821,7 @@ lab.experiment('entity & component refs', () => {
 
   lab.test('Entity Array', {}, () => {
 
-    ecs.registerComponent2('BeltSlots2', {
+    ecs.registerComponent('BeltSlots2', {
       properties: {
         slots: EntitySet,
       }
@@ -737,10 +850,10 @@ lab.experiment('entity & component refs', () => {
 
   lab.test('Component Object', {}, () => {
 
-    ecs.registerComponent2('Crying', {});
-    ecs.registerComponent2('Angry', {});
+    ecs.registerComponent('Crying', {});
+    ecs.registerComponent('Angry', {});
 
-    ecs.registerComponent2('ExpireObject', {
+    ecs.registerComponent('ExpireObject', {
       properties: {
         comps: ComponentObject
       }
@@ -765,7 +878,7 @@ lab.experiment('entity & component refs', () => {
 
   lab.test('Assign entity ref by id', () => {
 
-    ecs.registerComponent2('Ref', {
+    ecs.registerComponent('Ref', {
       properties: {
         other: EntityRef
       }
@@ -799,7 +912,7 @@ lab.experiment('entity & component refs', () => {
 
   lab.test('Plain Component ref', () => {
 
-    ecs.registerComponent2('Mate', {
+    ecs.registerComponent('Mate', {
       properties: {
         other: ComponentRef
       }
@@ -817,7 +930,7 @@ lab.experiment('entity & component refs', () => {
 
   lab.test('Plain Component ref by id', () => {
 
-    ecs.registerComponent2('Mate', {
+    ecs.registerComponent('Mate', {
       properties: {
         other: ComponentRef
       }
@@ -836,13 +949,13 @@ lab.experiment('entity & component refs', () => {
   lab.test('ComponentSet refs', () => {
 
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('IDontKnow', {
+    ecs.registerComponent('IDontKnow', {
       properties: {
         stuff: ComponentSet
       }
     });
-    ecs.registerComponent2('Shit', {});
-    ecs.registerComponent2('Crap', {});
+    ecs.registerComponent('Shit', {});
+    ecs.registerComponent('Crap', {});
 
     const entity = ecs.createEntity({
       IDontKnow: {},
@@ -872,8 +985,8 @@ lab.experiment('entity restore', () => {
   lab.test('restore maped object', {}, () => {
 
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('Potion');
-    ecs.registerComponent2('EquipmentSlot', {
+    ecs.registerComponent('Potion');
+    ecs.registerComponent('EquipmentSlot', {
       properties: {
         name: 'finger',
         slot: EntityRef
@@ -905,8 +1018,8 @@ lab.experiment('entity restore', () => {
   lab.test('restore unmapped object', {}, () => {
 
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('Potion');
-    ecs.registerComponent2('EquipmentSlot', {
+    ecs.registerComponent('Potion');
+    ecs.registerComponent('EquipmentSlot', {
       properties: {
         name: 'finger',
         slot: EntityRef
@@ -949,7 +1062,7 @@ lab.experiment('entity restore', () => {
   lab.test('2nd component on non-many component throws', { plan: 1 }, () => {
 
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('Potion');
+    ecs.registerComponent('Potion');
 
     const entity = ecs.createEntity({
       Potion: {}
@@ -965,7 +1078,7 @@ lab.experiment('entity restore', () => {
   lab.test('Unregistered component throws', { plan: 1 }, () => {
 
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('Potion');
+    ecs.registerComponent('Potion');
 
     let entity;
     try {
@@ -979,8 +1092,8 @@ lab.experiment('entity restore', () => {
 
   lab.test('removeComponentByType single', () => {
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('NPC');
-    ecs.registerComponent2('Cat');
+    ecs.registerComponent('NPC');
+    ecs.registerComponent('Cat');
 
     const entity = ecs.createEntity({
       NPC: {},
@@ -1000,11 +1113,11 @@ lab.experiment('entity restore', () => {
   lab.test('removeComponentByName many', () => {
 
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('NPC');
-    ecs.registerComponent2('Other', {
+    ecs.registerComponent('NPC');
+    ecs.registerComponent('Other', {
       many: true
     });
-    ecs.registerComponent2('Armor', {
+    ecs.registerComponent('Armor', {
       properties: { 'amount': 5 },
       many: true
     });
@@ -1032,7 +1145,7 @@ lab.experiment('entity restore', () => {
   lab.test('remove mapped by id', () => {
 
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('NPC');
+    ecs.registerComponent('NPC');
 
     const entity = ecs.createEntity({
       NPC: {}
@@ -1045,14 +1158,14 @@ lab.experiment('entity restore', () => {
 
   lab.test('remove mapped component', () => {
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('AI', {
+    ecs.registerComponent('AI', {
       properties: {
         order: 'sun'
       },
       many: true,
       mapBy: 'order'
     });
-    ecs.registerComponent2('EquipmentSlot', {
+    ecs.registerComponent('EquipmentSlot', {
       properties: {
         name: 'mainhand',
         slot: EntityRef
@@ -1111,12 +1224,12 @@ lab.experiment('entity restore', () => {
   lab.test('EntitySet', () => {
 
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('SetInventory', {
+    ecs.registerComponent('SetInventory', {
       properties: {
         slots: EntitySet
       }
     })
-    ecs.registerComponent2('Bottle', {
+    ecs.registerComponent('Bottle', {
      properties: {
       }
     })
@@ -1185,7 +1298,7 @@ lab.experiment('exporting and restoring', () => {
   lab.test('get object and stringify component', () => {
 
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('AI', {
+    ecs.registerComponent('AI', {
       properties: {
         order: 'sun'
       },
@@ -1206,7 +1319,7 @@ lab.experiment('exporting and restoring', () => {
   lab.test('getObject on entity', () => {
 
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('EquipmentSlot', {
+    ecs.registerComponent('EquipmentSlot', {
       properties: {
         name: 'ring',
         slot: EntityRef
@@ -1214,9 +1327,9 @@ lab.experiment('exporting and restoring', () => {
       many: true,
       mapBy: 'name'
     });
-    ecs.registerComponent2('Bottle', {});
-    ecs.registerComponent2('AI', {});
-    ecs.registerComponent2('Effect', {
+    ecs.registerComponent('Bottle', {});
+    ecs.registerComponent('AI', {});
+    ecs.registerComponent('Effect', {
       properties: {
         name: 'fire'
       },
@@ -1253,7 +1366,7 @@ lab.experiment('exporting and restoring', () => {
   lab.test('property skipping', () => {
 
     const ecs = new ECS.ECS();
-    ecs.registerComponent2('Effect', {
+    ecs.registerComponent('Effect', {
       properties: {
         name: 'fire',
         started: ''
@@ -1263,7 +1376,7 @@ lab.experiment('exporting and restoring', () => {
         ignore: ['started']
       }
     });
-    ecs.registerComponent2('AI', {
+    ecs.registerComponent('AI', {
       properties: {
         name: 'thingy',
       },
@@ -1273,7 +1386,7 @@ lab.experiment('exporting and restoring', () => {
       }
     });
 
-    ecs.registerComponent2('Liquid', {
+    ecs.registerComponent('Liquid', {
       properties: {},
       serialize: {
         ignore: []
@@ -1330,18 +1443,18 @@ lab.experiment('advanced queries', () => {
     expect(r.has(entity2)).to.be.true();
     expect(r.has(entity3)).to.be.true();
 
-    ecs.registerComponent2('Person', {
+    ecs.registerComponent('Person', {
       properties: {
         name: 'Bill'
       }
     });
-    ecs.registerComponent2('Item', {
+    ecs.registerComponent('Item', {
       properties: {
         name: 'knife'
       }
     });
 
-    ecs.registerComponent2('InInventory', {
+    ecs.registerComponent('InInventory', {
       properties: {
         person: EntityRef
       }

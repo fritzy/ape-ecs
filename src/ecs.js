@@ -77,7 +77,7 @@ class ECS {
   }
 
 
-  registerComponent2(name, definition = {}) {
+  registerComponent(name, definition = {}) {
     const klass = class Component extends BaseComponent {}
     klass.definition = definition;
     Object.defineProperty(klass, 'name', {value: name});
