@@ -2,12 +2,15 @@ const UUID = require('uuid/v1');
 const ComponentRefs = require('./componentrefs');
 
 function walk(target, path) {
-  for (const field of path) {
-    target = target[field];
+  for (let idx = 0, l = path.length; idx < l; idx++) {
+    target = target[path[idx]];
   }
   return target;
 }
 
+const PRIM = 0;
+const FUNC = 1;
+const SUB = 2;
 
 const NO_EVENTS = new Set(['updated', '_ready']);
 
@@ -19,83 +22,65 @@ class ComponentHandler {
     this.def = def;
     this.path = path;
     this.comp = comp;
+    this.fields = {
+      updated: PRIM,
+      _ready: PRIM
+    };
     this.functions = {};
-    this.special = new Set();
-    this.sub = new Set();
-    this.primitive = new Set(['updated', '_ready']);
-    this.setter = new Set();
     if (!def) return;
 
     const target = walk(comp, path);
-    if (target === undefined) throw new Error('no target at ' + path);
-    for (const field of Object.keys(def)) {
+    const fields = Object.keys(def);
+    for (let idx = 0, l = fields.length; idx < l; idx++) {
+      const field = fields[idx];
       const proppath = [...path, field].join('.');
-      let value;
-      if (typeof def[field] === 'object' && def[field] !== null) {
-        value = Object.assign({}, def[field]);
-      } else {
-        value = def[field];
-      }
-      if (value && value.setter === ComponentRefs.Setter) {
-        target[field] = value({}, comp, proppath)
+      const value = def[field];
+      if (typeof value === 'function') {
+        const result = value(undefined, comp, proppath)
+        if (result === undefined) {
+          this.fields[field] = PRIM;
+          continue;
+        }
+        target[field] = result;
         this.functions[field] = value;
-        this.setter.add(field);
-      } else if (typeof value === 'function') {
-        target[field] = value(undefined, comp, proppath)
-        this.functions[field] = value;
-        this.special.add(field);
+        this.fields[field] = FUNC;
       } else if (value !== null && typeof value === 'object') {
         target[field] = {};
-        target[field] = new Proxy(target[field], new ComponentHandler(ecs, comp, def[field], [...path, field])),
-        this.sub.add(field);
+        target[field] = new Proxy(target[field], new ComponentHandler(ecs, comp, def[field], [...path, field]));
+        this.fields[field] = SUB;
       } else {
         target[field] = value;
-        this.primitive.add(field);
+        this.fields[field] = PRIM;
       }
     }
-  }
-
-  get(target, prop, receiver) {
-
-    let get;
-    if (this.setter.has(prop)) {
-      get = target[prop].value;
-    } else {
-      get = Reflect.get(target, prop, receiver);
-    }
-    return get;
   }
 
   set(target, prop, value) {
 
-    if (this.setter.has(prop)) {
-      this.comp.updated = this.comp.entity.updatedValues = this.ecs.ticks;
-      target[prop].value = value;
-      return true;
-    } else if (this.sub.has(prop)) {
-      this.comp.updated = this.comp.entity.updatedValues = this.ecs.ticks;
-      Object.assign(target[prop], value);
-      return true;
-    } else if (this.primitive.has(prop)) {
-      if (!NO_EVENTS.has(prop)) {
-        this.comp.updated = this.comp.entity.updatedValues = this.ecs.ticks;
-        if(this.comp.subbed) {
+    this.comp.updated = this.comp.entity.updatedValues = this.ecs.ticks;
+    switch (this.fields[prop]) {
+      case PRIM:
+        if(this.comp.subbed && !NO_EVENTS.has(prop)) {
           const old = target[prop];
           const path = [...this.path, prop].join('.');
           this.comp.ecs._sendChange(this.comp, 'set', path, old, value);
         }
-      }
-      return Reflect.set(target, prop, value);
-    } else if (this.special.has(prop)) {
-      this.comp.updated = this.comp.entity.updatedValues = this.ecs.ticks;
-      target[prop] = this.functions[prop](value, this.comp, [...this.path, prop].join('.'))
-      return true;
-    } else {
-      throw new Error(`Cannot assign undefined field ${[
-        this.comp.type,
-          ...this.path,
-          prop
-        ].join('.')}`);
+        return Reflect.set(target, prop, value);
+        break;
+      case SUB:
+        Object.assign(target[prop], value);
+        return true;
+        break;
+      case FUNC:
+        target[prop] = this.functions[prop](value, this.comp, [...this.path, prop].join('.'))
+        return true;
+        break;
+      default:
+        throw new Error(`Cannot assign undefined field ${[
+          this.comp.type,
+            ...this.path,
+            prop
+          ].join('.')}`);
     }
   }
 }
@@ -106,26 +91,26 @@ class BaseComponent {
 
   constructor(ecs, entity, initial) {
 
-    Object.defineProperty(this, 'ecs', { enumerable: false, value: ecs });
-    Object.defineProperty(this, 'entity', { enumerable: false, value: entity });
-    Object.defineProperty(this, 'type', { enumerable: true, value: this.constructor.name });
-    Object.defineProperty(this, 'id', { enumerable: true, value: initial.id || UUID() });
-    Object.defineProperty(this, '_reverse', { enumerable: false, value: new Set() });
-    Object.defineProperty(this, 'updated', { enumerable: false, writable: true, value: this.ecs.ticks });
-    Object.defineProperty(this, '_ready', { enumerable: false, writable: true, value: false });
+    //Object.defineProperty(this, 'ecs', { enumerable: false, value: ecs });
+    Object.defineProperty(this, 'entity', { enumerable: false, value: entity, configurable: false});
+    this.type = this.constructor.name;
+    this.id = initial.id || UUID();
+    Object.defineProperty(this, '_values', { enumerable: false, value: {}, configurable: false});
+    Object.defineProperty(this, '_reverse', { enumerable: false, value: new Set(), configurable: false});
+    Object.defineProperty(this, 'updated', { enumerable: false, writable: true, value: this.ecs.ticks, configurable: false});
+    Object.defineProperty(this, '_ready', { enumerable: false, writable: true, value: false, configurable: false});
 
     const assign = {...initial};
     delete assign.id;
     delete assign.type;
 
     const def = this.constructor.definition;
-    //Object.assign(this, def.properties);
     const prox = new Proxy(this, new ComponentHandler(ecs, this, def.properties, []));
     Object.seal(this);
     Object.assign(prox, assign);
     this._ready = true;
-    if (this.constructor.definition.init)
-      this.constructor.definition.init.apply(this);
+    if (def.init)
+      def.init.apply(this);
     if (this.constructor.subbed) {
       this.ecs._sendChange(this, 'addComponent');
     }
@@ -150,6 +135,14 @@ class BaseComponent {
       } else {
         out[field] = this[field];
       }
+    }
+    for (const pathString of Object.keys(this._values)) {
+      const path = pathString.split('.');
+      let target = out;
+      for (let idx = 0; idx < path.length - 1; idx++) {
+        target = target[path[idx]];
+      }
+      target[path[path.length - 1]] = this._values[pathString];
     }
     return out;
   }

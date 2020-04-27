@@ -1,35 +1,13 @@
 module.exports = {
 
-  Setter: Symbol('Setter'),
   Pointer: (path) => {
-    if (!Array.isArray(path)) {
-      path = path.split('.');
-    }
+    path = path.split('.');
+    const parent = path.slice(0, path.length - 1);
+
     const PointerFunc = (obj, comp, prop) => {
-      class Pointer {
 
-        constructor(comp, prop) {
-
-          this.comp = comp;
-          this.prop = prop;
-          this.target = comp;
-          this.field = path[path.length - 1];
-        }
-
-        set value(value) {
-
-          let target = this.target;
-          for (const field of path.slice(0, path.length - 1)) {
-            target = target[field];
-          }
-          const old = target[prop];
-          target[prop] = value;
-          this.comp.updated = this.comp.ecs.ticks;
-          comp.ecs._sendChange(comp, 'setPointer', prop, old, value);
-          return true;
-        }
-
-        get value() {
+      const handler = {
+        get() {
 
           let target = comp;
           for (const field of path.slice(0, path.length - 1)) {
@@ -37,41 +15,45 @@ module.exports = {
           }
           const result = target[prop];
           return result;
-        }
+        },
+        set(value) {
 
-        _getRaw() {
-          return this.value;
-        }
+          let target = comp;
+          for (const field of parent) {
+            target = target[field];
+          }
+          const old = target[prop];
+          target[prop] = value;
+          comp.updated = comp.ecs.ticks;
+          comp.ecs._sendChange(comp, 'setPointer', prop, old, value);
+          return true;
+        },
+        enumerable: true
+      };
+
+      const nodes = prop.split('.');
+      let target = comp;
+      for (let i = 0; i < nodes.length - 1; i++) {
+        target = target[nodes[i]];
       }
-      return new Pointer(comp, prop);
-    }
-    PointerFunc.setter = module.exports.Setter;
+
+      Object.defineProperty(target, nodes[nodes.length - 1], handler);
+      return;
+    };
     return PointerFunc;
   },
 
-  EntityRef2: (obj, comp, path) => {
+  EntityRef: (obj, comp, path) => {
 
     const handler = {
-    };
+      get() {
 
-    Object.defineProperty(comp, path, handler);
+        return comp.ecs.getEntity(comp._values[path]);
+      },
 
-    return; //returning undefined indicates that the property is already taken care of
-  },
+      set(value) {
 
-  EntityRef: (obj, comp, path) => {
-    class EntityRef {
-
-      constructor(comp, path) {
-
-        this.comp = comp;
-        this.path = path;
-        this._value = null;
-      }
-
-      set value(value) {
-
-        const old = Reflect.get(this, '_value');
+        const old = comp._values[path];
         value = (value && typeof value !== 'string') ? value.id : value;
         if (old && old !== value) {
           comp._deleteRef(old, comp.entity.id, comp.id, path, undefined, comp.type);
@@ -79,24 +61,51 @@ module.exports = {
         if (value && value !== old) {
           comp._addRef(value, comp.entity.id, comp.id, path, undefined, comp.type);
         }
-        this._value = value;
-        this.comp.updated = this.comp.ecs.ticks;
+        comp._values[path] = value;
+        comp.updated = comp.ecs.ticks;
         comp.ecs._sendChange(comp, 'setEntity', path, old, value);
         return true;
-      }
+      },
+      enumerable: true
+    };
 
-      get value() {
-
-        return this.comp.ecs.getEntity(this._value);
-      }
-
-      _getRaw() {
-        return this._value;
-      }
+    const nodes = path.split('.');
+    let target = comp;
+    for (let i = 0; i < nodes.length - 1; i++) {
+      target = target[nodes[i]];
     }
-    return new EntityRef(comp, path);
+
+    Object.defineProperty(target, nodes[nodes.length - 1], handler);
+    comp._values[path] = null;
+    return;
   },
   ComponentRef: (obj, comp, path) => {
+    const handler = {
+      get() {
+
+        return comp.entity.componentMap[comp._values[path]];
+      },
+      set(value) {
+
+        if (typeof value === 'object' && value !== null) {
+          value = value.id;
+        }
+        const old = comp._values[path];
+        comp._values[path] = value;
+        comp.ecs._sendChange(this, 'setComponent', path, old, value);
+        return true;
+      },
+      enumerable: true
+    };
+    const nodes = path.split('.');
+    let target = comp;
+    for (let i = 0; i < nodes.length - 1; i++) {
+      target = target[nodes[i]];
+    }
+
+    Object.defineProperty(target, nodes[nodes.length - 1], handler);
+    comp._values[path] = null;
+    return;
     class ComponentRef {
 
       constructor(comp, path) {
@@ -133,6 +142,7 @@ module.exports = {
 
     const entity = component.entity;
     const ecs = component.ecs;
+    const entityId = entity.id;
 
     return new Proxy({}, {
       get(obj, prop, prox) {
@@ -153,10 +163,10 @@ module.exports = {
         const result = Reflect.set(obj, prop, value);
         ecs._sendChange(component, 'setEntityObject', prop, old, value);
         if (old && old !== value) {
-          ecs.deleteRef(old, entity.id, component.id, reference, prop);
+          ecs.deleteRef(old, entityId, component.id, reference, prop);
         }
         if (value && value !== old) {
-          ecs.addRef(value, entity.id, component.id, reference, prop);
+          ecs.addRef(value, entityId, component.id, reference, prop);
         }
         return result;
       },
@@ -165,7 +175,7 @@ module.exports = {
 
         const old = Reflect.get(obj, prop);
         if (old) {
-          ecs.deleteRef(old, entity.id, component.id, reference, prop);
+          ecs.deleteRef(old, entityId, component.id, reference, prop);
         }
         if (prop in obj) {
           delete obj[prop];
@@ -180,6 +190,7 @@ module.exports = {
   EntitySet: (object, component, reference) => {
     const ecs = component.ecs;
     const entity = component.entity;
+    const entityId = entity.id;
 
     class EntitySet extends Set {
 
@@ -193,7 +204,7 @@ module.exports = {
         if (value.id) {
           value = value.id;
         }
-        ecs.addRef(value, entity.id, component.id, reference, '__set__');
+        ecs.addRef(value, entityId, component.id, reference, '__set__');
         component.updated = component.ecs.ticks;
         component.ecs._sendChange(component, 'addEntitySet', reference, undefined, value);
         return super.add(value);
@@ -204,7 +215,7 @@ module.exports = {
         if (value.id) {
           value = value.id;
         }
-        ecs.deleteRef(value, entity.id,component.id, reference, '__set__');
+        ecs.deleteRef(value, entityId,component.id, reference, '__set__');
         component.updated = component.ecs.ticks;
         component.ecs._sendChange(component, 'deleteEntitySet', reference, undefined, value);
         return super.delete(value);
@@ -364,8 +375,4 @@ module.exports = {
       }
     });
   }
-}
-
-module.exports.EntityRef.setter = module.exports.Setter;
-module.exports.ComponentRef.setter = module.exports.Setter;
-//module.exports.Pointer.setter = module.exports.Setter;
+};

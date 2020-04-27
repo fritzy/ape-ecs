@@ -407,7 +407,7 @@ lab.experiment('deep components', () => {
     ecs.registerComponent('EquipmentSlot', {
       properties: {
         name: 'finger',
-        slot: EntityRef,
+        slot: { a: EntityRef },
         effects: ComponentSet
       },
       many: true,
@@ -418,6 +418,12 @@ lab.experiment('deep components', () => {
       properties: {
         rot: 300,
         restore: 2
+      },
+    });
+
+    ecs.registerComponent('Item', {
+      properties: {
+        name: 'sword',
       },
     });
 
@@ -443,7 +449,12 @@ lab.experiment('deep components', () => {
       }
     });
 
+    const sword = ecs.createEntity({
+      Item: { name: 'sword' }
+    });
+
     entity.Storage.pockets.things.items.add(food);
+    entity.EquipmentSlot.shirt.slot.a = sword;
 
     const entityObj = entity.getObject();
     delete entityObj.id;
@@ -454,6 +465,7 @@ lab.experiment('deep components', () => {
 
     expect(entity.Storage.pockets.things.items.has(food)).to.be.true();
     expect(entity2.Storage.pockets.things.items.has(food)).to.be.true();
+    expect(entity.EquipmentSlot.shirt.slot.a.id).to.equal(sword.id);
 
     ecs.removeEntity(food);
 
@@ -1346,6 +1358,8 @@ lab.experiment('exporting and restoring', () => {
     });
 
     const old = npc.getObject();
+
+    expect(old.EquipmentSlot.ring.slot).to.equal(bottle.id);
 
     npc.destroy();
     npc = undefined;

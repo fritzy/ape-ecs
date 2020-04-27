@@ -88,6 +88,7 @@ class ECS {
   registerComponentClass(klass) {
 
     klass.subbed = false;
+    klass.prototype.ecs = this;
     this.types[klass.name] = klass;
     this.entityComponents.set(klass.name, new Set());
     this.components.set(klass.name, new Set());

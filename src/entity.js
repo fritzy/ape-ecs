@@ -9,7 +9,7 @@ class Entity {
     this.id = definition.id || UUID();
     Object.defineProperty(this, 'components', { enumerable: false, value: {} });
     Object.defineProperty(this, 'componentMap', { enumerable: false, value: {} });
-    Object.defineProperty(this, 'tags', { enumerable: true, writable: false, value: new Set() });
+    this.tags = new Set();
     Object.defineProperty(this, 'refs', { enumerable: false, writable: false, value: {} });
     Object.defineProperty(this, 'destroyed', { enumerable: false, writable: true, value: false });
 
@@ -100,18 +100,11 @@ class Entity {
       addedType = true;
     }
     if (addedType) {
-      Object.defineProperty(this, component.type, {
-        configurable: true,
-        enumerable: true,
-        get: () => {
-          return Reflect.get(this.components, component.type);
-        }
-      });
+      this[component.type] = this.components[component.type];
     }
 
     ecs.entityComponents.get(component.type).add(this.id);
     ecs.components.get(component.type).add(component);
-
 
     this.updatedComponents = this.ecs.ticks;
     if (!delayCache) {
