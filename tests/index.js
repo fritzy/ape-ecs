@@ -306,6 +306,45 @@ lab.experiment('express components', () => {
 
   });
 
+  /*
+  lab.test('primitive property change subscription', () => {
+    const ecs = new ECS.ECS();
+    ecs.registerComponent('Position', {
+      properties: {
+        x: 0,
+        y: 0
+      }
+    });
+
+    let changes = [];
+    class System extends ECS.System {
+
+      update() {
+
+        changes = this.changes;
+        this.changes = [];
+      }
+    }
+    System.subscriptions = ['Position'];
+
+    ecs.addSystem('test', System);
+
+    const entity = ecs.createEntity({
+      Position: {
+        x: 1,
+        y: 2
+      }
+    });
+
+    entity.Position.y = 3;
+
+    ecs.runSystemGroup('test');
+
+    console.log(changes);
+
+  });
+  */
+
   lab.test('component pointers', () => {
 
     const ecs = new ECS.ECS();
@@ -313,7 +352,10 @@ lab.experiment('express components', () => {
       properties: {
         x: Pointer('container.position.x'),
         y: Pointer('container.position.y'),
-        container: null
+        container: null,
+        deep: {
+          x: Pointer('container.position.x'),
+        }
       }
     });
 
@@ -331,6 +373,7 @@ lab.experiment('express components', () => {
     entity1.Position.y = 12;
 
     expect(entity1.Position.x).to.be.equal(10);
+    expect(entity1.Position.deep.x).to.be.equal(10);
     expect(entity1.Position.y).to.be.equal(12);
 
     entity1.Position.container = { position: { x: 33, y: 1 } };
@@ -938,6 +981,9 @@ lab.experiment('entity & component refs', () => {
     entity.Mate.other = entity.Crying;
 
     expect(entity.Mate.other).to.equal(entity.Crying);
+
+    entity.Mate.other = null;
+    expect(entity.Mate.other).to.be.undefined();
   });
 
   lab.test('Plain Component ref by id', () => {
@@ -948,14 +994,25 @@ lab.experiment('entity & component refs', () => {
       }
     });
 
+    ecs.registerComponent('Deep', {
+      properties: {
+        layer: {
+          other: ComponentRef
+        }
+      }
+    });
+
     const entity = ecs.createEntity({
       Crying: {},
-      Mate: {}
+      Mate: {},
+      Deep: {}
     });
 
     entity.Mate.other = entity.Crying.id;
+    entity.Deep.layer.other = entity.Crying.id;
 
     expect(entity.Mate.other).to.equal(entity.Crying);
+    expect(entity.Deep.layer.other).to.equal(entity.Crying);
   });
 
   lab.test('ComponentSet refs', () => {
@@ -1102,6 +1159,18 @@ lab.experiment('entity restore', () => {
     }
   });
 
+  lab.test('Unassigned field throws', { plan: 1 }, () => {
+
+    const ecs = new ECS.ECS();
+    ecs.registerComponent('Potion');
+    try {
+      ecs.createEntity({ Potion: { x: 0 } });
+    } catch (err) {
+      expect(err).to.be.an.error();
+    }
+
+  });
+
   lab.test('removeComponentByType single', () => {
     const ecs = new ECS.ECS();
     ecs.registerComponent('NPC');
@@ -1240,14 +1309,21 @@ lab.experiment('entity restore', () => {
       properties: {
         slots: EntitySet
       }
-    })
+    });
     ecs.registerComponent('Bottle', {
      properties: {
       }
-    })
+    });
+    ecs.registerComponent('ThrowAway', {
+      properties: {
+        a: 1,
+      },
+      serialize: { skip: true }
+    });
 
     const container = ecs.createEntity({
       SetInventory: {},
+      ThrowAway: {}
     });
 
     const bottle1 = ecs.createEntity({
@@ -1276,6 +1352,7 @@ lab.experiment('entity restore', () => {
     expect(container2.SetInventory.slots.has(bottle1)).to.be.true();
     expect(container2.SetInventory.slots.has(bottle2)).to.be.true();
     expect(container2.SetInventory.slots.has(bottle3)).to.be.false();
+    expect(container2.ThrowAway).to.be.undefined();
 
     let idx = 0;
     for (const entity of container2.SetInventory.slots) {
@@ -1403,7 +1480,6 @@ lab.experiment('exporting and restoring', () => {
     ecs.registerComponent('Liquid', {
       properties: {},
       serialize: {
-        ignore: []
       }
     });
 

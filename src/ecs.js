@@ -38,9 +38,11 @@ class ECS {
       eInst.refs[type] = new Map();
     }
     let count = eInst.refs[type].get(entity);
+    /* $lab:coverage:off$ */
     if (count === undefined) {
       count = 0
     }
+    /* $lab:coverage:on$ */
     eInst.refs[type].set(entity, count + 1);
     this.refs[target].add([entity, component, prop, sub].join('...'));
   }
@@ -50,11 +52,13 @@ class ECS {
     const eInst = this.getEntity(target);
     let count = eInst.refs[type].get(entity);
     count--;
+    /* $lab:coverage:off$ */
     if (count < 1) {
       eInst.refs[type].delete(entity);
     } else {
       eInst.refs[type].set(entity, count);
     }
+    /* $lab:coverage:on$ */
     if (eInst.refs[type].size === 0) {
       delete eInst.refs[type];
     }
@@ -190,7 +194,9 @@ class ECS {
     component.updated = component.entity.updatedValues = this.ticks;
     if (!component.constructor.subbed) return;
     const systems = this.subscriptions.get(component.type);
+    /* $lab:coverage:off$ */
     if (systems) {
+    /* $lab:coverage:on$ */
       const change = { component, op, key, old, value };
       for (const system of systems) {
         system._sendChange(change);

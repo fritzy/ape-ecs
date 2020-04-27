@@ -22,9 +22,12 @@ class ComponentHandler {
     this.def = def;
     this.path = path;
     this.comp = comp;
+    this.const = comp.constructor;
+    this.filterEvents = new Set(['updated', '_ready']);
     this.fields = {
       updated: PRIM,
-      _ready: PRIM
+      _ready: PRIM,
+      _fields: PRIM
     };
     this.functions = {};
     if (!def) return;
@@ -34,11 +37,13 @@ class ComponentHandler {
     for (let idx = 0, l = fields.length; idx < l; idx++) {
       const field = fields[idx];
       const proppath = [...path, field].join('.');
+      comp._fields.push(proppath);
       const value = def[field];
       if (typeof value === 'function') {
         const result = value(undefined, comp, proppath)
         if (result === undefined) {
           this.fields[field] = PRIM;
+          this.filterEvents.add(field);
           continue;
         }
         target[field] = result;
@@ -60,21 +65,18 @@ class ComponentHandler {
     this.comp.updated = this.comp.entity.updatedValues = this.ecs.ticks;
     switch (this.fields[prop]) {
       case PRIM:
-        if(this.comp.subbed && !NO_EVENTS.has(prop)) {
+        if(this.const.subbed && !this.filterEvents.has(prop)) {
           const old = target[prop];
           const path = [...this.path, prop].join('.');
           this.comp.ecs._sendChange(this.comp, 'set', path, old, value);
         }
         return Reflect.set(target, prop, value);
-        break;
       case SUB:
         Object.assign(target[prop], value);
         return true;
-        break;
       case FUNC:
         target[prop] = this.functions[prop](value, this.comp, [...this.path, prop].join('.'))
         return true;
-        break;
       default:
         throw new Error(`Cannot assign undefined field ${[
           this.comp.type,
@@ -91,14 +93,14 @@ class BaseComponent {
 
   constructor(ecs, entity, initial) {
 
-    //Object.defineProperty(this, 'ecs', { enumerable: false, value: ecs });
-    Object.defineProperty(this, 'entity', { enumerable: false, value: entity, configurable: false});
+    this._fields = [];
+    this.entity = entity;
     this.type = this.constructor.name;
     this.id = initial.id || UUID();
-    Object.defineProperty(this, '_values', { enumerable: false, value: {}, configurable: false});
-    Object.defineProperty(this, '_reverse', { enumerable: false, value: new Set(), configurable: false});
-    Object.defineProperty(this, 'updated', { enumerable: false, writable: true, value: this.ecs.ticks, configurable: false});
-    Object.defineProperty(this, '_ready', { enumerable: false, writable: true, value: false, configurable: false});
+    this._values = {};
+    this._reverse = new Set();
+    this.updated = this.ecs.ticks;
+    this._ready = false;
 
     const assign = {...initial};
     delete assign.id;
@@ -119,23 +121,43 @@ class BaseComponent {
 
   getObject() {
 
-    let fields = Object.keys(this);
+    let fields = [...this._fields];
     if (this.constructor.definition.serialize) {
       const serialize = this.constructor.definition.serialize;
-      if (serialize.skip) return;
-      if (Array.isArray(serialize.ignore)) {
+      if (serialize.ignore) {
         const ignore = new Set(serialize.ignore);
         fields = fields.filter((field) => !ignore.has(field));
       }
     }
-    const out = {};
-    for (const field of fields) {
-      if (this[field] && this[field]._getRaw) {
-        out[field] = this[field]._getRaw();
-      } else {
-        out[field] = this[field];
+    const out = {
+      id: this.id,
+      type: this.type
+    };
+    for (const path of fields) {
+      if (this._values.hasOwnProperty(path)) {
+        continue;
+      }
+      let source = this;
+      let target = out;
+      for (const node of path.split('.')) {
+        source = source[node];
+        /* $lab:coverage:off$ */
+        if (typeof source === 'object' && source !== null) {
+        /* $lab:coverage:on$ */
+          target[node] = {};
+          if (source.toJSON) {
+            source = source.toJSON();
+            target[node] = source;
+          } else {
+            Object.assign(target[node], source);
+          }
+        } else {
+          target[node] = source;
+        }
+        target = target[node]
       }
     }
+
     for (const pathString of Object.keys(this._values)) {
       const path = pathString.split('.');
       let target = out;

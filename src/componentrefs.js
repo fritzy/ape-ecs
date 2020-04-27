@@ -13,7 +13,7 @@ module.exports = {
           for (const field of path.slice(0, path.length - 1)) {
             target = target[field];
           }
-          const result = target[prop];
+          const result = target[path[path.length - 1]];
           return result;
         },
         set(value) {
@@ -106,36 +106,6 @@ module.exports = {
     Object.defineProperty(target, nodes[nodes.length - 1], handler);
     comp._values[path] = null;
     return;
-    class ComponentRef {
-
-      constructor(comp, path) {
-
-        this.comp = comp;
-        this.path = path;
-        this._value = null;
-      }
-      set value(value) {
-
-        if (typeof value === 'object' && value !== null) {
-          value = value.id;
-        }
-        const old = this._value;
-        this._value = value;
-        comp.ecs._sendChange(this, 'setComponent', path, old, value);
-        return true;
-      }
-
-      get value() {
-
-        const result = comp.entity.componentMap[this._value];
-        return result;
-      }
-
-      _getRaw() {
-        return this._value;
-      }
-    }
-    return new ComponentRef(comp, path);
   },
 
   EntityObject: (object, component, reference) => {

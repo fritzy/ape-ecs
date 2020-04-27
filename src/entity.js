@@ -231,9 +231,11 @@ class Entity {
         if (!sub) {
           const last = path[path.length - 1];
           let t2 = component;
+          /* $lab:coverage:off$ */
           for (let i = 0; i < path.length - 1; i++) {
             t2 = t2[path[i]];
           }
+          /* $lab:coverage:on$ */
           t2[last] = null;
           continue;
         }
