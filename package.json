@@ -8,7 +8,9 @@
     "/src"
   ],
   "scripts": {
-    "test": "lab -a \"@hapi/code\" -cv tests --coverage-exclude tests"
+    "test": "lab -a \"@hapi/code\" -cv tests --coverage-exclude tests",
+    "gendocs": "rm -rf out && jsdoc src/",
+    "md": "jsdoc2md src/ecs.js"
   },
   "repository": {
     "type": "git",
@@ -26,6 +28,7 @@
   },
   "devDependencies": {
     "@hapi/code": "^5.3.1",
-    "@hapi/lab": "^22.0.4"
+    "@hapi/lab": "^22.0.4",
+    "jsdoc-to-markdown": "^5.0.3"
   }
 }

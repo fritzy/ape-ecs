@@ -68,7 +68,7 @@ class ComponentHandler {
         if(this.const.subbed && !this.filterEvents.has(prop)) {
           const old = target[prop];
           const path = [...this.path, prop].join('.');
-          this.comp.ecs._sendChange(this.comp, 'set', path, old, value);
+          this.comp._updated('set', path, old, value);
         }
         return Reflect.set(target, prop, value);
       case SUB:
@@ -113,9 +113,7 @@ class BaseComponent {
     this._ready = true;
     if (def.init)
       def.init.apply(this);
-    if (this.constructor.subbed) {
-      this.ecs._sendChange(this, 'addComponent');
-    }
+    this._updated('addComponent');
     return prox;
   }
 
@@ -201,6 +199,14 @@ class BaseComponent {
       this.entity.removeComponent(this, false, false);
     }
     this._ready = false;
+  }
+
+  _updated(op, prop, old, value) {
+
+    if(!this._ready) return;
+    this.updated = this.entity.updatededValues = this.ecs.ticks;
+    if (!this.constructor.subbed) return;
+    this.ecs._sendChange(this, op, prop, old, value);
   }
 }
 

@@ -1,11 +1,21 @@
+/*
+ * @module ecs/ECS
+ * @type {class}
+ */
 const UUID = require('uuid/v1');
-//const BaseComponent = require('./component');
 const Entity = require('./entity');
 const Query = require('./query');
 const BaseComponent = require('./component');
 
 const componentMethods = new Set(['stringify', 'clone', 'getObject', Symbol.iterator]);
-class ECS {
+
+/**
+ * Main library class for registering Components, Systems, Queries,
+ * and runnning Systems.
+ * Create multiple ECS instances in order to have multiple collections.
+ * @exports ECS
+ */
+module.exports = class ECS {
 
   constructor() {
 
@@ -22,6 +32,10 @@ class ECS {
     this.refs = {};
   }
 
+  /**
+   * Called in order to increment ecs.ticks, update indexed queries, and update lookups.
+   * @method module:ECS#tick
+   */
   tick() {
 
     this.ticks++;
@@ -70,6 +84,19 @@ class ECS {
     }
   }
 
+  /**
+   * @typedef {Object} definition
+   * @property {Object} properites
+   * @property {function} init
+   */
+
+  /**
+   * If you're going to use tags, you needs to let the ECS instance know.
+   * @method module:ECS#registerTags
+   * @param {string[]|string} tags - Array of tags to register, or a single tag.
+   * @example
+   * ecs.registerTags['Item', 'Blocked']);
+   */
   registerTags(tags) {
     if (Array.isArray(tags)) {
       for (const tag of tags) {
@@ -81,6 +108,12 @@ class ECS {
   }
 
 
+  /**
+   * Register a component
+   * @method module:ECS#registerComponent
+   * @param {string} name - Name for the component type.
+   * @param {definition} definition - Definition of the component
+   */
   registerComponent(name, definition = {}) {
     const klass = class Component extends BaseComponent {}
     klass.definition = definition;
@@ -190,9 +223,11 @@ class ECS {
 
   _sendChange(component, op, key, old, value) {
 
+    /*
     if (!component._ready) return;
     component.updated = component.entity.updatedValues = this.ticks;
     if (!component.constructor.subbed) return;
+    */
     const systems = this.subscriptions.get(component.type);
     /* $lab:coverage:off$ */
     if (systems) {
@@ -203,7 +238,4 @@ class ECS {
       }
     }
   }
-
 }
-
-module.exports = ECS;
