@@ -5,17 +5,17 @@
 const UUID = require('uuid/v1');
 const Entity = require('./entity');
 const Query = require('./query');
-const BaseComponent = require('./component');
+const Component = require('./component');
 
 const componentMethods = new Set(['stringify', 'clone', 'getObject', Symbol.iterator]);
 
 /**
  * Main library class for registering Components, Systems, Queries,
  * and runnning Systems.
- * Create multiple ECS instances in order to have multiple collections.
- * @exports ECS
+ * Create multiple World instances in order to have multiple collections.
+ * @exports World
  */
-module.exports = class ECS {
+module.exports = class World {
 
   constructor() {
 
@@ -23,8 +23,11 @@ module.exports = class ECS {
     this.entities = new Map();
     this.types = {};
     this.tags = new Set();
-    this.entityComponents = new Map();
-    this.checkIndexEntities = new Set();
+    //this.entityComponents = new Map();
+    this.entitiesByComponent = {};
+    this.entityReverse = {};
+    this.updatedEntities = new Set();
+    this.componentTypes = {};
     this.components = new Map();
     this.queryIndexes = new Map();
     this.subscriptions = new Map();
@@ -48,33 +51,37 @@ module.exports = class ECS {
       this.refs[target] = new Set();
     }
     const eInst = this.getEntity(target);
-    if(!eInst.refs.hasOwnProperty(type)) {
-      eInst.refs[type] = new Map();
+    if(!this.entityReverse.hasOwnProperty(target)) {
+      this.entityReverse[target] = {};
     }
-    let count = eInst.refs[type].get(entity);
+    if(!this.entityReverse[target].hasOwnProperty(type)) {
+      this.entityReverse[target][type] = new Map();
+    }
+    const reverse = this.entityReverse[target][type];
+    let count = reverse.get(entity);
     /* $lab:coverage:off$ */
     if (count === undefined) {
       count = 0
     }
     /* $lab:coverage:on$ */
-    eInst.refs[type].set(entity, count + 1);
+    reverse.set(entity, count + 1);
     this.refs[target].add([entity, component, prop, sub].join('...'));
   }
 
   deleteRef(target, entity, component, prop, sub, type) {
 
-    const eInst = this.getEntity(target);
-    let count = eInst.refs[type].get(entity);
+    const ref = this.entityReverse[target][type];
+    let count = ref.get(entity);
     count--;
     /* $lab:coverage:off$ */
     if (count < 1) {
-      eInst.refs[type].delete(entity);
+      ref.delete(entity);
     } else {
-      eInst.refs[type].set(entity, count);
+      ref.set(entity, count);
     }
     /* $lab:coverage:on$ */
-    if (eInst.refs[type].size === 0) {
-      delete eInst.refs[type];
+    if (ref.size === 0) {
+      delete ref[type];
     }
     /* $lab:coverage:off$ */
     /* $lab:coverage:on$ */
@@ -100,35 +107,73 @@ module.exports = class ECS {
   registerTags(tags) {
     if (Array.isArray(tags)) {
       for (const tag of tags) {
-        this.entityComponents.set(tag, new Set());
+        this.entitiesByComponent[tag] = new Set();
       }
       return;
     }
-    this.entityComponents.set(tags, new Set());
+    this.entitiesByComponent[tags] = new Set();
   }
 
+  registerComponent(name, definition) {
 
-  /**
-   * Register a component
-   * @method module:ECS#registerComponent
-   * @param {string} name - Name for the component type.
-   * @param {definition} definition - Definition of the component
-   */
-  registerComponent(name, definition = {}) {
-    const klass = class Component extends BaseComponent {}
+    const klass = class CustomComponent extends Component {};
+
+    function setProps(definition, path) {
+      const props = {
+        default: {},
+        custom: {},
+        sub: {},
+        path
+      }
+
+      for (const key of Object.keys(definition)) {
+        const prop = definition[key];
+        let type;
+        let value;
+        let constructor;
+        if (prop === null) {
+          type = 'null';
+          value = null;
+        } else if (typeof prop === 'object' && prop.default) {
+          value = prop.default;
+          if (typeof prop.type === 'function') {
+            props.custom[key] = { value, constructor: prop.type };
+            continue;
+          } else if (prop.type === 'sub') {
+            props.sub[key] = setProps(value, [...path, key]);
+            continue;
+          }
+          type = prop.type;
+        } else {
+          value = prop;
+        }
+        if (!type) {
+          type = typeof value;
+        }
+        switch (type) {
+          case 'null':
+          case 'string':
+          case 'number':
+          case 'object':
+            props.default[key] = value;
+            break;
+          case 'function':
+            props.custom[key] = { value: null, constructor: value };
+            break;
+        }
+      }
+      return props;
+    }
+    const props = setProps(definition.properties, []);
+
+    klass.prototype.type = name;
+    klass.prototype.id = '';
+    klass.props = props;
     klass.definition = definition;
-    Object.defineProperty(klass, 'name', {value: name});
-    this.registerComponentClass(klass);
-    return klass;
-  }
-
-  registerComponentClass(klass) {
-
-    klass.subbed = false;
-    klass.prototype.ecs = this;
-    this.types[klass.name] = klass;
-    this.entityComponents.set(klass.name, new Set());
-    this.components.set(klass.name, new Set());
+    klass.world = this;
+    Object.defineProperty(klass, 'name', { value: name });
+    this.componentTypes[name] = klass;
+    this.entitiesByComponent[name] = new Set();
   }
 
   createEntity(definition) {
@@ -198,19 +243,29 @@ module.exports = class ECS {
     }
   }
 
-  _checkEntity(entity) {
+  _entityUpdated(entity) {
 
-    this.checkIndexEntities.add(entity);
+    this.updatedEntities.add(entity);
   }
+
+  _addEntityComponent(name, entity) {
+
+    if (!this.entitiesByComponent.hasOwnProperty(name)) {
+      this.entitiesByComponent[name] = new Set();
+    }
+    this.entitiesByComponent[name].add(entity.id);
+  }
+
 
   updateIndexes(entity) {
 
     if (entity !== undefined) {
       return this._updateIndexesEntity(entity);
     }
-    for (const entity of this.checkIndexEntities) {
+    for (const entity of this.updatedEntities) {
       this._updateIndexesEntity(entity);
     }
+    this.updatedEntities.clear();
   }
 
   _updateIndexesEntity(entity) {
@@ -218,24 +273,6 @@ module.exports = class ECS {
     for (const query of this.queryIndexes) {
       query[1].update(entity);
     }
-    this.checkIndexEntities.delete(entity);
   }
 
-  _sendChange(component, op, key, old, value) {
-
-    /*
-    if (!component._ready) return;
-    component.updated = component.entity.updatedValues = this.ticks;
-    if (!component.constructor.subbed) return;
-    */
-    const systems = this.subscriptions.get(component.type);
-    /* $lab:coverage:off$ */
-    if (systems) {
-    /* $lab:coverage:on$ */
-      const change = { component, op, key, old, value };
-      for (const system of systems) {
-        system._sendChange(change);
-      }
-    }
-  }
 }

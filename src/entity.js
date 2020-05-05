@@ -3,48 +3,28 @@ const UUID = require('uuid/v1');
 
 class Entity {
 
-  constructor(ecs, definition = {}) {
+  constructor(world, definition = {}) {
 
-    Object.defineProperty(this, 'ecs', { enumerable: false, value: ecs });
+    this.world = world;
+    this.components = {};
+    this.componentById = {};
+    this.componentsByType = {};
     this.id = definition.id || UUID();
-    Object.defineProperty(this, 'components', { enumerable: false, value: {} });
-    Object.defineProperty(this, 'componentMap', { enumerable: false, value: {} });
+    this.world.entities.set(this.id, this);
     this.tags = new Set();
-    Object.defineProperty(this, 'refs', { enumerable: false, writable: false, value: {} });
-    Object.defineProperty(this, 'destroyed', { enumerable: false, writable: true, value: false });
 
+    this.updatedComponents = this.world.ticks;
+    this.updatedValues = this.world.ticks;
 
-    this.updatedComponents = this.ecs.ticks;
-    this.updatedValues = this.ecs.ticks;
-
-    for (const type of Object.keys(definition)) {
-      if (type === 'id') continue;
-      if (type === 'tags') {
-        for (const tag of definition[type]) {
-          this.tags.add(tag);
-          this.ecs.entityComponents.get(tag).add(this.id);
-        }
+    for (const key of Object.keys(definition)) {
+      if (key === 'id') {
+        this.id = definition.id;
         continue;
       }
-      const cdefs = definition[type];
-      if (!ecs.types.hasOwnProperty(type)) throw new Error(`No component type named "${type}". Did you misspell it?`)
-      const mapBy = ecs.types[type].definition.mapBy;
-      if (Array.isArray(cdefs)) {
-        for (const def of cdefs) {
-          this.addComponent(type, def, true);
-        }
-      } else if (mapBy) {
-        for (const key of Object.keys(cdefs)) {
-          const def = cdefs[key];
-          def[mapBy] = key;
-          this.addComponent(type, def, true);
-        }
-      } else {
-        this.addComponent(type, cdefs, true);
-      }
+      const constName = definition[key].type || key;
+      const component = this.world.componentTypes[constName];
+      this.addComponent(component, definition[key], key);
     }
-    this.ecs.entities.set(this.id, this);
-    this.ecs._checkEntity(this);
   }
 
   has(tagOrComponent) {
@@ -55,176 +35,70 @@ class Entity {
     return (this.components.hasOwnProperty(tagOrComponent));
   }
 
+  getComponent(lookup) {
+
+    return this.components[lookup];
+  }
+
+  getMutableComponent(lookup) {
+
+    const comp = this.components[lookup];
+    comp._meta.updated = this.world.ticks;
+    return comp;
+  }
+
   addTag(tag) {
 
     this.tags.add(tag);
-    this.updatedComponents = this.ecs.ticks;
-    this.ecs.entityComponents.get(tag).add(this.id);
-    this.ecs._checkEntity(this);
+    this.updatedComponents = this.world.ticks;
+    this.world.entityComponents.get(tag).add(this.id);
+    this.world.entityUpdated(this);
   }
 
   removeTag(tag) {
+
     this.tags.delete(tag);
-    this.updatedComponents = this.ecs.ticks;
-    this.ecs.entityComponents.get(tag).delete(this.id);
-    this.ecs._checkEntity(this);
+    this.updatedComponents = this.world.ticks;
+    this.world.entityComponents.get(tag).delete(this.id);
+    this.world.entityUpdated(this);
   }
 
-  addComponent(type, definition, delayCache) {
+  addComponent(component, properties, lookup) {
 
-    const ecs = this.ecs;
-    const component = new ecs.types[type](ecs, this, definition);
-
-    let addedType = false;
-    if (ecs.types[type].definition.many) {
-      const mapBy = ecs.types[type].definition.mapBy;
-      if (mapBy) {
-        if (!this.components.hasOwnProperty(component.type)) {
-          this.components[component.type] = {};
-          addedType = true;
-        }
-        this.components[component.type][component[mapBy]] = component;
-      } else {
-        if(!this.components.hasOwnProperty(component.type)) {
-          this.components[component.type] = new Set([component]);
-          addedType = true;
-        } else {
-          this.components[component.type].add(component);
-        }
-      }
-    } else {
-      if(this.components.hasOwnProperty(component.type)) {
-        throw new Error(`Entity<${this.id}> already has component ${component.type}`)
-      }
-      this.components[component.type] = component;
-      addedType = true;
+    const name = component.name;
+    lookup = lookup || component.name;
+    const comp = new component(this, properties);
+    this.components[lookup] = comp;
+    comp._meta.lookup = lookup;
+    if (!this.componentsByType[name]) {
+      this.componentsByType[name] = new Set();
     }
-    if (addedType) {
-      this[component.type] = this.components[component.type];
-    }
-
-    ecs.entityComponents.get(component.type).add(this.id);
-    ecs.components.get(component.type).add(component);
-
-    this.updatedComponents = this.ecs.ticks;
-    if (!delayCache) {
-      this.ecs._checkEntity(this);
-    }
-
-    this.componentMap[component.id] = component;
-    return component;
+    this.componentsByType[name].add(comp);
+    this.componentById[comp.id] = comp;
+    this.world._addEntityComponent(name, this);
   }
 
-  removeComponentByType(cname) {
-
-    if (!this.components.hasOwnProperty(cname)) {
-      return;
-    }
-
-    if (this.ecs.types[cname].definition.many) {
-      for (const component of this.components[cname]) {
-        this.removeComponent(component, true);
-      }
-      this.ecs._checkEntity(this);
-    } else {
-      this.removeComponent(this.components[cname]);
-    }
-  }
-
-  removeComponent(component, delayCache, destroy=true) {
-
-    if (!(component instanceof BaseComponent)) {
-      component = this.componentMap[component];
-    }
-    component._updated('removeComponent');
-    if (destroy) {
-      component.destroy(false);
-    }
-    const ecs = this.ecs;
-    const name = component.type;
-    let removedType = false;
-    if (ecs.types[name].definition.many) {
-      const mapBy = ecs.types[name].definition.mapBy;
-      if (mapBy) {
-        const mapValue = component[mapBy]
-        if (this.components.hasOwnProperty(component.type)
-          && this.components[component.type].hasOwnProperty(mapValue)
-          && this.components[component.type][mapValue].id === component.id
-        ) {
-          delete this.components[component.type][mapValue];
-          if (Object.entries(this.components[component.type]).length === 0) {
-            removedType = true;
-          }
-        } else {
-          return;
-        }
-      } else {
-        if (this.components.hasOwnProperty(component.type)) {
-          const cset = this.components[component.type];
-          cset.delete(component);
-          if (cset.size === 0) {
-            removedType = true;
-          }
-        } else {
-          return;
-        }
-      }
-    } else {
-      removedType = true;
-    }
-    if (removedType) {
-      ecs.entityComponents.get(component.type).delete(this.id);
-      delete this.components[component.type];
-      delete this[component.type];
-    }
-
-    ecs.components.get(component.type).delete(component);
-    if (!delayCache) {
-      this.ecs._checkEntity(this);
-    }
-
-    delete this.componentMap[component.id];
-    this.updatedComponents = this.ecs.ticks;
-  }
 
   getObject() {
 
-    const result = {};
-    for (const type of Object.keys(this.components)) {
-      const definition = this.ecs.types[type].definition;
-      if (definition.serialize && definition.serialize.skip) continue;
-      let next;
-      if (this.components[type] instanceof Set) {
-        next = [];
-        for (const component of this.components[type]) {
-          next.push(component.getObject());
-        }
-      } else if (definition.mapBy) {
-        next = {};
-        for (const key of Object.keys(this.components[type])) {
-          next[key] = this.components[type][key].getObject();
-        }
-      } else {
-        next = this.components[type].getObject();
-      }
-      result[type] = next;
+    const obj = {};
+    for (const key of Object.keys(this.components)) {
+      obj[key] = this.components[key].getObject();
     }
-    return Object.assign({ id: this.id}, result);
+    obj.id = this.id;
+    return obj;
   }
 
   destroy() {
 
-    for (const key in this.componentMap) {
-      this.componentMap[key].destroy();
-    }
-    if (this.ecs.refs[this.id]) {
-      for (const ref of this.ecs.refs[this.id]) {
+    if (this.world.refs[this.id]) {
+      for (const ref of this.world.refs[this.id]) {
         const [entityId, componentId, prop, sub] = ref.split('...');
-        const entity = this.ecs.getEntity(entityId);
+        const entity = this.world.getEntity(entityId);
         // remove coverage because I can't think of how this would go wrng
         /* $lab:coverage:off$ */
         if (!entity) continue;
-        const component = entity.componentMap[componentId];
+        const component = entity.componentById[componentId];
         if (!component) continue;
         /* $lab:coverage:on$ */
         const path = prop.split('.');
@@ -247,12 +121,12 @@ class Entity {
         if (sub === '__set__') {
           target.delete(this);
         } else {
-          target[sub] = null;
+          target[sub].set(null);
         }
       }
     }
-    this.ecs.entities.delete(this.id);
-    this.destroyed = true;
+    this.world.entities.delete(this.id);
+    delete this.world.entityReverse[this.id];
   }
 
 }

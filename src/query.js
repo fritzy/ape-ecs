@@ -6,9 +6,9 @@ const Entity = require('./entity');
 
 class Query {
 
-  constructor(ecs, init) {
+  constructor(world, init) {
 
-    this.ecs = ecs;
+    this.world = world;
     this.query = {
       froms: [],
       filters: []
@@ -56,7 +56,7 @@ class Query {
 
     /* $lab:coverage:off$ */
     if(typeof entity !== 'object') {
-      entity = this.ecs.getEntity(entity);
+      entity = this.world.getEntity(entity);
     }
     /* $lab:coverage:on$ */
     this.query.froms.push({
@@ -104,7 +104,7 @@ class Query {
       if(source.from === 'all') {
         const potential = [];
         for (const type of source.types) {
-          potential.push(this.ecs.entityComponents.get(type));
+          potential.push(this.world.entitiesByComponent[type]);
         }
         potential.sort((a, b) => a.size - b.size);
         let found = true;
@@ -121,7 +121,7 @@ class Query {
       } else if (source.from === 'any') {
         const potential = [];
         for (const type of source.types) {
-          potential.push(this.ecs.entityComponents.get(type));
+          potential.push(this.world.entitiesByComponent.get[type]);
         }
         potential.sort((a, b) => b.size - a.size);
         let found = false;
@@ -162,7 +162,7 @@ class Query {
       throw new Error('Cannot persistently index query without entity source (fromAll, fromAny, fromReverse).');
     }
     /* $lab:coverage:on$ */
-    this.ecs.queryIndexes.set(name, this);
+    this.world.queryIndexes.set(name, this);
     this.indexed = true;
     return this;
   }
@@ -177,15 +177,15 @@ class Query {
       } else if (source.from === 'all') {
         if (source.types.length === 1) {
           /* $lab:coverage:off$ */
-          if (!this.ecs.entityComponents.has(source.types[0])) {
+          if (!this.world.entitiesByComponent.hasOwnProperty(source.types[0])) {
             throw new Error(`${source.types[0]} is not a registered Component/Tag`);
           }
           /* $lab:coverage:on$ */
-          results = SetHelpers.union(results, this.ecs.entityComponents.get(source.types[0]));
+          results = SetHelpers.union(results, this.world.entitiesByComponent[source.types[0]]);
         } else {
           const comps = [];
           for (const type of source.types) {
-            const entities = this.ecs.entityComponents.get(type);
+            const entities = this.world.entitiesByComponent[type];
             /* $lab:coverage:off$ */
             if (entities === undefined) {
               throw new Error(`${type} is not a registered Component/Tag`);
@@ -198,7 +198,7 @@ class Query {
       } else if (source.from === 'any') {
         const comps = [];
         for (const type of source.types) {
-          const entities = this.ecs.entityComponents.get(type);
+          const entities = this.world.entitiesByComponent[type];
           /* $lab:coverage:off$ */
           if (entities === undefined) {
             throw new Error(`${type} is not a registered Component/Tag`);
@@ -217,7 +217,7 @@ class Query {
     }
 
     this.results = new Set([...results]
-      .map(id => this.ecs.entities.get(id))
+      .map(id => this.world.entities.get(id))
       .filter(entity => !!entity)
     );
 

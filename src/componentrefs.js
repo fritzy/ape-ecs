@@ -42,41 +42,47 @@ module.exports = {
     return PointerFunc;
   },
 
-  EntityRef: (obj, comp, path) => {
+  EntityRef: class EntityRef  {
 
-    const handler = {
-      get() {
+    constructor(comp, obj, pathArr) {
 
-        return comp.ecs.getEntity(comp._values[path]);
-      },
-
-      set(value) {
-
-        const old = comp._values[path];
-        value = (value && typeof value !== 'string') ? value.id : value;
-        if (old && old !== value) {
-          comp._deleteRef(old, comp.entity.id, comp.id, path, undefined, comp.type);
-        }
-        if (value && value !== old) {
-          comp._addRef(value, comp.entity.id, comp.id, path, undefined, comp.type);
-        }
-        comp._values[path] = value;
-        comp._updated('setEntity', path, old, value);
-        return true;
-      },
-      enumerable: true
-    };
-
-    const nodes = path.split('.');
-    let target = comp;
-    for (let i = 0; i < nodes.length - 1; i++) {
-      target = target[nodes[i]];
+      this.comp = comp;
+      this.default = obj;
+      this.path = pathArr.join('.');
+      this.world = this.comp.world;
+      this.value = null;
     }
 
-    Object.defineProperty(target, nodes[nodes.length - 1], handler);
-    comp._values[path] = null;
-    return;
+    get() {
+
+      return this.world.getEntity(this.value);
+    }
+
+    getValue() {
+
+      return this.value;
+    }
+
+    reset() {
+      if (this.value) {
+        this.world.deleteRef(value, this.comp.entity.id, this.comp.id, this.path, undefined, this.comp.type);
+      }
+    }
+
+    set(value) {
+
+      const old = this.value;
+      value = (value && typeof value !== 'string') ? value.id : value;
+      if (old && old !== value) {
+        this.world.deleteRef(old, this.comp.entity.id, this.comp.id, this.path, undefined, this.comp.type);
+      }
+      if (value && value !== old) {
+        this.world.addRef(value, this.comp.entity.id, this.comp.id, this.path, undefined, this.comp.type);
+      }
+      this.value = value;
+    }
   },
+
   ComponentRef: (obj, comp, path) => {
     const handler = {
       get() {
@@ -155,80 +161,74 @@ module.exports = {
     });
   },
 
-  EntitySet: (object, component, reference) => {
-    const ecs = component.ecs;
-    const entity = component.entity;
-    const entityId = entity.id;
+  //EntitySet: (object, component, reference) => {
+  EntitySet: class EntitySet extends Set {
 
-    class EntitySet extends Set {
+    static get [Symbol.species]() { return this.constructor; }
 
-      /* $lab:coverage:off$ */
-      // lab doesn't detect this being used internally
-      static get [Symbol.species]() { return this.constructor; }
-      /* $lab:coverage:on */
+    constructor (component, object = [], reference) {
 
-      add(value) {
-
-        if (value.id) {
-          value = value.id;
-        }
-        ecs.addRef(value, entityId, component.id, reference, '__set__');
-        component.updated = component.ecs.ticks;
-        component._updated('addEntitySet', reference, undefined, value);
-        return super.add(value);
-      }
-
-      delete(value) {
-
-        if (value.id) {
-          value = value.id;
-        }
-        ecs.deleteRef(value, entityId,component.id, reference, '__set__');
-        component.updated = component.ecs.ticks;
-        component._updated('deleteEntitySet', reference, undefined, value);
-        return super.delete(value);
-      }
-
-      clear() {
-
-        component._updated('clearEntitySet', reference, undefined, undefined);
-        for (const entity of this) {
-          this.delete(entity);
-        }
-      }
-
-      has(value) {
-
-        if (value.id) {
-          value = value.id;
-        }
-        const has = super.has(value);
-        return has;
-      }
-
-      [Symbol.iterator]() {
-
-        const that = this;
-        const siterator = super[Symbol.iterator]();
-        return {
-          next() {
-
-            const result = siterator.next();
-            if (typeof result.value === 'string') {
-              result.value = component.ecs.getEntity(result.value);
-            }
-            return result;
-          }
-        }
-      }
-
-      toJSON() {
-
-        return [...this].map(entity => entity.id);
+      super();
+      this.component = component;
+      this.reference = reference.join('.');
+      this.sub = reference.slice(0, reference.length - 1).join('.');
+      this.entity = component._meta.entity;
+      this.world = this.entity.world;
+      this.entityId = this.entity.id;
+      object = object.map(value => (typeof value === 'string') ? value : value.id );
+      for (const item of object) {
+        this.add(item);
       }
     }
 
-    return new EntitySet(object);
+
+    add(value) {
+
+      if (value.id) {
+        value = value.id;
+      }
+      this.world.addRef(value, this.entityId, this.component.id, this.reference, '__set__', this.component._meta.lookup);
+      super.add(value);
+    }
+
+    delete(value) {
+
+      if (value.id) {
+        value = value.id;
+      }
+      this.world.deleteRef(value, this.entityId, this.component.id, this.reference, '__set__', this.component._meta.lookup);
+      const res = super.delete(value);
+      return res;
+    }
+
+    has(value) {
+
+      if (value.id) {
+        value = value.id;
+      }
+      return super.has(value);
+    }
+
+    [Symbol.iterator]() {
+
+      const that = this;
+      const siterator = super[Symbol.iterator]();
+      return {
+        next() {
+
+          const result = siterator.next();
+          if (typeof result.value === 'string') {
+            result.value = that.world.getEntity(result.value);
+          }
+          return result;
+        }
+      }
+    }
+
+    getValue() {
+
+      return [...this].map(entity => entity.id);
+    }
   },
 
   ComponentSet: (object, component, reference) => {

@@ -1,5 +1,5 @@
 module.exports = {
-  ECS: require('./ecs'),
+  World: require('./world'),
   System: require('./system'),
   Component: require('./component')
 }

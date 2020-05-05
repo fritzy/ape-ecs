@@ -14,7 +14,7 @@ const {
 
 lab.experiment('express components', () => {
 
-  const ecs = new ECS.ECS();
+  const ecs = new ECS.World();
   ecs.registerComponent('Health', {
     properties: {
       max: 25,
@@ -65,7 +65,7 @@ lab.experiment('express components', () => {
       properties: {
         name: 'finger',
         slot: EntityRef,
-        effects: ComponentSet
+        effects: []
       },
       many: true,
       mapBy: 'name'
@@ -84,21 +84,20 @@ lab.experiment('express components', () => {
     });
 
     const entity = ecs.createEntity({
-      Storage: {
-        pockets: { size: 4 },
-        backpack: { size: 25 }
-      },
-      EquipmentSlot: {
-        pants: {},
-        shirt: {}
-      },
+      pockets: { type: 'Storage', size: 4 },
+      backpack: { type: 'Storage', size: 25 },
+      pants: { type: 'EquipmentSlot' },
+      shirt: { type: 'EquipmentSlot' },
       Health: {
         hp: 10,
         max: 10
       }
     });
 
-    entity.components.Storage.pockets.items.add(food);
+    const pockets = entity.getMutableComponent('pockets');
+
+    pockets.items.add(food);
+    expect(pockets.items.has(food)).to.be.true();
 
     const entityObj = entity.getObject();
     delete entityObj.id;
@@ -106,11 +105,15 @@ lab.experiment('express components', () => {
     const entityDef = JSON.parse(eJson);
 
     const entity2 = ecs.createEntity(entityDef);
+    const pockets2 = entity2.getMutableComponent('pockets');
 
-    expect(entity.components.Storage.pockets.items.has(food)).to.be.true();
-    expect(entity2.components.Storage.pockets.items.has(food)).to.be.true();
+    expect(pockets.items.has(food)).to.be.true();
+    expect(pockets2.items.has(food)).to.be.true();
 
     ecs.removeEntity(food);
+
+    expect(pockets.items.has(food)).to.be.false();
+    expect(pockets2.items.has(food)).to.be.false();
 
     expect(ecs.getEntity(food.id)).to.be.undefined();
     ecs.removeEntity(entity.id);
@@ -123,7 +126,7 @@ lab.experiment('express components', () => {
 
     let hit = false;
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('Test', {
       properties: {
         x: null,
@@ -143,7 +146,9 @@ lab.experiment('express components', () => {
       }
     });
 
-    expect(entity.Test.y).to.equal(1);
+    const test = entity.getComponent('Test');
+
+    expect(test.y).to.equal(1);
     expect(hit).to.equal(false);
 
     entity.removeComponent(entity.Test);
@@ -157,7 +162,7 @@ lab.experiment('express components', () => {
     let changes2 = [];
     let effectExt = null;
     /* $lab:coverage:off$ */
-    class System extends ECS.System {
+    class System extends World.System {
 
       constructor(ecs) {
 
@@ -204,7 +209,7 @@ lab.experiment('express components', () => {
     }
     System.subscriptions = ['EquipmentSlot'];
 
-    class System2 extends ECS.System {
+    class System2 extends World.System {
 
       constructor(ecs) {
 
@@ -308,7 +313,7 @@ lab.experiment('express components', () => {
 
   /*
   lab.test('primitive property change subscription', () => {
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('Position', {
       properties: {
         x: 0,
@@ -317,7 +322,7 @@ lab.experiment('express components', () => {
     });
 
     let changes = [];
-    class System extends ECS.System {
+    class System extends World.System {
 
       update() {
 
@@ -347,7 +352,7 @@ lab.experiment('express components', () => {
 
   lab.test('component pointers', () => {
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('Position', {
       properties: {
         x: Pointer('container.position.x'),
@@ -396,7 +401,7 @@ lab.experiment('express components', () => {
 
 lab.experiment('deep components', () => {
 
-  const ecs = new ECS.ECS();
+  const ecs = new ECS.World();
   ecs.registerComponent('Health', {
     properties: {
       hp: {
@@ -522,7 +527,7 @@ lab.experiment('deep components', () => {
 
 lab.experiment('system queries', () => {
 
-  const ecs = new ECS.ECS();
+  const ecs = new ECS.World();
 
   lab.test('add and remove forbidden component', () => {
 
@@ -538,7 +543,7 @@ lab.experiment('system queries', () => {
       properties: {}
     });
 
-    class TileSystem extends ECS.System {
+    class TileSystem extends World.System {
 
       constructor(ecs) {
 
@@ -653,7 +658,7 @@ lab.experiment('system queries', () => {
   });
 
   lab.test('tags', () => {
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('Tile', {});
     ecs.registerComponent('Sprite', {});
     ecs.registerTags(['Billboard']);
@@ -726,7 +731,7 @@ lab.experiment('system queries', () => {
 
   lab.test('filter by updatedValues', () => {
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('Comp1', {
       properties: {
         greeting: 'hi'
@@ -761,7 +766,7 @@ lab.experiment('system queries', () => {
 
   lab.test('filter by updatedComponents', () => {
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('Comp1', {
       properties: {
         greeting: 'hi'
@@ -799,7 +804,7 @@ lab.experiment('system queries', () => {
 
   lab.test('destroyed entity should be cleared', () => {
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('Comp1', {});
 
     const entity1 = ecs.createEntity({
@@ -823,7 +828,7 @@ lab.experiment('system queries', () => {
 
 lab.experiment('entity & component refs', () => {
 
-  const ecs = new ECS.ECS();
+  const ecs = new ECS.World();
 
   lab.test('Enitity Object', {}, () => {
 
@@ -1017,7 +1022,7 @@ lab.experiment('entity & component refs', () => {
 
   lab.test('ComponentSet refs', () => {
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('IDontKnow', {
       properties: {
         stuff: ComponentSet
@@ -1053,7 +1058,7 @@ lab.experiment('entity restore', () => {
 
   lab.test('restore maped object', {}, () => {
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('Potion');
     ecs.registerComponent('EquipmentSlot', {
       properties: {
@@ -1086,7 +1091,7 @@ lab.experiment('entity restore', () => {
 
   lab.test('restore unmapped object', {}, () => {
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('Potion');
     ecs.registerComponent('EquipmentSlot', {
       properties: {
@@ -1130,7 +1135,7 @@ lab.experiment('entity restore', () => {
 
   lab.test('2nd component on non-many component throws', { plan: 1 }, () => {
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('Potion');
 
     const entity = ecs.createEntity({
@@ -1146,7 +1151,7 @@ lab.experiment('entity restore', () => {
 
   lab.test('Unregistered component throws', { plan: 1 }, () => {
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('Potion');
 
     let entity;
@@ -1161,7 +1166,7 @@ lab.experiment('entity restore', () => {
 
   lab.test('Unassigned field throws', { plan: 1 }, () => {
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('Potion');
     try {
       ecs.createEntity({ Potion: { x: 0 } });
@@ -1172,7 +1177,7 @@ lab.experiment('entity restore', () => {
   });
 
   lab.test('removeComponentByType single', () => {
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('NPC');
     ecs.registerComponent('Cat');
 
@@ -1193,7 +1198,7 @@ lab.experiment('entity restore', () => {
 
   lab.test('removeComponentByName many', () => {
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('NPC');
     ecs.registerComponent('Other', {
       many: true
@@ -1225,7 +1230,7 @@ lab.experiment('entity restore', () => {
 
   lab.test('remove mapped by id', () => {
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('NPC');
 
     const entity = ecs.createEntity({
@@ -1238,7 +1243,7 @@ lab.experiment('entity restore', () => {
   });
 
   lab.test('remove mapped component', () => {
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('AI', {
       properties: {
         order: 'sun'
@@ -1304,7 +1309,7 @@ lab.experiment('entity restore', () => {
 
   lab.test('EntitySet', () => {
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('SetInventory', {
       properties: {
         slots: EntitySet
@@ -1386,7 +1391,7 @@ lab.experiment('exporting and restoring', () => {
 
   lab.test('get object and stringify component', () => {
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('AI', {
       properties: {
         order: 'sun'
@@ -1407,7 +1412,7 @@ lab.experiment('exporting and restoring', () => {
 
   lab.test('getObject on entity', () => {
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('EquipmentSlot', {
       properties: {
         name: 'ring',
@@ -1456,7 +1461,7 @@ lab.experiment('exporting and restoring', () => {
 
   lab.test('property skipping', () => {
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
     ecs.registerComponent('Effect', {
       properties: {
         name: 'fire',
@@ -1507,7 +1512,7 @@ lab.experiment('exporting and restoring', () => {
 lab.experiment('advanced queries', () => {
   lab.test('from and reverse queries', () => {
 
-    const ecs = new ECS.ECS();
+    const ecs = new ECS.World();
 
     ecs.registerTags(['A', 'B', 'C']);
 
