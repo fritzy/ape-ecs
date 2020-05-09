@@ -151,7 +151,8 @@ lab.experiment('express components', () => {
     expect(test.y).to.equal(1);
     expect(hit).to.equal(false);
 
-    entity.removeComponent(entity.Test);
+    const testC = entity.getComponent('Test');
+    entity.removeComponent(testC);
     expect(hit).to.equal(true);
 
   });
@@ -162,54 +163,7 @@ lab.experiment('express components', () => {
     let changes2 = [];
     let effectExt = null;
     /* $lab:coverage:off$ */
-    class System extends World.System {
-
-      constructor(ecs) {
-
-        super(ecs);
-        //this.ecs.subscribe(this, 'EquipmentSlot');
-      }
-
-      update(tick) {
-
-        changes = this.changes;
-        for (const change of this.changes) {
-          const parent = change.component.entity;
-          if (change.component.type === 'EquipmentSlot'
-          && change.op === 'setEntity') {
-            if (change.value !== null) {
-              const value = this.ecs.getEntity(change.value);
-              if (value.hasOwnProperty('Wearable')) {
-                const components = [];
-                for (const ctype of Object.keys(value.Wearable.effects)) {
-                  const component = parent.addComponent(ctype, value.Wearable.effects[ctype]);
-                  components.push(component);
-                }
-                if (components.length > 0) {
-                  const effect = parent.addComponent('EquipmentEffect', { equipment: value.id });
-                  for (const c of components) {
-                    effect.effects.add(c);
-                    effectExt = c;
-                  }
-                }
-              }
-            } else if (change.old !== null && change.value !== change.old) {
-              for (const effect of parent.EquipmentEffect) {
-                if (effect.equipment === change.old) {
-                  for (const comp of effect.effects) {
-                    parent.removeComponent(comp);
-                  }
-                  parent.removeComponent(effect);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    System.subscriptions = ['EquipmentSlot'];
-
-    class System2 extends World.System {
+    class System extends ECS.System {
 
       constructor(ecs) {
 
@@ -219,10 +173,50 @@ lab.experiment('express components', () => {
 
       update(tick) {
 
-        if (this.changes.length > 0) {
-          //make sure it is a separate object
-          this.changes[0] = null;
+        changes = this.changes;
+        for (const change of this.changes) {
+          const parent = change.component._meta.entity;
+          if (change.op === 'addRef') {
+            const value = this.ecs.getEntity(change.target);
+            if (value.has('Wearable')) {
+              const components = [];
+              const wearable = value.getComponent('Wearable');
+              for (const ctype of Object.keys(wearable.effects)) {
+                const component = parent.addComponent(ctype, wearable.effects[ctype], '*');
+                components.push(component);
+              }
+              if (components.length > 0) {
+                const effect = parent.addComponent('EquipmentEffect', { equipment: value.id }, '*');
+                for (const c of components) {
+                  effect.effects.push(c.id);
+                  effectExt = c;
+                }
+              }
+            }
+          } else if (change.op === 'deleteRef') {
+            for (const effect of parent.getComponents('EquipmentEffect')) {
+              if (effect.equipment === change.target) {
+                for (const comp of effect.effects) {
+                  parent.removeComponent(comp);
+                }
+                parent.removeComponent(effect);
+              }
+            }
+          }
         }
+      }
+    }
+
+    class System2 extends ECS.System {
+
+      constructor(ecs) {
+
+        super(ecs);
+        this.ecs.subscribe(this, 'EquipmentSlot');
+      }
+
+      update(tick) {
+
         changes2 = this.changes;
       }
     }
@@ -231,7 +225,7 @@ lab.experiment('express components', () => {
     ecs.registerComponent('EquipmentEffect', {
       properties: {
         equipment: '',
-        effects: ComponentSet
+        effects: []
       },
       many: true
     });
@@ -259,14 +253,10 @@ lab.experiment('express components', () => {
     ecs.runSystemGroup('equipment');
 
     const entity = ecs.createEntity({
-      Storage: {
-        pockets: { size: 4 },
-        backpack: { size: 25 }
-      },
-      EquipmentSlot: {
-        pants: {},
-        shirt: {}
-      },
+      pockets: { type: 'Storage', size: 4 },
+      backpack: { type: 'Storage', size: 25 },
+      pants: { type: 'EquipmentSlot' },
+      shirt: { type: 'EquipmentSlot' },
       Health: {
         hp: 10,
         max: 10
@@ -284,18 +274,19 @@ lab.experiment('express components', () => {
     ecs.runSystemGroup('equipment');
     expect(changes.length).to.equal(2);
 
-    entity.EquipmentSlot.pants.slot = pants;
+    const slot = entity.getMutableComponent('pants');
+    slot.slot.set(pants);
 
     ecs.runSystemGroup('equipment');
 
-    expect(entity.EquipmentEffect).to.exist();
-    expect([...entity.EquipmentEffect][0].effects.has(effectExt)).to.be.true();
-    expect([...entity.EquipmentEffect][0].effects.has(effectExt.id)).to.be.true();
-    expect(entity.Burning).to.exist();
-    expect(changes.length).to.equal(1);
-    expect(changes[0].op).to.equal('setEntity');
-    expect(changes[0].value).to.equal(pants.id);
-    expect(changes[0].old).to.equal(null);
+    expect(entity.getComponents('EquipmentEffect')).to.exist();
+    const eEffects = new Set([...entity.getComponents('EquipmentEffect')][0].effects);
+
+    expect(eEffects.has(effectExt.id)).to.be.true();
+    expect(entity.getComponents('Burning')).to.exist();
+    expect(changes.length).to.equal(2);
+    expect(changes[1].op).to.equal('addRef');
+    expect(changes[1].target).to.equal(pants.id);
 
     //entity.EquipmentSlot.pants.slot = null;
     pants.destroy();
@@ -303,97 +294,10 @@ lab.experiment('express components', () => {
 
     ecs.runSystemGroup('asdf'); //code path for non-existant system
     expect(changes2.length).to.be.greaterThan(0);
-    expect(changes2[0]).to.be.null();
     expect(changes.length).to.be.greaterThan(0);
-    expect(changes[0].value).to.be.null();
-    expect(entity.EquipmentEffect).to.not.exist();
-    expect(entity.Burning).to.not.exist();
-
-  });
-
-  /*
-  lab.test('primitive property change subscription', () => {
-    const ecs = new ECS.World();
-    ecs.registerComponent('Position', {
-      properties: {
-        x: 0,
-        y: 0
-      }
-    });
-
-    let changes = [];
-    class System extends World.System {
-
-      update() {
-
-        changes = this.changes;
-        this.changes = [];
-      }
-    }
-    System.subscriptions = ['Position'];
-
-    ecs.addSystem('test', System);
-
-    const entity = ecs.createEntity({
-      Position: {
-        x: 1,
-        y: 2
-      }
-    });
-
-    entity.Position.y = 3;
-
-    ecs.runSystemGroup('test');
-
-    console.log(changes);
-
-  });
-  */
-
-  lab.test('component pointers', () => {
-
-    const ecs = new ECS.World();
-    ecs.registerComponent('Position', {
-      properties: {
-        x: Pointer('container.position.x'),
-        y: Pointer('container.position.y'),
-        container: null,
-        deep: {
-          x: Pointer('container.position.x'),
-        }
-      }
-    });
-
-    const entity1 = ecs.createEntity({
-      Position: {
-        container: {
-          position: {
-            x: 0,
-            y: 0
-          }
-        }
-      }
-    });
-    entity1.Position.x = 10;
-    entity1.Position.y = 12;
-
-    expect(entity1.Position.x).to.be.equal(10);
-    expect(entity1.Position.deep.x).to.be.equal(10);
-    expect(entity1.Position.y).to.be.equal(12);
-
-    entity1.Position.container = { position: { x: 33, y: 1 } };
-
-
-    expect(entity1.Position.x).to.be.equal(33);
-    expect(entity1.Position.y).to.be.equal(1);
-
-    entity1.Position.x = 21;
-    entity1.Position.y = 34;
-
-    expect(entity1.Position.x).to.be.equal(21);
-    expect(entity1.Position.y).to.be.equal(34);
-    expect(entity1.Position.container.position.x).to.be.equal(21);
-    expect(entity1.Position.container.position.y).to.be.equal(34);
+    expect(changes[0].target).to.equal(pants.id);
+    expect(entity.getComponents('EquipmentEffect')).to.not.exist();
+    expect(entity.getComponents('Burning')).to.not.exist();
 
   });
 
@@ -543,7 +447,7 @@ lab.experiment('system queries', () => {
       properties: {}
     });
 
-    class TileSystem extends World.System {
+    class TileSystem extends ECS.System {
 
       constructor(ecs) {
 

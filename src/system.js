@@ -3,6 +3,7 @@ class System {
   constructor(ecs) {
 
     this.ecs = ecs;
+    this._stagedChanges = [];
     this.changes = [];
     this.lastTick = this.ecs.ticks;
     if (this.constructor.subscriptions) {
@@ -16,9 +17,18 @@ class System {
 
   }
 
-  _sendChange(change) {
+  _preUpdate() {
 
-    this.changes.push(change);
+    this.changes = this._stagedChanges;
+    this._stagedChanges = [];
+  }
+
+  _postUpdate() {
+  }
+
+  _recvChange(change) {
+
+    this._stagedChanges.push(change);
   }
 
   destroy() {

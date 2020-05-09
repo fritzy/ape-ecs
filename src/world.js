@@ -25,6 +25,7 @@ module.exports = class World {
     this.tags = new Set();
     //this.entityComponents = new Map();
     this.entitiesByComponent = {};
+    this.componentsById = new Map();
     this.entityReverse = {};
     this.updatedEntities = new Set();
     this.componentTypes = {};
@@ -46,7 +47,8 @@ module.exports = class World {
     return this.ticks;
   }
 
-  addRef(target, entity, component, prop, sub, type) {
+  _addRef(target, entity, component, prop, sub, type) {
+
     if (!this.refs[target]) {
       this.refs[target] = new Set();
     }
@@ -66,9 +68,16 @@ module.exports = class World {
     /* $lab:coverage:on$ */
     reverse.set(entity, count + 1);
     this.refs[target].add([entity, component, prop, sub].join('...'));
+    this._sendChange({
+      op: 'addRef',
+      component: this.componentsById.get(component),
+      target,
+      entity,
+      prop
+    });
   }
 
-  deleteRef(target, entity, component, prop, sub, type) {
+  _deleteRef(target, entity, component, prop, sub, type) {
 
     const ref = this.entityReverse[target][type];
     let count = ref.get(entity);
@@ -89,6 +98,13 @@ module.exports = class World {
     if (this.refs[target].size === 0) {
       delete this.refs[target];
     }
+    this._sendChange({
+      op: 'deleteRef',
+      component: this.componentsById.get(component),
+      target,
+      entity,
+      prop
+    });
   }
 
   /**
@@ -166,11 +182,14 @@ module.exports = class World {
     }
     const props = setProps(definition.properties, []);
 
+    klass.prototype.onInit = definition.init || function onInit() {};
+    klass.prototype.onDestroy = definition.destroy || function onDestroy() {};
     klass.prototype.type = name;
     klass.prototype.id = '';
+    klass.prototype.world = this;
     klass.props = props;
     klass.definition = definition;
-    klass.world = this;
+    klass.subbed = false;
     Object.defineProperty(klass, 'name', { value: name });
     this.componentTypes[name] = klass;
     this.entitiesByComponent[name] = new Set();
@@ -212,10 +231,20 @@ module.exports = class World {
   subscribe(system, type) {
 
     if (!this.subscriptions.has(type)) {
-      this.types[type].subbed = true;
+      this.componentTypes[type].subbed = true;
       this.subscriptions.set(type, new Set());
     }
     this.subscriptions.get(type).add(system);
+  }
+
+  _sendChange(operation) {
+
+    if (operation.component.constructor.subbed) {
+      const systems = this.subscriptions.get(operation.component.type);
+      for (const system of systems) {
+        system._recvChange(operation);
+      }
+    }
   }
 
   addSystem(group, system) {
@@ -235,7 +264,9 @@ module.exports = class World {
     if (!systems) return;
     for (const system of systems) {
       let entities;
+      system._preUpdate();
       system.update(this.ticks, entities);
+      system._postUpdate();
       system.lastTick = this.ticks;
       if (system.changes.length !== 0) {
         system.changes = [];
@@ -254,6 +285,11 @@ module.exports = class World {
       this.entitiesByComponent[name] = new Set();
     }
     this.entitiesByComponent[name].add(entity.id);
+  }
+
+  _deleteEntityComponent(component) {
+
+    this.entitiesByComponent[component.type].delete(component._meta.entity.id);
   }
 
 

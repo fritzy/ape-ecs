@@ -70,19 +70,25 @@ class Component {
 
   constructor(entity, initial) {
 
+    this.id = this.id || UUID();
     this._meta = {
       lookup: '',
-      updated: this.constructor.world.ticks,
-      entity: entity
+      updated: this.world.ticks,
+      entity: entity,
+      refs: new Set()
     };
     Object.seal(this._meta);
+    this.world.componentsById.set(this.id, this);
     this._init(initial);
+    this.onInit();
+    this.world._sendChange({
+      op: 'add',
+      component: this
+    });
   }
-
 
   _init(initial) {
 
-    this.id = this.id || UUID();
     recursiveInit(this, this.constructor.props, this, initial);
   }
 
@@ -108,6 +114,33 @@ class Component {
   }
 
   clear() {
+  }
+
+  _addRef(value, prop, sub) {
+
+    this._meta.refs.add(`${value}||${prop}||${sub}`);
+    this.world._addRef(value, this._meta.entity.id, this.id, prop, sub, this._meta.lookup);
+  }
+
+  _deleteRef(value, prop, sub) {
+
+    this._meta.refs.delete(`${value}||${prop}||${sub}`);
+    this.world._deleteRef(value, this._meta.entity.id, this.id, prop, sub, this._meta.lookup);
+  }
+
+  destroy() {
+
+    this.onDestroy();
+    for (const ref of this._meta.refs) {
+      const [value, prop, sub] = ref.split('||');
+      this.world._deleteRef(value, this._meta.entity.id, this.id, sub, this._meta.lookup);
+    }
+    this._meta.refs.clear();
+    this.world._sendChange({
+      op: 'destroy',
+      component: this
+    });
+    this.world.componentsById.delete(this.id);
   }
 }
 

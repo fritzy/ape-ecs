@@ -7,7 +7,6 @@ class Entity {
 
     this.world = world;
     this.components = {};
-    this.componentById = {};
     this.componentsByType = {};
     this.id = definition.id || UUID();
     this.world.entities.set(this.id, this);
@@ -27,12 +26,9 @@ class Entity {
     }
   }
 
-  has(tagOrComponent) {
+  has(type) {
 
-    if (this.tags.has(tagOrComponent)) {
-      return true;
-    }
-    return (this.components.hasOwnProperty(tagOrComponent));
+    return this.world.entitiesByComponent[type].has(this.id)
   }
 
   getComponent(lookup) {
@@ -44,7 +40,29 @@ class Entity {
 
     const comp = this.components[lookup];
     comp._meta.updated = this.world.ticks;
+    this.world._sendChange({
+      op: 'update',
+      component: comp
+    });
     return comp;
+  }
+
+  getComponents(type) {
+
+    return this.componentsByType[type];
+  }
+
+  getMutableComponents(type) {
+
+    const components = this.componentsByType[type];
+    for (comp of components) {
+      comp._meta.updated = this.world.ticks;
+      this.world._sendChange({
+        op: 'update',
+        component: comp
+      });
+    }
+    return components;
   }
 
   addTag(tag) {
@@ -52,7 +70,7 @@ class Entity {
     this.tags.add(tag);
     this.updatedComponents = this.world.ticks;
     this.world.entityComponents.get(tag).add(this.id);
-    this.world.entityUpdated(this);
+    this.world._entityUpdated(this);
   }
 
   removeTag(tag) {
@@ -60,24 +78,46 @@ class Entity {
     this.tags.delete(tag);
     this.updatedComponents = this.world.ticks;
     this.world.entityComponents.get(tag).delete(this.id);
-    this.world.entityUpdated(this);
+    this.world._entityUpdated(this);
   }
 
   addComponent(component, properties, lookup) {
 
+    if (typeof component === 'string') {
+      component = this.world.componentTypes[component];
+    }
     const name = component.name;
     lookup = lookup || component.name;
     const comp = new component(this, properties);
+    if (lookup === '*') {
+      lookup = comp.id;
+    }
     this.components[lookup] = comp;
     comp._meta.lookup = lookup;
     if (!this.componentsByType[name]) {
       this.componentsByType[name] = new Set();
     }
     this.componentsByType[name].add(comp);
-    this.componentById[comp.id] = comp;
     this.world._addEntityComponent(name, this);
+    this.world._entityUpdated(this);
+    return comp;
   }
 
+  removeComponent(component) {
+
+    if (typeof component === 'string') {
+      component = this.components[component];
+    }
+    delete this.components[component._meta.lookup];
+    this.componentsByType[component.type].delete(component);
+
+    if (this.componentsByType[component.type].size === 0) {
+      delete this.componentsByType[component.type];
+    }
+    this.world._deleteEntityComponent(component);
+    this.world._entityUpdated(this);
+    component.destroy();
+  }
 
   getObject() {
 
@@ -95,24 +135,10 @@ class Entity {
       for (const ref of this.world.refs[this.id]) {
         const [entityId, componentId, prop, sub] = ref.split('...');
         const entity = this.world.getEntity(entityId);
-        // remove coverage because I can't think of how this would go wrng
-        /* $lab:coverage:off$ */
         if (!entity) continue;
-        const component = entity.componentById[componentId];
+        const component = entity.world.componentsById.get(componentId);
         if (!component) continue;
-        /* $lab:coverage:on$ */
         const path = prop.split('.');
-        if (!sub) {
-          const last = path[path.length - 1];
-          let t2 = component;
-          /* $lab:coverage:off$ */
-          for (let i = 0; i < path.length - 1; i++) {
-            t2 = t2[path[i]];
-          }
-          /* $lab:coverage:on$ */
-          t2[last] = null;
-          continue;
-        }
 
         let target = component;
         for (const prop of path) {
@@ -121,14 +147,16 @@ class Entity {
         if (sub === '__set__') {
           target.delete(this);
         } else {
-          target[sub].set(null);
+          target.set(null);
         }
       }
+    }
+    for (const lookup of Object.keys(this.components)) {
+      this.removeComponent(this.components[lookup]);
     }
     this.world.entities.delete(this.id);
     delete this.world.entityReverse[this.id];
   }
-
 }
 
 module.exports = Entity;
