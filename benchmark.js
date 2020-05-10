@@ -3,7 +3,7 @@ const ECS = require('./src/index');
 const perf_hooks = require('perf_hooks');
 
 
-const ecs = new ECS.ECS();
+const ecs = new ECS.World();
 ecs.registerComponent('Test', {
   properties: {
     a: 1,

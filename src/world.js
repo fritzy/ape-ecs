@@ -23,7 +23,6 @@ module.exports = class World {
     this.entities = new Map();
     this.types = {};
     this.tags = new Set();
-    //this.entityComponents = new Map();
     this.entitiesByComponent = {};
     this.componentsById = new Map();
     this.entityReverse = {};
@@ -48,6 +47,10 @@ module.exports = class World {
   }
 
   _addRef(target, entity, component, prop, sub, type) {
+
+    if (!type) {
+      throw new Error();
+    }
 
     if (!this.refs[target]) {
       this.refs[target] = new Set();
@@ -132,6 +135,8 @@ module.exports = class World {
 
   registerComponent(name, definition) {
 
+    if (!definition.properties) definition.properties = {};
+
     const klass = class CustomComponent extends Component {};
 
     function setProps(definition, path) {
@@ -160,6 +165,8 @@ module.exports = class World {
             continue;
           }
           type = prop.type;
+        } else if (typeof prop === 'object' && !Array.isArray(prop) && !prop.hasOwnProperty('type')) {
+          props.sub[key] = setProps(prop, [...path, key]);
         } else {
           value = prop;
         }
@@ -187,6 +194,7 @@ module.exports = class World {
     klass.prototype.type = name;
     klass.prototype.id = '';
     klass.prototype.world = this;
+    klass.serialize = definition.serialize || {};
     klass.props = props;
     klass.definition = definition;
     klass.subbed = false;
@@ -219,7 +227,7 @@ module.exports = class World {
 
   getEntities(type) {
 
-    const results = [...this.entityComponents.get(type)];
+    const results = [...this.entitiesByComponent[type]];
     return new Set(results.map((id) => this.getEntity(id)));
   }
 

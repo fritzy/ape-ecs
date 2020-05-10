@@ -121,7 +121,7 @@ class Query {
       } else if (source.from === 'any') {
         const potential = [];
         for (const type of source.types) {
-          potential.push(this.world.entitiesByComponent.get[type]);
+          potential.push(this.world.entitiesByComponent[type]);
         }
         potential.sort((a, b) => b.size - a.size);
         let found = false;
@@ -135,11 +135,11 @@ class Query {
           inFrom = true;
           break;
         }
-      /* $lab:coverage:off$ */
       } else if (source.from === 'reverse') {
-      /* $lab:coverage:on$ */
-        if (source.entity.refs.hasOwnProperty(source.type)) {
-          if (new Set(source.entity.refs[source.type].keys()).has(entity.id)) {
+        if (this.world.entityReverse.hasOwnProperty(source.entity.id)
+          && this.world.entityReverse[source.entity.id].hasOwnProperty(source.type)) {
+          const keys = new Set(this.world.entityReverse[source.entity.id][source.type].keys());
+          if (new Set(this.world.entityReverse[source.entity.id][source.type].keys()).has(entity.id)) {
             inFrom = true;
             break;
           }
@@ -207,11 +207,9 @@ class Query {
           comps.push(entities);
         }
         results = SetHelpers.union(results, ...comps);
-      /* $lab:coverage:off$ */
       } else if (source.from === 'reverse') {
-        if (source.entity.refs.hasOwnProperty(source.type)) {
-      /* $lab:coverage:on$ */
-          results = SetHelpers.union(results, new Set(source.entity.refs[source.type].keys()));
+        if (this.world.entityReverse[source.entity.id] && this.world.entityReverse[source.entity.id].hasOwnProperty(source.type)) {
+          results = SetHelpers.union(results, new Set([...this.world.entityReverse[source.entity.id][source.type].keys()]));
         }
       }
     }

@@ -22,7 +22,7 @@ function recursiveInit(comp, props, target, initial) {
   }
   for (const key of Object.keys(props.sub)) {
     target[key] = {};
-    Component._recursiveInit(props.sub[key], target[key], initial[key]);
+    recursiveInit(comp, props.sub[key], target[key], initial[key]);
   }
   Object.seal(target);
 }
@@ -52,7 +52,7 @@ function recursiveAssign(values, props, target) {
   }
 }
 
-function recursiveGetObject(obj = obj, target, props) {
+function recursiveGetObject(obj = {}, target, props) {
 
   for (const key of Object.keys(props.default)) {
     obj[key] = target[key];
@@ -68,11 +68,12 @@ function recursiveGetObject(obj = obj, target, props) {
 
 class Component {
 
-  constructor(entity, initial) {
+  constructor(entity, initial={}, lookup) {
 
-    this.id = this.id || UUID();
+    this.id = initial.id || UUID();
+    if (lookup === '*') lookup = this.id;
     this._meta = {
-      lookup: '',
+      lookup,
       updated: this.world.ticks,
       entity: entity,
       refs: new Set()
@@ -133,7 +134,7 @@ class Component {
     this.onDestroy();
     for (const ref of this._meta.refs) {
       const [value, prop, sub] = ref.split('||');
-      this.world._deleteRef(value, this._meta.entity.id, this.id, sub, this._meta.lookup);
+      this.world._deleteRef(value, this._meta.entity.id, this.id, prop, sub, this._meta.lookup);
     }
     this._meta.refs.clear();
     this.world._sendChange({

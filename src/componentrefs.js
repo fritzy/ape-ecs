@@ -46,11 +46,14 @@ module.exports = {
 
     constructor(comp, obj, pathArr) {
 
+      obj = obj || null;
       this.comp = comp;
-      this.default = obj;
       this.path = pathArr.join('.');
       this.world = this.comp.world;
       this.value = null;
+      if (obj !== null) {
+        this.set(obj);
+      }
     }
 
     get() {
@@ -66,7 +69,6 @@ module.exports = {
     reset() {
 
       if (this.value) {
-        //this.world.deleteRef(value, this.comp.entity.id, this.comp.id, this.path, undefined, this.comp.type);
         this.comp._deleteRef(value, this.path, undefined);
       }
     }
@@ -76,7 +78,6 @@ module.exports = {
       const old = this.value;
       value = (value && typeof value !== 'string') ? value.id : value;
       if (old && old !== value) {
-        //this.world.deleteRef(old, this.comp._meta.entity.id, this.comp.id, this.path, undefined, this.comp.type);
         this.comp._deleteRef(old, this.path, undefined);
       }
       if (value && value !== old) {
@@ -86,56 +87,64 @@ module.exports = {
     }
   },
 
-  /*
-  EntityObject: (object, component, reference) => {
+  EntityObject: class EntityObject {
 
-    const entity = component.entity;
-    const ecs = component.ecs;
-    const entityId = entity.id;
+    constructor(component, object, reference) {
 
-    return new Proxy({}, {
-      get(obj, prop, prox) {
+      this.entity = component._meta.entity;
+      this.world = component.world;
+      this.entityId = this.entity.id;
+      this.reference = reference.join('.');
+      this.value = object || {};
+      this.component = component;
+    }
 
-        const value = Reflect.get(obj, prop, prox);
-        if (typeof value === 'string') {
-          return component.ecs.getEntity(value);
-        }
-        return value;
-      },
-      set(obj, prop, value) {
+    get(prop) {
 
-        component.updated = component.ecs.ticks;
-        const old = Reflect.get(obj, prop);
-        if (value && value.id) {
-          value = value.id;
-        }
-        const result = Reflect.set(obj, prop, value);
-        component._updated('setEntityObject', prop, old, value);
-        if (old && old !== value) {
-          ecs.deleteRef(old, entityId, component.id, reference, prop);
-        }
-        if (value && value !== old) {
-          ecs.addRef(value, entityId, component.id, reference, prop);
-        }
-        return result;
-      },
+      return this.world.getEntity(this.value[prop]);
+    }
 
-      deleteProperty(obj, prop) {
+    set(prop, value) {
 
-        const old = Reflect.get(obj, prop);
-        if (old) {
-          ecs.deleteRef(old, entityId, component.id, reference, prop);
-        }
-        if (prop in obj) {
-          delete obj[prop];
-          component._updated('deleteEntityObject', prop);
-          return true;
-        }
+      const old = this.value[prop];
+      if (value && value.id) {
+        value = value.id;
       }
+      this.value[prop] = value;
+      if (old && old !== value) {
+        this.component._deleteRef(old, `${this.reference}.${prop}`, '__obj__');
+      }
+      if (value && value !== old) {
+        this.component._addRef(value, `${this.reference}.${prop}`, '__obj__');
+      }
+      return true;
+    }
 
-    });
+    has(prop) {
+
+      return this.value.hasOwnProperty(prop);
+    }
+
+    delete(prop) {
+
+      const old = this.value[prop];
+      if (old) {
+        this.component._deleteRef(old, `${this.reference}.${prop}`, '__obj__');
+      }
+      delete this.value[prop];
+    }
+
+    keys() {
+
+      return Object.keys(this.value);
+    }
+
+    getValue() {
+
+      return this.value;
+    }
+
   },
-  */
 
   EntitySet: class EntitySet extends Set {
 
@@ -170,7 +179,6 @@ module.exports = {
       if (value.id) {
         value = value.id;
       }
-      //this.world.deleteRef(value, this.entityId, this.component.id, this.reference, '__set__', this.component._meta.lookup);
       this.component._deleteRef(value, this.reference, '__set__');
       const res = super.delete(value);
       return res;

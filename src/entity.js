@@ -15,6 +15,13 @@ class Entity {
     this.updatedComponents = this.world.ticks;
     this.updatedValues = this.world.ticks;
 
+    if (definition.tags) {
+      for (const tag of definition.tags) {
+        this.addTag(tag, true);
+      }
+      delete definition.tags;
+    }
+
     for (const key of Object.keys(definition)) {
       if (key === 'id') {
         this.id = definition.id;
@@ -22,7 +29,10 @@ class Entity {
       }
       const constName = definition[key].type || key;
       const component = this.world.componentTypes[constName];
-      this.addComponent(component, definition[key], key);
+      if (component === undefined) {
+        throw new Error(`Component "${constName}" has not been registered.`);
+      }
+      this.addComponent(component, definition[key], key, false);
     }
   }
 
@@ -40,6 +50,7 @@ class Entity {
 
     const comp = this.components[lookup];
     comp._meta.updated = this.world.ticks;
+    this.updatedValues = this.world.ticks;
     this.world._sendChange({
       op: 'update',
       component: comp
@@ -55,6 +66,7 @@ class Entity {
   getMutableComponents(type) {
 
     const components = this.componentsByType[type];
+    this.updatedValues = this.world.ticks;
     for (comp of components) {
       comp._meta.updated = this.world.ticks;
       this.world._sendChange({
@@ -65,41 +77,48 @@ class Entity {
     return components;
   }
 
-  addTag(tag) {
+  addTag(tag, skipUpdate=false) {
 
     this.tags.add(tag);
     this.updatedComponents = this.world.ticks;
-    this.world.entityComponents.get(tag).add(this.id);
-    this.world._entityUpdated(this);
+    this.world.entitiesByComponent[tag].add(this.id);
+    if (!skipUpdate) {
+      this.world._entityUpdated(this);
+    }
   }
 
   removeTag(tag) {
 
     this.tags.delete(tag);
     this.updatedComponents = this.world.ticks;
-    this.world.entityComponents.get(tag).delete(this.id);
+    this.world.entitiesByComponent[tag].delete(this.id);
     this.world._entityUpdated(this);
   }
 
-  addComponent(component, properties, lookup) {
+  addComponent(component, properties, lookup, skipUpdate=false) {
 
+    let name;
     if (typeof component === 'string') {
+      name = component;
       component = this.world.componentTypes[component];
     }
-    const name = component.name;
-    lookup = lookup || component.name;
-    const comp = new component(this, properties);
-    if (lookup === '*') {
-      lookup = comp.id;
+    if (component === undefined) {
+      throw new Error(`Component "${name}" has not been registered.`);
     }
-    this.components[lookup] = comp;
+    name = component.name;
+    lookup = lookup || component.name;
+    const comp = new component(this, properties, lookup);
+    this.components[comp._meta.lookup] = comp;
     comp._meta.lookup = lookup;
     if (!this.componentsByType[name]) {
       this.componentsByType[name] = new Set();
     }
     this.componentsByType[name].add(comp);
     this.world._addEntityComponent(name, this);
-    this.world._entityUpdated(this);
+    if (!skipUpdate) {
+      this.updatedComponents = this.world.ticks;
+      this.world._entityUpdated(this);
+    }
     return comp;
   }
 
@@ -107,6 +126,9 @@ class Entity {
 
     if (typeof component === 'string') {
       component = this.components[component];
+    }
+    if (component === undefined) {
+      throw new Error('Cannot remove undefined component.');
     }
     delete this.components[component._meta.lookup];
     this.componentsByType[component.type].delete(component);
@@ -123,7 +145,11 @@ class Entity {
 
     const obj = {};
     for (const key of Object.keys(this.components)) {
-      obj[key] = this.components[key].getObject();
+      const comp = this.components[key];
+      if (comp.constructor.serialize && comp.constructor.serialize.skip) {
+        continue;
+      }
+      obj[key] = comp.getObject();
     }
     obj.id = this.id;
     return obj;
@@ -141,11 +167,15 @@ class Entity {
         const path = prop.split('.');
 
         let target = component;
+        let parent = target;
         for (const prop of path) {
+          parent = target;
           target = target[prop];
         }
         if (sub === '__set__') {
           target.delete(this);
+        } else if (sub === '__obj__') {
+          parent.delete(path[path.length - 1]);
         } else {
           target.set(null);
         }
