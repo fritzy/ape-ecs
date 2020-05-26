@@ -1,4 +1,5 @@
 const BaseComponent = require('./component');
+const genId = require('./util').genId;
 const UUID = require('uuid/v1');
 
 class Entity {
@@ -8,7 +9,8 @@ class Entity {
     this.world = world;
     this.components = {};
     this.componentsByType = {};
-    this.id = definition.id || UUID();
+    this.id = definition.id || genId();
+    delete definition.id;
     this.world.entities.set(this.id, this);
     this.tags = new Set();
 
@@ -23,16 +25,8 @@ class Entity {
     }
 
     for (const key of Object.keys(definition)) {
-      if (key === 'id') {
-        this.id = definition.id;
-        continue;
-      }
-      const constName = definition[key].type || key;
-      const component = this.world.componentTypes[constName];
-      if (component === undefined) {
-        throw new Error(`Component "${constName}" has not been registered.`);
-      }
-      this.addComponent(component, definition[key], key, false);
+      const name = definition[key].type || key;
+      this.addComponent(name, definition[key], key, false);
     }
   }
 
@@ -53,7 +47,9 @@ class Entity {
     this.updatedValues = this.world.ticks;
     this.world._sendChange({
       op: 'update',
-      component: comp
+      component: comp.id,
+      entity: comp._meta.entity.id,
+      type: comp.type
     });
     return comp;
   }
@@ -71,7 +67,9 @@ class Entity {
       comp._meta.updated = this.world.ticks;
       this.world._sendChange({
         op: 'update',
-        component: comp
+        component: comp.id,
+        entity: comp._meta.entity.id,
+        type: comp.type
       });
     }
     return components;
@@ -95,19 +93,14 @@ class Entity {
     this.world._entityUpdated(this);
   }
 
-  addComponent(component, properties, lookup, skipUpdate=false) {
+  addComponent(name, properties, lookup, skipUpdate=false) {
 
-    let name;
-    if (typeof component === 'string') {
-      name = component;
-      component = this.world.componentTypes[component];
-    }
-    if (component === undefined) {
+    const pool = this.world.componentPool[name];
+    if (pool === undefined) {
       throw new Error(`Component "${name}" has not been registered.`);
     }
-    name = component.name;
-    lookup = lookup || component.name;
-    const comp = new component(this, properties, lookup);
+    lookup = lookup || name;
+    const comp = pool.get(this, properties, lookup);
     this.components[comp._meta.lookup] = comp;
     comp._meta.lookup = lookup;
     if (!this.componentsByType[name]) {
@@ -141,7 +134,7 @@ class Entity {
     component.destroy();
   }
 
-  getObject() {
+  getObject(componentIds=true) {
 
     const obj = {};
     for (const key of Object.keys(this.components)) {
@@ -149,7 +142,7 @@ class Entity {
       if (comp.constructor.serialize && comp.constructor.serialize.skip) {
         continue;
       }
-      obj[key] = comp.getObject();
+      obj[key] = comp.getObject(componentIds);
     }
     obj.id = this.id;
     return obj;

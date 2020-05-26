@@ -1,14 +1,14 @@
 class System {
 
-  constructor(ecs) {
+  constructor(world) {
 
-    this.ecs = ecs;
+    this.world = world;
     this._stagedChanges = [];
     this.changes = [];
-    this.lastTick = this.ecs.ticks;
+    this.lastTick = this.world.ticks;
     if (this.constructor.subscriptions) {
       for (const sub of this.constructor.subscriptions) {
-        this.ecs.subscribe(this, sub);
+        this.world.subscribe(this, sub);
       }
     }
   }

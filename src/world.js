@@ -6,6 +6,7 @@ const UUID = require('uuid/v1');
 const Entity = require('./entity');
 const Query = require('./query');
 const Component = require('./component');
+const ComponentPool = require('./componentpool');
 
 const componentMethods = new Set(['stringify', 'clone', 'getObject', Symbol.iterator]);
 
@@ -33,6 +34,7 @@ module.exports = class World {
     this.subscriptions = new Map();
     this.systems = new Map();
     this.refs = {};
+    this.componentPool = {};
   }
 
   /**
@@ -46,11 +48,7 @@ module.exports = class World {
     return this.ticks;
   }
 
-  _addRef(target, entity, component, prop, sub, type) {
-
-    if (!type) {
-      throw new Error();
-    }
+  _addRef(target, entity, component, prop, sub, lookup, type) {
 
     if (!this.refs[target]) {
       this.refs[target] = new Set();
@@ -59,10 +57,10 @@ module.exports = class World {
     if(!this.entityReverse.hasOwnProperty(target)) {
       this.entityReverse[target] = {};
     }
-    if(!this.entityReverse[target].hasOwnProperty(type)) {
-      this.entityReverse[target][type] = new Map();
+    if(!this.entityReverse[target].hasOwnProperty(lookup)) {
+      this.entityReverse[target][lookup] = new Map();
     }
-    const reverse = this.entityReverse[target][type];
+    const reverse = this.entityReverse[target][lookup];
     let count = reverse.get(entity);
     /* $lab:coverage:off$ */
     if (count === undefined) {
@@ -73,16 +71,17 @@ module.exports = class World {
     this.refs[target].add([entity, component, prop, sub].join('...'));
     this._sendChange({
       op: 'addRef',
-      component: this.componentsById.get(component),
+      component: component,
+      type: type,
       target,
       entity,
       prop
     });
   }
 
-  _deleteRef(target, entity, component, prop, sub, type) {
+  _deleteRef(target, entity, component, prop, sub, lookup, type) {
 
-    const ref = this.entityReverse[target][type];
+    const ref = this.entityReverse[target][lookup];
     let count = ref.get(entity);
     count--;
     /* $lab:coverage:off$ */
@@ -93,7 +92,7 @@ module.exports = class World {
     }
     /* $lab:coverage:on$ */
     if (ref.size === 0) {
-      delete ref[type];
+      delete ref[lookup];
     }
     /* $lab:coverage:off$ */
     /* $lab:coverage:on$ */
@@ -103,7 +102,8 @@ module.exports = class World {
     }
     this._sendChange({
       op: 'deleteRef',
-      component: this.componentsById.get(component),
+      component,
+      type: type,
       target,
       entity,
       prop
@@ -133,7 +133,7 @@ module.exports = class World {
     this.entitiesByComponent[tags] = new Set();
   }
 
-  registerComponent(name, definition) {
+  registerComponent(name, definition, spinup=1) {
 
     if (!definition.properties) definition.properties = {};
 
@@ -201,6 +201,7 @@ module.exports = class World {
     Object.defineProperty(klass, 'name', { value: name });
     this.componentTypes[name] = klass;
     this.entitiesByComponent[name] = new Set();
+    this.componentPool[name] = new ComponentPool(this, name, spinup);
   }
 
   createEntity(definition) {
@@ -247,8 +248,8 @@ module.exports = class World {
 
   _sendChange(operation) {
 
-    if (operation.component.constructor.subbed) {
-      const systems = this.subscriptions.get(operation.component.type);
+    if (this.componentTypes[operation.type].subbed) {
+      const systems = this.subscriptions.get(operation.type);
       for (const system of systems) {
         system._recvChange(operation);
       }

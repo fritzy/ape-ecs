@@ -1,5 +1,6 @@
 const UUID = require('uuid/v1');
 const ComponentRefs = require('./componentrefs');
+const genId = require('./util').genId;
 
 function recursiveInit(comp, props, target, initial) {
 
@@ -31,10 +32,10 @@ function recursiveReset(props, target) {
 
   Object.assign(target, props.default);
   for (const key of Object.keys(props.custom)) {
-    target[key].reset();
+    target[key]._reset();
   }
   for (const key of Object.keys(props.sub)) {
-    Component._recursiveReset(props.sub[key], target[key]);
+    recursiveReset(props.sub[key], target[key]);
   }
 }
 
@@ -45,9 +46,10 @@ function recursiveAssign(values, props, target) {
     if (props.default.hasOwnProperty(key)) {
       target[key] = values[key];
     } else if (props.custom.hasOwnProperty(key)) {
-      target[key].set(values[key]);
+      console.log(target[key]);
+      target[key]._set(values[key]);
     } else if (props.sub.hasOwnProperty(key)) {
-      Component._recursiveAssign(values[key], props.sub[key], target[key]);
+      recursiveAssign(values[key], props.sub[key], target[key]);
     }
   }
 }
@@ -70,7 +72,7 @@ class Component {
 
   constructor(entity, initial={}, lookup) {
 
-    this.id = initial.id || UUID();
+    this.id = initial.id || genId();
     if (lookup === '*') lookup = this.id;
     this._meta = {
       lookup,
@@ -84,7 +86,9 @@ class Component {
     this.onInit();
     this.world._sendChange({
       op: 'add',
-      component: this
+      component: this.id,
+      entity: this._meta.entity.id,
+      type: this.type
     });
   }
 
@@ -93,17 +97,40 @@ class Component {
     recursiveInit(this, this.constructor.props, this, initial);
   }
 
+  setup(entity, initial, lookup) {
+
+    this.id = initial.id || genId();
+    if (lookup === '*') lookup = this.id;
+    this._meta.lookup = lookup;
+    this._meta.entity = entity;
+    this.world.componentsById.set(this.id, this);
+    this.assign(initial);
+    this.onInit();
+    this.world._sendChange({
+      op: 'add',
+      component: this.id,
+      entity: this._meta.entity.id,
+      type: this.type
+    });
+  }
+
+  mutate(obj) {
+
+    recursiveMutagte(this, obj);
+  }
 
   reset() {
 
     recursiveReset(this.constructor.props, this);
   }
 
-  getObject() {
+  getObject(componentIds=true) {
 
     const props = this.constructor.props;
     const obj = recursiveGetObject({}, this, props);
-    obj.id = this.id;
+    if (componentIds) {
+      obj.id = this.id;
+    }
     obj.type = this.type;
     return obj;
   }
@@ -120,13 +147,13 @@ class Component {
   _addRef(value, prop, sub) {
 
     this._meta.refs.add(`${value}||${prop}||${sub}`);
-    this.world._addRef(value, this._meta.entity.id, this.id, prop, sub, this._meta.lookup);
+    this.world._addRef(value, this._meta.entity.id, this.id, prop, sub, this._meta.lookup, this.type);
   }
 
   _deleteRef(value, prop, sub) {
 
     this._meta.refs.delete(`${value}||${prop}||${sub}`);
-    this.world._deleteRef(value, this._meta.entity.id, this.id, prop, sub, this._meta.lookup);
+    this.world._deleteRef(value, this._meta.entity.id, this.id, prop, sub, this._meta.lookup, this.type);
   }
 
   destroy() {
@@ -134,14 +161,17 @@ class Component {
     this.onDestroy();
     for (const ref of this._meta.refs) {
       const [value, prop, sub] = ref.split('||');
-      this.world._deleteRef(value, this._meta.entity.id, this.id, prop, sub, this._meta.lookup);
+      this.world._deleteRef(value, this._meta.entity.id, this.id, prop, sub, this._meta.lookup, this.type);
     }
     this._meta.refs.clear();
     this.world._sendChange({
       op: 'destroy',
-      component: this
+      component: this.id,
+      entity: this._meta.entity.id,
+      type: this.type
     });
     this.world.componentsById.delete(this.id);
+    this.world.componentPool[this.type].release(this);
   }
 }
 

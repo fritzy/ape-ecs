@@ -1,6 +1,5 @@
-const SetHelpers = require('set-helpers');
 const Entity = require('./entity');
-
+const Util = require('./util');
 
 //from(entities).fromReverse(entity, components).fromAll(types).fromAny(types).not(types).filter((entity) => true).index('myindex').execute(last).update(entity);
 
@@ -173,7 +172,7 @@ class Query {
     let results = new Set();
     for (const source of this.query.froms) {
       if (source.from === 'from') {
-        results = SetHelpers.union(results, source.entities);
+        results = Util.setUnion(results, source.entities);
       } else if (source.from === 'all') {
         if (source.types.length === 1) {
           /* $lab:coverage:off$ */
@@ -181,7 +180,7 @@ class Query {
             throw new Error(`${source.types[0]} is not a registered Component/Tag`);
           }
           /* $lab:coverage:on$ */
-          results = SetHelpers.union(results, this.world.entitiesByComponent[source.types[0]]);
+          results = Util.setUnion(results, this.world.entitiesByComponent[source.types[0]]);
         } else {
           const comps = [];
           for (const type of source.types) {
@@ -193,7 +192,7 @@ class Query {
             /* $lab:coverage:on$ */
             comps.push(entities);
           }
-          results = SetHelpers.union(results, SetHelpers.intersection(...comps));
+          results = Util.setUnion(results, Util.setIntersection(...comps));
         }
       } else if (source.from === 'any') {
         const comps = [];
@@ -206,10 +205,10 @@ class Query {
           /* $lab:coverage:on$ */
           comps.push(entities);
         }
-        results = SetHelpers.union(results, ...comps);
+        results = Util.setUnion(results, ...comps);
       } else if (source.from === 'reverse') {
         if (this.world.entityReverse[source.entity.id] && this.world.entityReverse[source.entity.id].hasOwnProperty(source.type)) {
-          results = SetHelpers.union(results, new Set([...this.world.entityReverse[source.entity.id][source.type].keys()]));
+          results = Util.setUnion(results, new Set([...this.world.entityReverse[source.entity.id][source.type].keys()]));
         }
       }
     }

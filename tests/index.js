@@ -8,8 +8,7 @@ const {
   EntitySet,
   EntityObject,
   ComponentSet,
-  ComponentObject,
-  Pointer
+  ComponentObject
 } = require('../src/componentrefs');
 
 lab.experiment('express components', () => {
@@ -99,7 +98,7 @@ lab.experiment('express components', () => {
     pockets.items.add(food);
     expect(pockets.items.has(food)).to.be.true();
 
-    const entityObj = entity.getObject();
+    const entityObj = entity.getObject(false);
     delete entityObj.id;
     const eJson = JSON.stringify(entityObj);
     const entityDef = JSON.parse(eJson);
@@ -165,19 +164,19 @@ lab.experiment('express components', () => {
     /* $lab:coverage:off$ */
     class System extends ECS.System {
 
-      constructor(ecs) {
+      constructor(world) {
 
-        super(ecs);
-        this.ecs.subscribe(this, 'EquipmentSlot');
+        super(world);
+        this.world.subscribe(this, 'EquipmentSlot');
       }
 
       update(tick) {
 
         changes = this.changes;
         for (const change of this.changes) {
-          const parent = change.component._meta.entity;
+          const parent = this.world.getEntity(change.entity);
           if (change.op === 'addRef') {
-            const value = this.ecs.getEntity(change.target);
+            const value = this.world.getEntity(change.target);
             if (value.has('Wearable')) {
               const components = [];
               const wearable = value.getComponent('Wearable');
@@ -209,10 +208,10 @@ lab.experiment('express components', () => {
 
     class System2 extends ECS.System {
 
-      constructor(ecs) {
+      constructor(world) {
 
-        super(ecs);
-        this.ecs.subscribe(this, 'EquipmentSlot');
+        super(world);
+        this.world.subscribe(this, 'EquipmentSlot');
       }
 
       update(tick) {
@@ -406,7 +405,7 @@ lab.experiment('deep components', () => {
     const shirt = entity.getMutableComponent('shirt');
     shirt.slot.a.set(sword);
 
-    const entityObj = entity.getObject();
+    const entityObj = entity.getObject(false);
     delete entityObj.id;
     const eJson = JSON.stringify(entityObj);
     const entityDef = JSON.parse(eJson);
@@ -448,11 +447,11 @@ lab.experiment('system queries', () => {
 
     class TileSystem extends ECS.System {
 
-      constructor(ecs) {
+      constructor(world) {
 
-        super(ecs);
+        super(world);
         this.lastResults = [];
-        this.query = this.ecs.createQuery({
+        this.query = this.world.createQuery({
           all: 'Tile',
           not: ['Hidden'],
           index: this });
@@ -1039,7 +1038,7 @@ lab.experiment('entity restore', () => {
     expect(setInv.slots.has(bottle2)).to.be.true();
     expect(setInv.slots.has(bottle3)).to.be.false();
 
-    const def = container.getObject();
+    const def = container.getObject(false);
     const defS = JSON.stringify(def);
     const def2 = JSON.parse(defS);
     delete def2.id;

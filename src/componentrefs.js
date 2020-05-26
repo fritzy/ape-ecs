@@ -1,52 +1,11 @@
 module.exports = {
 
-  Pointer: (path) => {
-    path = path.split('.');
-    const parent = path.slice(0, path.length - 1);
-
-    const PointerFunc = (obj, comp, prop) => {
-
-      const handler = {
-        get() {
-
-          let target = comp;
-          for (const field of path.slice(0, path.length - 1)) {
-            target = target[field];
-          }
-          const result = target[path[path.length - 1]];
-          return result;
-        },
-        set(value) {
-
-          let target = comp;
-          for (const field of parent) {
-            target = target[field];
-          }
-          const old = target[prop];
-          target[prop] = value;
-          comp._updated('setPointer', prop, old, value);
-          return true;
-        },
-        enumerable: true
-      };
-
-      const nodes = prop.split('.');
-      let target = comp;
-      for (let i = 0; i < nodes.length - 1; i++) {
-        target = target[nodes[i]];
-      }
-
-      Object.defineProperty(target, nodes[nodes.length - 1], handler);
-      return;
-    };
-    return PointerFunc;
-  },
-
   EntityRef: class EntityRef  {
 
     constructor(comp, obj, pathArr) {
 
       obj = obj || null;
+      this.default = obj;
       this.comp = comp;
       this.path = pathArr.join('.');
       this.world = this.comp.world;
@@ -54,6 +13,10 @@ module.exports = {
       if (obj !== null) {
         this.set(obj);
       }
+    }
+
+    _set(value) {
+      this.set(value);
     }
 
     get() {
@@ -66,11 +29,9 @@ module.exports = {
       return this.value;
     }
 
-    reset() {
+    _reset() {
 
-      if (this.value) {
-        this.comp._deleteRef(value, this.path, undefined);
-      }
+      this.set(this.default);
     }
 
     set(value) {
@@ -91,17 +52,27 @@ module.exports = {
 
     constructor(component, object, reference) {
 
-      this.entity = component._meta.entity;
-      this.world = component.world;
-      this.entityId = this.entity.id;
       this.reference = reference.join('.');
-      this.value = object || {};
+      this.value = Object.assign({}, object || {});
+      this.default = object;
       this.component = component;
+    }
+
+    _reset() {
+
+      this.value = Object.assign({}, this.default || {});
     }
 
     get(prop) {
 
-      return this.world.getEntity(this.value[prop]);
+      return this.component._meta.entity.world.getEntity(this.value[prop]);
+    }
+
+    _set(object) {
+
+      for (const key of Object.keys(object)) {
+        this.set(key, object[key]);
+      }
     }
 
     set(prop, value) {
@@ -156,11 +127,24 @@ module.exports = {
       this.component = component;
       this.reference = reference.join('.');
       this.sub = reference.slice(0, reference.length - 1).join('.');
-      this.entity = component._meta.entity;
-      this.world = this.entity.world;
-      this.entityId = this.entity.id;
       object = object.map(value => (typeof value === 'string') ? value : value.id );
+      this.default = object;
       for (const item of object) {
+        this.add(item);
+      }
+    }
+
+    _reset() {
+
+      this.clear();
+      for (const item of this.default) {
+        this.add(item);
+      }
+    }
+
+    _set(items) {
+      for (const item of this.default) {
+        if (item.id) item = item.id;
         this.add(item);
       }
     }
@@ -201,7 +185,7 @@ module.exports = {
 
           const result = siterator.next();
           if (typeof result.value === 'string') {
-            result.value = that.world.getEntity(result.value);
+            result.value = that.component._meta.entity.world.getEntity(result.value);
           }
           return result;
         }
