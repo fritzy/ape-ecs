@@ -139,64 +139,40 @@ module.exports = class World {
 
     const klass = class CustomComponent extends Component {};
 
-    function setProps(definition, path) {
-      const props = {
-        default: {},
-        custom: {},
-        sub: {},
-        path
+    const props = definition.properties;
+    const primitive = {};
+    const special = {};
+    const fields = Object.keys(definition.properties);
+    for (const field of fields) {
+      if (typeof props[field] === 'function') {
+        special[field] = props[field];
+        continue;
       }
+      primitive[field] = props[field];
+      Object.defineProperty(klass.prototype, field, {
+        get() {
+          return this._meta.values[field];
+        },
+        set(value) {
 
-      for (const key of Object.keys(definition)) {
-        const prop = definition[key];
-        let type;
-        let value;
-        let constructor;
-        if (prop === null) {
-          type = 'null';
-          value = null;
-        } else if (typeof prop === 'object' && prop.default) {
-          value = prop.default;
-          if (typeof prop.type === 'function') {
-            props.custom[key] = { value, constructor: prop.type };
-            continue;
-          } else if (prop.type === 'sub') {
-            props.sub[key] = setProps(value, [...path, key]);
-            continue;
-          }
-          type = prop.type;
-        } else if (typeof prop === 'object' && !Array.isArray(prop) && !prop.hasOwnProperty('type')) {
-          props.sub[key] = setProps(prop, [...path, key]);
-        } else {
-          value = prop;
+          this._meta.values[field] = value;
+          this._updated();
+          return true;
         }
-        if (!type) {
-          type = typeof value;
-        }
-        switch (type) {
-          case 'null':
-          case 'string':
-          case 'number':
-          case 'object':
-            props.default[key] = value;
-            break;
-          case 'function':
-            props.custom[key] = { value: null, constructor: value };
-            break;
-        }
-      }
-      return props;
+      });
     }
-    const props = setProps(definition.properties, []);
 
     klass.prototype.onInit = definition.init || function onInit() {};
     klass.prototype.onDestroy = definition.destroy || function onDestroy() {};
     klass.prototype.type = name;
-    klass.prototype.id = '';
-    klass.prototype.world = this;
+    Object.defineProperty(klass.prototype, 'world', {
+      value: this, enumerable: false });
     klass.serialize = definition.serialize || {};
-    klass.props = props;
-    klass.definition = definition;
+    klass.props = {
+      fields,
+      primitive,
+      special
+    };
     klass.subbed = false;
     Object.defineProperty(klass, 'name', { value: name });
     this.componentTypes[name] = klass;
@@ -298,7 +274,7 @@ module.exports = class World {
 
   _deleteEntityComponent(component) {
 
-    this.entitiesByComponent[component.type].delete(component._meta.entity.id);
+    this.entitiesByComponent[component.type].delete(component._meta.entityId);
   }
 
 

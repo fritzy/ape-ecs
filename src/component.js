@@ -1,159 +1,91 @@
-const UUID = require('uuid/v1');
 const ComponentRefs = require('./componentrefs');
 const genId = require('./util').genId;
-
-function recursiveInit(comp, props, target, initial) {
-
-  if (initial) {
-    for (const key of Object.keys(props.default)) {
-      if (initial[key] == undefined) {
-        target[key] = props.default[key];
-      } else {
-        target[key] = initial[key];
-      }
-    }
-  } else {
-    Object.assign(target, props.default);
-    initial = {};
-  }
-  for (const key of Object.keys(props.custom)) {
-    const def = props.custom[key];
-    const value = initial[key] || def.default;
-    target[key] = new def.constructor(comp, value, [...props.path, key]);
-  }
-  for (const key of Object.keys(props.sub)) {
-    target[key] = {};
-    recursiveInit(comp, props.sub[key], target[key], initial[key]);
-  }
-  Object.seal(target);
-}
-
-function recursiveReset(props, target) {
-
-  Object.assign(target, props.default);
-  for (const key of Object.keys(props.custom)) {
-    target[key]._reset();
-  }
-  for (const key of Object.keys(props.sub)) {
-    recursiveReset(props.sub[key], target[key]);
-  }
-}
-
-function recursiveAssign(values, props, target) {
-
-  const custom = props.custom;
-  for (const key of Object.keys(values)) {
-    if (props.default.hasOwnProperty(key)) {
-      target[key] = values[key];
-    } else if (props.custom.hasOwnProperty(key)) {
-      console.log(target[key]);
-      target[key]._set(values[key]);
-    } else if (props.sub.hasOwnProperty(key)) {
-      recursiveAssign(values[key], props.sub[key], target[key]);
-    }
-  }
-}
-
-function recursiveGetObject(obj = {}, target, props) {
-
-  for (const key of Object.keys(props.default)) {
-    obj[key] = target[key];
-  }
-  for (const key of Object.keys(props.custom)) {
-    obj[key] = target[key].getValue();
-  }
-  for (const key of Object.keys(props.sub)) {
-    obj[key] = recursiveGetObject(obj[key], target[key], props.sub[key]);
-  }
-  return obj;
-}
 
 class Component {
 
   constructor(entity, initial={}, lookup) {
 
-    this.id = initial.id || genId();
+    this._setup(entity, initial, lookup)
+  }
+
+  get entity() {
+
+    return this.world.getEntity(this._meta.entityId);
+  }
+
+  _setup(entity, initial, lookup) {
+
+    if (!initial.id) this.id = genId();
     if (lookup === '*') lookup = this.id;
     this._meta = {
       lookup,
       updated: this.world.ticks,
-      entity: entity,
-      refs: new Set()
+      entityId: entity.id,
+      refs: new Set(),
+      values: {}
     };
-    Object.seal(this._meta);
+    //Object.seal(this._meta);
     this.world.componentsById.set(this.id, this);
-    this._init(initial);
+
+    const props = this.constructor.props;
+    const values = Object.assign({}, props.primitive, initial);
+    for (const field of props.fields) {
+      const value = values[field];
+      if (props.special.hasOwnProperty(field)) {
+        const res = props.special[field](this, value, field);
+        if (res !== undefined) {
+          this[field] = res;
+        }
+      } else {
+        this[field] = value;
+      }
+    }
     this.onInit();
     this.world._sendChange({
       op: 'add',
       component: this.id,
-      entity: this._meta.entity.id,
+      entity: this._meta.entityId,
       type: this.type
     });
   }
 
-  _init(initial) {
-
-    recursiveInit(this, this.constructor.props, this, initial);
+  _updated() {
   }
 
-  setup(entity, initial, lookup) {
+  _reset() {
 
-    this.id = initial.id || genId();
-    if (lookup === '*') lookup = this.id;
-    this._meta.lookup = lookup;
-    this._meta.entity = entity;
-    this.world.componentsById.set(this.id, this);
-    this.assign(initial);
-    this.onInit();
-    this.world._sendChange({
-      op: 'add',
-      component: this.id,
-      entity: this._meta.entity.id,
-      type: this.type
-    });
-  }
-
-  mutate(obj) {
-
-    recursiveMutagte(this, obj);
-  }
-
-  reset() {
-
-    recursiveReset(this.constructor.props, this);
+    this._meta = null;
   }
 
   getObject(componentIds=true) {
 
     const props = this.constructor.props;
-    const obj = recursiveGetObject({}, this, props);
+    const obj = Object.assign({
+      entity: this._meta.entityId,
+      type: this.type
+    }, this._meta.values);
+    for (const field of this.constructor.props.fields) {
+      if (!obj.hasOwnProperty(field)) {
+        obj[field] = this[field].getValue();
+      }
+    }
     if (componentIds) {
       obj.id = this.id;
     }
-    obj.type = this.type;
     return obj;
   }
 
 
-  assign(values) {
-
-    recursiveAssign(values, this.constructor.props, this);
-  }
-
-  clear() {
-  }
-
   _addRef(value, prop, sub) {
 
     this._meta.refs.add(`${value}||${prop}||${sub}`);
-    this.world._addRef(value, this._meta.entity.id, this.id, prop, sub, this._meta.lookup, this.type);
+    this.world._addRef(value, this._meta.entityId, this.id, prop, sub, this._meta.lookup, this.type);
   }
 
   _deleteRef(value, prop, sub) {
 
     this._meta.refs.delete(`${value}||${prop}||${sub}`);
-    this.world._deleteRef(value, this._meta.entity.id, this.id, prop, sub, this._meta.lookup, this.type);
+    this.world._deleteRef(value, this._meta.entityId, this.id, prop, sub, this._meta.lookup, this.type);
   }
 
   destroy() {
@@ -167,7 +99,7 @@ class Component {
     this.world._sendChange({
       op: 'destroy',
       component: this.id,
-      entity: this._meta.entity.id,
+      entity: this._meta.entityId,
       type: this.type
     });
     this.world.componentsById.delete(this.id);

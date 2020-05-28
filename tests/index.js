@@ -274,7 +274,7 @@ lab.experiment('express components', () => {
     expect(changes.length).to.equal(2);
 
     const slot = entity.getMutableComponent('pants');
-    slot.slot.set(pants);
+    slot.slot = pants;
 
     ecs.runSystemGroup('equipment');
 
@@ -403,7 +403,7 @@ lab.experiment('deep components', () => {
     const pockets = entity.getMutableComponent('pockets');
     pockets.things.items.add(food);
     const shirt = entity.getMutableComponent('shirt');
-    shirt.slot.a.set(sword);
+    shirt.slot.a = sword;
 
     const entityObj = entity.getObject(false);
     delete entityObj.id;
@@ -756,7 +756,7 @@ lab.experiment('entity & component refs', () => {
       const potion = ecs.createEntity({
         Potion: {}
       });
-      beltslots.slots.set(slot, potion);
+      beltslots.slots[slot] =  potion;
       potions.push(potion);
     }
 
@@ -777,7 +777,7 @@ lab.experiment('entity & component refs', () => {
     expect(beltslots.slots.get('c')).to.not.exist();
 
     //assign again
-    beltslots.slots.set('a', potions[0]);
+    beltslots.slots['a'] = potions[0];
 
     //asign by id
     beltslots.slots.set('a', potionf.id);

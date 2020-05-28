@@ -48,7 +48,7 @@ class Entity {
     this.world._sendChange({
       op: 'update',
       component: comp.id,
-      entity: comp._meta.entity.id,
+      entity: comp._meta.entityId,
       type: comp.type
     });
     return comp;
