@@ -214,7 +214,7 @@ class Query {
     }
 
     this.results = new Set([...results]
-      .map(id => this.world.entities.get(id))
+      .map(id => this.world.getEntity(id))
       .filter(entity => !!entity)
     );
 

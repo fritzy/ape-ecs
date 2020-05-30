@@ -7,6 +7,7 @@ const Entity = require('./entity');
 const Query = require('./query');
 const Component = require('./component');
 const ComponentPool = require('./componentpool');
+const EntityPool = require('./entitypool');
 
 const componentMethods = new Set(['stringify', 'clone', 'getObject', Symbol.iterator]);
 
@@ -18,8 +19,12 @@ const componentMethods = new Set(['stringify', 'clone', 'getObject', Symbol.iter
  */
 module.exports = class World {
 
-  constructor() {
+  constructor(config) {
 
+    this.config = Object.assign({
+      trackChanges: true,
+      entityPool: 100
+    }, config);
     this.ticks = 0;
     this.entities = new Map();
     this.types = {};
@@ -34,7 +39,8 @@ module.exports = class World {
     this.subscriptions = new Map();
     this.systems = new Map();
     this.refs = {};
-    this.componentPool = {};
+    this.componentPool = new Map();
+    this.entityPool = new EntityPool(this, this.config.entityPool);
   }
 
   /**
@@ -150,6 +156,7 @@ module.exports = class World {
       }
       primitive[field] = props[field];
       Object.defineProperty(klass.prototype, field, {
+        enumerable: true,
         get() {
           return this._meta.values[field];
         },
@@ -177,12 +184,12 @@ module.exports = class World {
     Object.defineProperty(klass, 'name', { value: name });
     this.componentTypes[name] = klass;
     this.entitiesByComponent[name] = new Set();
-    this.componentPool[name] = new ComponentPool(this, name, spinup);
+    this.componentPool.set(name, new ComponentPool(this, name, spinup));
   }
 
   createEntity(definition) {
 
-    return new Entity(this, definition);
+    return this.entityPool.get(definition);
   }
 
   removeEntity(id) {
@@ -199,7 +206,7 @@ module.exports = class World {
 
   getEntity(entityId) {
 
-    return this.entities.get(`${entityId}`);
+    return this.entities.get(entityId);
   }
 
   getEntities(type) {
@@ -261,14 +268,13 @@ module.exports = class World {
 
   _entityUpdated(entity) {
 
-    this.updatedEntities.add(entity);
+    if (this.config.trackChanges) {
+      this.updatedEntities.add(entity);
+    }
   }
 
   _addEntityComponent(name, entity) {
 
-    if (!this.entitiesByComponent.hasOwnProperty(name)) {
-      this.entitiesByComponent[name] = new Set();
-    }
     this.entitiesByComponent[name].add(entity.id);
   }
 

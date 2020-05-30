@@ -1,10 +1,20 @@
 const ComponentRefs = require('./componentrefs');
-const genId = require('./util').genId;
+const IdGenerator = require('./util').IdGenerator;
+
+const idGen = new IdGenerator();
+let ids = 0;
 
 class Component {
 
   constructor(entity, initial={}, lookup) {
 
+    this._meta = {
+      lookup: '',
+      updated: 0,
+      entityId: '',
+      refs: new Set(),
+      values: {}
+    };
     this._setup(entity, initial, lookup)
   }
 
@@ -15,15 +25,18 @@ class Component {
 
   _setup(entity, initial, lookup) {
 
-    if (!initial.id) this.id = genId();
+    if (initial.id) {
+      this.id = initial.id;
+    } else {
+      //this.id = idGen.genId();
+      this.id = idGen.genId();
+    }
     if (lookup === '*') lookup = this.id;
-    this._meta = {
-      lookup,
-      updated: this.world.ticks,
-      entityId: entity.id,
-      refs: new Set(),
-      values: {}
-    };
+    this._meta.lookup = lookup;
+    this._meta.updated = this.world.ticks;
+    this._meta.entityId = entity.id;
+    //this._meta.refs.clear();
+    this._meta.values = {};
     //Object.seal(this._meta);
     this.world.componentsById.set(this.id, this);
 
@@ -54,7 +67,11 @@ class Component {
 
   _reset() {
 
-    this._meta = null;
+    this._meta.lookup = '';
+    this._meta.updated = 0;
+    this._meta.entityId = 0;
+    this._meta.refs.clear();
+    this._meta.values = {};
   }
 
   getObject(componentIds=true) {
@@ -95,7 +112,7 @@ class Component {
       const [value, prop, sub] = ref.split('||');
       this.world._deleteRef(value, this._meta.entity.id, this.id, prop, sub, this._meta.lookup, this.type);
     }
-    this._meta.refs.clear();
+    //this._meta.refs.clear();
     this.world._sendChange({
       op: 'destroy',
       component: this.id,
@@ -103,7 +120,7 @@ class Component {
       type: this.type
     });
     this.world.componentsById.delete(this.id);
-    this.world.componentPool[this.type].release(this);
+    this.world.componentPool.get(this.type).release(this);
   }
 }
 

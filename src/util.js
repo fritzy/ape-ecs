@@ -1,33 +1,39 @@
 const crypto = require('crypto');
 
-let gen_last = Date.now();
-const gen_rnd = new Buffer.allocUnsafe(8);
-const gen_time = new Buffer.allocUnsafe(4);
-const gen_iter = new Buffer.allocUnsafe(4);
-const MAX = 4294967295;
-let gen_num = 0;
-let prefix = '';
+class IdGenerator {
 
-const genPrefix = () => {
+  constructor() {
 
-  gen_last = Date.now();
-  crypto.randomFillSync(gen_rnd);
-  gen_time.writeUInt32BE(gen_last >>> 0);
-  prefix = `${gen_rnd.toString('hex')}-${gen_time.toString('hex')}-`;
-};
-
-
-genPrefix();
-
-const genId = () => {
-
-  gen_num++;
-  if (gen_num === MAX) {
-  gen_num = 0;
-  genPrefix();
+    this.gen_last = Date.now();
+    this.gen_rnd = new Buffer.allocUnsafe(8);
+    this.gen_time = new Buffer.allocUnsafe(4);
+    this.gen_iter = new Buffer.allocUnsafe(4);
+    this.MAX = 4294967295;
+    this.gen_num = 0;
+    this.prefix = '';
+    this.genPrefix();
   }
-  return prefix + gen_num;
+
+  genPrefix() {
+
+    this.gen_last = Date.now();
+    crypto.randomFillSync(this.gen_rnd);
+    this.gen_time.writeUInt32BE(this.gen_last >>> 0);
+    this.prefix = `${this.gen_rnd.toString('hex')}-${this.gen_time.toString('hex')}-`;
+  }
+
+  genId(){
+
+    this.gen_num++;
+    if (this.gen_num === 4294967295) {
+      this.gen_num = 0;
+      this.genPrefix();
+    }
+    return this.prefix + this.gen_num;
+  }
+
 };
+
 
 
 function setIntersection() {
@@ -62,7 +68,7 @@ function setUnion() {
 }
 
 module.exports = {
-  genId,
+  IdGenerator,
   setIntersection,
   setUnion
 };

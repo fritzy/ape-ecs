@@ -1,18 +1,30 @@
 const BaseComponent = require('./component');
-const genId = require('./util').genId;
-const UUID = require('uuid/v1');
+const IdGenerator = require('./util').IdGenerator;
+
+const idGen = new IdGenerator();
 
 class Entity {
 
-  constructor(world, definition = {}) {
+  constructor(world) {
 
     this.world = world;
     this.components = {};
     this.componentsByType = {};
-    this.id = definition.id || genId();
-    delete definition.id;
-    this.world.entities.set(this.id, this);
+    this.id = '';
     this.tags = new Set();
+    this.updatedComponents = 0;
+    this.updatedValues = 0;
+  }
+
+  _setup(definition) {
+
+    if (definition.id)  {
+      this.id = definition.id;
+      delete definition.id;
+    } else {
+      this.id = idGen.genId();
+    }
+    this.world.entities.set(this.id, this);
 
     this.updatedComponents = this.world.ticks;
     this.updatedValues = this.world.ticks;
@@ -95,14 +107,13 @@ class Entity {
 
   addComponent(name, properties, lookup, skipUpdate=false) {
 
-    const pool = this.world.componentPool[name];
+    const pool = this.world.componentPool.get(name);
     if (pool === undefined) {
       throw new Error(`Component "${name}" has not been registered.`);
     }
     lookup = lookup || name;
     const comp = pool.get(this, properties, lookup);
     this.components[comp._meta.lookup] = comp;
-    comp._meta.lookup = lookup;
     if (!this.componentsByType[name]) {
       this.componentsByType[name] = new Set();
     }
@@ -177,8 +188,10 @@ class Entity {
     for (const lookup of Object.keys(this.components)) {
       this.removeComponent(this.components[lookup]);
     }
+    this.tags.clear();
     this.world.entities.delete(this.id);
     delete this.world.entityReverse[this.id];
+    this.world.entityPool.release(this);
   }
 }
 
