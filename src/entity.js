@@ -5,10 +5,10 @@ const idGen = new IdGenerator();
 
 class Entity {
 
-  constructor(world) {
+  constructor() {
 
-    this.world = world;
-    this.components = {};
+    this.component = {};
+    this.c = this.component;
     this.componentsByType = {};
     this.id = '';
     this.tags = new Set();
@@ -47,44 +47,9 @@ class Entity {
     return this.world.entitiesByComponent[type].has(this.id)
   }
 
-  getComponent(lookup) {
-
-    return this.components[lookup];
-  }
-
-  getMutableComponent(lookup) {
-
-    const comp = this.components[lookup];
-    comp._meta.updated = this.world.ticks;
-    this.updatedValues = this.world.ticks;
-    this.world._sendChange({
-      op: 'update',
-      component: comp.id,
-      entity: comp._meta.entityId,
-      type: comp.type
-    });
-    return comp;
-  }
-
   getComponents(type) {
 
     return this.componentsByType[type];
-  }
-
-  getMutableComponents(type) {
-
-    const components = this.componentsByType[type];
-    this.updatedValues = this.world.ticks;
-    for (comp of components) {
-      comp._meta.updated = this.world.ticks;
-      this.world._sendChange({
-        op: 'update',
-        component: comp.id,
-        entity: comp._meta.entity.id,
-        type: comp.type
-      });
-    }
-    return components;
   }
 
   addTag(tag, skipUpdate=false) {
@@ -113,7 +78,7 @@ class Entity {
     }
     lookup = lookup || name;
     const comp = pool.get(this, properties, lookup);
-    this.components[comp._meta.lookup] = comp;
+    this.component[comp._meta.lookup] = comp;
     if (!this.componentsByType[name]) {
       this.componentsByType[name] = new Set();
     }
@@ -126,15 +91,20 @@ class Entity {
     return comp;
   }
 
+  getComponent(lookup) {
+
+    return this.component[lookup];
+  }
+
   removeComponent(component) {
 
     if (typeof component === 'string') {
-      component = this.components[component];
+      component = this.component[component];
     }
     if (component === undefined) {
       throw new Error('Cannot remove undefined component.');
     }
-    delete this.components[component._meta.lookup];
+    delete this.component[component._meta.lookup];
     this.componentsByType[component.type].delete(component);
 
     if (this.componentsByType[component.type].size === 0) {
@@ -148,8 +118,8 @@ class Entity {
   getObject(componentIds=true) {
 
     const obj = {};
-    for (const key of Object.keys(this.components)) {
-      const comp = this.components[key];
+    for (const key of Object.keys(this.component)) {
+      const comp = this.component[key];
       if (comp.constructor.serialize && comp.constructor.serialize.skip) {
         continue;
       }
@@ -179,14 +149,14 @@ class Entity {
         if (sub === '__set__') {
           target.delete(this);
         } else if (sub === '__obj__') {
-          parent.delete(path[path.length - 1]);
+          delete parent[path[1]];
         } else {
-          target.set(null);
+          parent[prop] = null
         }
       }
     }
-    for (const lookup of Object.keys(this.components)) {
-      this.removeComponent(this.components[lookup]);
+    for (const lookup of Object.keys(this.component)) {
+      this.removeComponent(this.component[lookup]);
     }
     this.tags.clear();
     this.world.entities.delete(this.id);

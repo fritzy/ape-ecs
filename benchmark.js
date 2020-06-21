@@ -65,10 +65,10 @@ function benchmarks() {
 
   start = perf_hooks.performance.now();
   for (let i = 0; i < CREATE; i++) {
-    entities[i].components.Test.a = 14;
-    entities[i].components.Test.b = 15;
-    entities[i].components.Test2.c = 16;
-    entities[i].components.Test2.d = 17;
+    entities[i].component.Test.a = 14;
+    entities[i].component.Test.b = 15;
+    entities[i].component.Test2.c = 16;
+    entities[i].component.Test2.d = 17;
   }
   end = perf_hooks.performance.now();
   times.rewriteComp = end - start;

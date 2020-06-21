@@ -24,7 +24,6 @@
   },
   "homepage": "https://github.com/fritzy/ecs-js#readme",
   "dependencies": {
-    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "@hapi/code": "^5.3.1",

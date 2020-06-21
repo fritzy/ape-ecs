@@ -13,6 +13,7 @@ class Component {
       updated: 0,
       entityId: '',
       refs: new Set(),
+      ready: false,
       values: {}
     };
     this._setup(entity, initial, lookup)
@@ -54,6 +55,7 @@ class Component {
       }
     }
     this.onInit();
+    this._meta.ready = true;
     this.world._sendChange({
       op: 'add',
       component: this.id,
@@ -63,6 +65,10 @@ class Component {
   }
 
   _updated() {
+
+    if (this._meta.ready) {
+      this._meta.updated = this.entity.updatedValues = this.world.ticks;
+    }
   }
 
   _reset() {
@@ -70,6 +76,7 @@ class Component {
     this._meta.lookup = '';
     this._meta.updated = 0;
     this._meta.entityId = 0;
+    this._meta.ready = false;
     this._meta.refs.clear();
     this._meta.values = {};
   }
@@ -110,7 +117,7 @@ class Component {
     this.onDestroy();
     for (const ref of this._meta.refs) {
       const [value, prop, sub] = ref.split('||');
-      this.world._deleteRef(value, this._meta.entity.id, this.id, prop, sub, this._meta.lookup, this.type);
+      this.world._deleteRef(value, this._meta.entityId, this.id, prop, sub, this._meta.lookup, this.type);
     }
     //this._meta.refs.clear();
     this.world._sendChange({

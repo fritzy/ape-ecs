@@ -6,6 +6,8 @@ class EntityPool {
 
     this.world = world;
     this.pool = [];
+    this.worldEntity = class WorldEntity extends Entity {};
+    this.worldEntity.prototype.world = this.world;
     this.spinUp(spinup);
   }
 
@@ -13,7 +15,7 @@ class EntityPool {
 
     let entity;
     if (this.pool.length === 0) {
-      entity = new Entity(this.world);
+      entity = new this.worldEntity();
     } else {
       entity = this.pool.pop();
     }
@@ -29,7 +31,7 @@ class EntityPool {
   spinUp(count) {
 
     for(let i = 0; i < count; i++) {
-      const entity = new Entity(this.world);
+      const entity = new this.worldEntity();
       this.pool.push(entity);
     }
   }

@@ -105,23 +105,31 @@ module.exports = {
 
     comp._meta.values[field] = object || {}
     return new Proxy(comp._meta.values[field], {
-      get(prop) {
+      get(obj, prop) {
 
-        return this.component._meta.entity.world.getEntity(this.value[prop]);
+        return comp.world.getEntity(obj[prop]);
       },
-      set(prop, value) {
+      set(obj, prop, value) {
 
-        const old = comp._meta.values[field][prop];
+        const old = obj[prop];
         if (value && value.id) {
           value = value.id;
         }
-        comp._meta.values[field][prop] = value;
+        obj[prop] = value;
         if (old && old !== value) {
           comp._deleteRef(old, `${field}.${prop}`, '__obj__');
         }
         if (value && value !== old) {
           comp._addRef(value, `${field}.${prop}`, '__obj__');
         }
+        return true;
+      },
+      deleteProperty(obj, prop) {
+
+        if (!obj.hasOwnProperty(prop)) return false;
+        const old = obj[prop];
+        delete obj[prop];
+        comp._deleteRef(old, `${field}.${prop}`, '__obj__');
         return true;
       }
     });

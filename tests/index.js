@@ -29,7 +29,7 @@ lab.experiment('express components', () => {
   lab.test('create entity', () => {
 
     ecs.createEntity({
-      Health: [ { hp: 10 } ]
+      Health: { hp: 10 }
     });
 
     const results = ecs.createQuery({ all: ['Health'] }).execute();
@@ -37,7 +37,7 @@ lab.experiment('express components', () => {
     expect(results.size).to.equal(1);
   });
 
-  lab.test('create entity without array', () => {
+  lab.test('create 2nd entity', () => {
 
     ecs.createEntity({
       Health: { hp: 10 }
@@ -93,10 +93,8 @@ lab.experiment('express components', () => {
       }
     });
 
-    const pockets = entity.getMutableComponent('pockets');
-
-    pockets.items.add(food);
-    expect(pockets.items.has(food)).to.be.true();
+    entity.component.pockets.items.add(food);
+    expect(entity.component.pockets.items.has(food)).to.be.true();
 
     const entityObj = entity.getObject(false);
     delete entityObj.id;
@@ -104,15 +102,14 @@ lab.experiment('express components', () => {
     const entityDef = JSON.parse(eJson);
 
     const entity2 = ecs.createEntity(entityDef);
-    const pockets2 = entity2.getMutableComponent('pockets');
 
-    expect(pockets.items.has(food)).to.be.true();
-    expect(pockets2.items.has(food)).to.be.true();
+    expect(entity.component.pockets.items.has(food)).to.be.true();
+    expect(entity2.component.pockets.items.has(food)).to.be.true();
 
     ecs.removeEntity(food);
 
-    expect(pockets.items.has(food)).to.be.false();
-    expect(pockets2.items.has(food)).to.be.false();
+    expect(entity.component.pockets.items.has(food)).to.be.false();
+    expect(entity.component.pockets.items.has(food)).to.be.false();
 
     expect(ecs.getEntity(food.id)).to.be.undefined();
     ecs.removeEntity(entity.id);
@@ -145,13 +142,11 @@ lab.experiment('express components', () => {
       }
     });
 
-    const test = entity.getComponent('Test');
 
-    expect(test.y).to.equal(1);
+    expect(entity.component.Test.y).to.equal(1);
     expect(hit).to.equal(false);
 
-    const testC = entity.getComponent('Test');
-    entity.removeComponent(testC);
+    entity.removeComponent(entity.component.Test);
     expect(hit).to.equal(true);
 
   });
@@ -179,9 +174,8 @@ lab.experiment('express components', () => {
             const value = this.world.getEntity(change.target);
             if (value.has('Wearable')) {
               const components = [];
-              const wearable = value.getComponent('Wearable');
-              for (const ctype of Object.keys(wearable.effects)) {
-                const component = parent.addComponent(ctype, wearable.effects[ctype], '*');
+              for (const ctype of Object.keys(value.c.Wearable.effects)) {
+                const component = parent.addComponent(ctype, value.c.Wearable.effects[ctype], '*');
                 components.push(component);
               }
               if (components.length > 0) {
@@ -273,8 +267,7 @@ lab.experiment('express components', () => {
     ecs.runSystemGroup('equipment');
     expect(changes.length).to.equal(2);
 
-    const slot = entity.getMutableComponent('pants');
-    slot.slot = pants;
+    entity.c.pants.slot = pants;
 
     ecs.runSystemGroup('equipment');
 
@@ -283,9 +276,9 @@ lab.experiment('express components', () => {
 
     expect(eEffects.has(effectExt.id)).to.be.true();
     expect(entity.getComponents('Burning')).to.exist();
-    expect(changes.length).to.equal(2);
-    expect(changes[1].op).to.equal('addRef');
-    expect(changes[1].target).to.equal(pants.id);
+    expect(changes.length).to.equal(1);
+    expect(changes[0].op).to.equal('addRef');
+    expect(changes[0].target).to.equal(pants.id);
 
     //entity.EquipmentSlot.pants.slot = null;
     pants.destroy();
@@ -347,9 +340,7 @@ lab.experiment('deep components', () => {
       properties: {
         name: 'inventory',
         size: 20,
-        things: {
-          items: EntitySet
-        }
+        items: EntitySet
       },
       many: true,
       mapBy: 'name'
@@ -400,9 +391,9 @@ lab.experiment('deep components', () => {
       Item: { name: 'sword' }
     });
 
-    const pockets = entity.getMutableComponent('pockets');
-    pockets.things.items.add(food);
-    const shirt = entity.getMutableComponent('shirt');
+    const pockets = entity.getComponent('pockets');
+    pockets.items.add(food);
+    const shirt = entity.getComponent('shirt');
     shirt.slot.a = sword;
 
     const entityObj = entity.getObject(false);
@@ -411,11 +402,11 @@ lab.experiment('deep components', () => {
     const entityDef = JSON.parse(eJson);
 
     const entity2 = ecs.createEntity(entityDef);
-    const pockets2 = entity2.getMutableComponent('pockets');
+    const pockets2 = entity2.getComponent('pockets');
 
-    expect(pockets.things.items.has(food)).to.be.true();
-    expect(pockets2.things.items.has(food)).to.be.true();
-    expect(shirt.slot.a.get().id).to.equal(sword.id);
+    expect(pockets.items.has(food)).to.be.true();
+    expect(pockets2.items.has(food)).to.be.true();
+    expect(shirt.slot.a.id).to.equal(sword.id);
 
     ecs.removeEntity(food);
 
@@ -494,7 +485,7 @@ lab.experiment('system queries', () => {
     expect(tileSystem.lastResults.size).to.equal(1);
     expect(tileSystem.lastResults.has(tile1)).to.be.true();
 
-    tile2.removeComponent(tile2.getComponent('Hidden'));
+    tile2.removeComponent(tile2.c.Hidden);
     ecs.tick();
 
     ecs.runSystemGroup('map');
@@ -661,7 +652,7 @@ lab.experiment('system queries', () => {
     expect(results1.has(entity1)).to.be.true();
     expect(results1.has(entity2)).to.be.true();
 
-    const comp1 = entity1.getMutableComponent('Comp1');
+    const comp1 = entity1.getComponent('Comp1');
     comp1.greeting = 'Gutten Tag';
 
     const results2 = testQ.execute({updatedValues: ticks});
@@ -698,7 +689,7 @@ lab.experiment('system queries', () => {
     expect(results1.has(entity1)).to.be.true();
     expect(results1.has(entity2)).to.be.true();
 
-    const comp1 = entity1.getMutableComponent('Comp1');
+    const comp1 = entity1.getComponent('Comp1');
     comp1.greeting = 'Gutten Tag';
     entity2.addComponent('Comp2', {});
 
@@ -751,7 +742,7 @@ lab.experiment('entity & component refs', () => {
 
     const slots = ['a', 'b', 'c'];
     const potions = [];
-    const beltslots = belt.getMutableComponent('BeltSlots');
+    const beltslots = belt.getComponent('BeltSlots');
     for (const slot of slots) {
       const potion = ecs.createEntity({
         Potion: {}
@@ -764,26 +755,26 @@ lab.experiment('entity & component refs', () => {
       Potion: {}
     });
 
-    expect(beltslots.slots[Symbol.iterator]).to.not.exist();
+    //expect(beltslots.slots[Symbol.iterator]).to.not.exist();
 
-    expect(beltslots.slots.get('a')).to.equal(potions[0]);
-    expect(beltslots.slots.get('b')).to.equal(potions[1]);
-    expect(beltslots.slots.get('c')).to.equal(potions[2]);
+    expect(beltslots.slots.a).to.equal(potions[0]);
+    expect(beltslots.slots.b).to.equal(potions[1]);
+    expect(beltslots.slots.c).to.equal(potions[2]);
 
     potions[1].destroy();
-    expect(beltslots.slots.get('b')).to.not.exist();
+    expect(beltslots.slots.b).to.not.exist();
 
-    beltslots.slots.delete('c');
-    expect(beltslots.slots.get('c')).to.not.exist();
+    delete beltslots.slots.c;
+    expect(beltslots.slots.c).to.not.exist();
 
     //assign again
     beltslots.slots['a'] = potions[0];
 
     //asign by id
-    beltslots.slots.set('a', potionf.id);
-    expect(beltslots.slots.get('a')).to.equal(potionf);
+    beltslots.slots.a = potionf.id;
+    expect(beltslots.slots.a).to.equal(potionf);
 
-    beltslots.slots.delete('d');
+    delete beltslots.slots.d;
   });
 
   lab.test('Entity Set', {}, () => {
@@ -800,7 +791,7 @@ lab.experiment('entity & component refs', () => {
 
     const slots = ['a', 'b', 'c'];
     const potions = [];
-    const beltSlots2 = belt.getMutableComponent('BeltSlots2');
+    const beltSlots2 = belt.getComponent('BeltSlots2');
     for (const slot of slots) {
       const potion = ecs.createEntity({
         Potion: {}
@@ -835,8 +826,7 @@ lab.experiment('entity & component refs', () => {
       Ref: { other: entity.id }
     });
 
-    const ref = entity2.getComponent('Ref');
-    expect(ref.other.get()).to.equal(entity);
+    expect(entity2.c.Ref.other).to.equal(entity);
   });
 
   lab.test('Reassign same entity ref', () => {
@@ -849,10 +839,10 @@ lab.experiment('entity & component refs', () => {
       Ref: { other: entity.id }
     });
 
-    const ref2 = entity2.getMutableComponent('Ref');
-    ref2.other.set(entity);
+    const ref2 = entity2.getComponent('Ref');
+    ref2.other = entity;
 
-    expect(ref2.other.get()).to.equal(entity);
+    expect(ref2.other).to.equal(entity);
   });
 
 });
@@ -883,10 +873,8 @@ lab.experiment('entity restore', () => {
       'secondary': { slot: potion2, type: 'EquipmentSlot' }
     });
 
-    const main = entity.getComponent('main');
-    const secondary = entity.getComponent('secondary');
-    expect(main.slot.get()).to.equal(potion1);
-    expect(secondary.slot.get()).to.equal(potion2);
+    expect(entity.c.main.slot).to.equal(potion1);
+    expect(entity.c.secondary.slot).to.equal(potion2);
     expect(potion1).to.not.equal(potion2);
   });
 
@@ -922,16 +910,13 @@ lab.experiment('entity restore', () => {
       slot: potion3
     }, 'slot3');
 
-    const slot1 = entity.getComponent('slot1');
-    const slot2 = entity.getComponent('slot2');
-    const slot3 = entity.getComponent('slot3');
 
-    expect(slot1.slot.get()).to.equal(potion1);
-    expect(slot1.name).to.equal('slot1');
-    expect(slot2.slot.get()).to.equal(potion2);
-    expect(slot2.name).to.equal('slot2');
-    expect(slot3.slot.get()).to.equal(potion3);
-    expect(slot3.name).to.equal('slot3');
+    expect(entity.c.slot1.slot).to.equal(potion1);
+    expect(entity.c.slot1.name).to.equal('slot1');
+    expect(entity.c.slot2.slot).to.equal(potion2);
+    expect(entity.c.slot2.name).to.equal('slot2');
+    expect(entity.c.slot3.slot).to.equal(potion3);
+    expect(entity.c.slot3.name).to.equal('slot3');
   });
 
   lab.test('Unregistered component throws', { plan: 1 }, () => {
@@ -956,8 +941,7 @@ lab.experiment('entity restore', () => {
       properties: {}
     });
     const entity = ecs.createEntity({ Potion: { x: 37 } });
-    const potion = entity.getComponent('Potion');
-    expect(potion.x).to.be.undefined();
+    expect(entity.c.Potion.x).to.be.undefined();
 
   });
 
@@ -1030,7 +1014,7 @@ lab.experiment('entity restore', () => {
       Bottle: {}
     });
 
-    const setInv = container.getMutableComponent('SetInventory');
+    const setInv = container.getComponent('SetInventory');
     setInv.slots.add(bottle1);
     setInv.slots.add(bottle2);
 
@@ -1044,11 +1028,11 @@ lab.experiment('entity restore', () => {
     delete def2.id;
 
     const container2 = ecs.createEntity(def2);
-    const setInv2 = container2.getMutableComponent('SetInventory');
+    const setInv2 = container2.getComponent('SetInventory');
     expect(setInv2.slots.has(bottle1)).to.be.true();
     expect(setInv2.slots.has(bottle2)).to.be.true();
     expect(setInv2.slots.has(bottle3)).to.be.false();
-    expect(container2.getComponent('ThrowAway')).to.be.undefined();
+    expect(container2.c.ThrowAway).to.be.undefined();
 
     let idx = 0;
     for (const entity of setInv2.slots) {
@@ -1138,7 +1122,7 @@ lab.experiment('exporting and restoring', () => {
     const old2 = npc.getObject();
 
     const ring = npc.getComponent('ring');
-    expect(ring.slot.get()).to.equal(bottle);
+    expect(ring.slot).to.equal(bottle);
     const effect = npc.getComponents('Effect');
     expect(effect.size).to.equal(2);
     expect([...effect][0].name).to.equal('wet');
