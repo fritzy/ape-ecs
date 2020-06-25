@@ -205,7 +205,7 @@ lab.experiment('express components', () => {
       constructor(world) {
 
         super(world);
-        this.world.subscribe(this, 'EquipmentSlot');
+        //this.world.subscribe(this, 'EquipmentSlot');
       }
 
       update(tick) {
@@ -213,6 +213,7 @@ lab.experiment('express components', () => {
         changes2 = this.changes;
       }
     }
+    System2.subscriptions = ['EquipmentSlot'];
     /* $lab:coverage:on */
 
     ecs.registerComponent('EquipmentEffect', {

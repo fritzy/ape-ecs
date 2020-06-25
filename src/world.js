@@ -268,9 +268,11 @@ module.exports = class World {
 
   _entityUpdated(entity) {
 
+    // $lab:coverage:off$
     if (this.config.trackChanges) {
       this.updatedEntities.add(entity);
     }
+    // $lab:coverage:on$
   }
 
   _addEntityComponent(name, entity) {
