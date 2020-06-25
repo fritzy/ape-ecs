@@ -1,6 +1,8 @@
 class EntitySet extends Set {
 
+  // $lab:coverage:off$
   static get [Symbol.species]() { return this.constructor; }
+  // $lab:coverage:on$
 
   constructor (component, object = [], field) {
 
@@ -104,6 +106,13 @@ module.exports = {
   EntityObject(comp, object, field) {
 
     comp._meta.values[field] = object || {}
+    const values = comp._meta.values[field];
+    const keys = Object.keys(values);
+    for (const key of keys) {
+      if (values[key] && values[key].id) {
+        values[key] = values[key].id;
+      }
+    }
     return new Proxy(comp._meta.values[field], {
       get(obj, prop) {
 
