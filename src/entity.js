@@ -38,7 +38,7 @@ class Entity {
 
     for (const key of Object.keys(definition)) {
       const name = definition[key].type || key;
-      this.addComponent(name, definition[key], key, false);
+      this.addComponent(name, definition[key], key);
     }
   }
 
@@ -70,7 +70,7 @@ class Entity {
     this.world._entityUpdated(this);
   }
 
-  addComponent(name, properties, lookup, skipUpdate=false) {
+  addComponent(name, properties, lookup) {
 
     const pool = this.world.componentPool.get(name);
     if (pool === undefined) {
@@ -84,10 +84,8 @@ class Entity {
     }
     this.componentsByType[name].add(comp);
     this.world._addEntityComponent(name, this);
-    if (!skipUpdate) {
-      this.updatedComponents = this.world.ticks;
-      this.world._entityUpdated(this);
-    }
+    this.updatedComponents = this.world.ticks;
+    this.world._entityUpdated(this);
     return comp;
   }
 

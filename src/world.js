@@ -23,7 +23,7 @@ module.exports = class World {
 
     this.config = Object.assign({
       trackChanges: true,
-      entityPool: 100
+      entityPool: 10
     }, config);
     this.ticks = 0;
     this.entities = new Map();
