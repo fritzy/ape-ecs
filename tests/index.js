@@ -872,7 +872,13 @@ lab.experiment('entity restore', () => {
 
     const others = entity2.getComponents('Other');
     expect(others.size).to.equal(1);
-    entity2.removeComponent([...others][0]);
+    const removed = entity2.removeComponent([...others][0]);
+
+    const removed2 = entity2.removeComponent('nonexistant');
+
+    expect(removed).to.be.true();
+    expect(removed2).to.be.false();
+
   });
 
   lab.test('EntitySet', () => {
@@ -1193,5 +1199,16 @@ lab.experiment('advanced queries', () => {
 
     const r5 = q4.execute();
     expect(r5.size).to.equal(2);
+
+    expect(r3.has(entity1)).to.be.false();
+    entity1.addTag('B');
+    ecs.tick();
+
+    const r6 = q3.execute();
+    expect(r6.has(entity1)).to.be.true();
+    const r7 = q2.execute();
+
+    expect(r7.has(e5)).to.be.false();
+
   });
 });

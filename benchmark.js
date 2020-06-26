@@ -3,10 +3,10 @@ const ECS = require('./src/index');
 const perf_hooks = require('perf_hooks');
 
 const descriptions = {
-  create2Comp: 'Create 50,000 entities with two simple components',
+  create2Comp:  'Create 50,000 entities with two simple components ',
   destroy2Comp: 'Destroy 50,000 entities with two simple components',
-  recreating: 'Recreating components now that pool is established',
-  rewriteComp: 'Chanigng the values of each component'
+  recreating:   'Recreating components now that pool is established',
+  rewriteComp:  'Changing the values of each component             '
 }
 
 const times = {
@@ -24,7 +24,7 @@ function benchmarks() {
   let start, end;
 
 
-  const ecs = new ECS.World({ trackChanges: false, entityPool: CREATE });
+  const ecs = new ECS.World({ trackChanges: false, entityPool: 100 });
   ecs.registerComponent('Test', {
     properties: {
       a: 1,
@@ -106,5 +106,4 @@ function benchmarks() {
 
 benchmarks();
 
-console.log(times);
 

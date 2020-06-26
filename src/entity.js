@@ -100,7 +100,7 @@ class Entity {
       component = this.component[component];
     }
     if (component === undefined) {
-      throw new Error('Cannot remove undefined component.');
+      return false;
     }
     delete this.component[component._meta.lookup];
     this.componentsByType[component.type].delete(component);
@@ -111,6 +111,7 @@ class Entity {
     this.world._deleteEntityComponent(component);
     this.world._entityUpdated(this);
     component.destroy();
+    return true;
   }
 
   getObject(componentIds=true) {
@@ -118,9 +119,11 @@ class Entity {
     const obj = {};
     for (const key of Object.keys(this.component)) {
       const comp = this.component[key];
+      // $lab:coverage:off$
       if (comp.constructor.serialize && comp.constructor.serialize.skip) {
         continue;
       }
+      // $lab:coverage:on$
       obj[key] = comp.getObject(componentIds);
     }
     obj.id = this.id;
@@ -133,9 +136,13 @@ class Entity {
       for (const ref of this.world.refs[this.id]) {
         const [entityId, componentId, prop, sub] = ref.split('...');
         const entity = this.world.getEntity(entityId);
+        // $lab:coverage:off$
         if (!entity) continue;
+        // $lab:coverage:on$
         const component = entity.world.componentsById.get(componentId);
+        // $lab:coverage:off$
         if (!component) continue;
+        // $lab:coverage:on$
         const path = prop.split('.');
 
         let target = component;

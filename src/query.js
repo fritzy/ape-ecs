@@ -1,8 +1,6 @@
 const Entity = require('./entity');
 const Util = require('./util');
 
-//from(entities).fromReverse(entity, components).fromAll(types).fromAny(types).not(types).filter((entity) => true).index('myindex').execute(last).update(entity);
-
 class Query {
 
   constructor(world, init) {
@@ -98,9 +96,8 @@ class Query {
 
     let inFrom = false;
     this.results.delete(entity);
-    if (entity.destroyed) return;
     for (const source of this.query.froms) {
-      if(source.from === 'all') {
+      if (source.from === 'all') {
         const potential = [];
         for (const type of source.types) {
           potential.push(this.world.entitiesByComponent[type]);
@@ -134,9 +131,11 @@ class Query {
           inFrom = true;
           break;
         }
+      // $lab:coverage:off$
       } else if (source.from === 'reverse') {
         if (this.world.entityReverse.hasOwnProperty(source.entity.id)
           && this.world.entityReverse[source.entity.id].hasOwnProperty(source.type)) {
+      // $lab:coverage:on$
           const keys = new Set(this.world.entityReverse[source.entity.id][source.type].keys());
           if (new Set(this.world.entityReverse[source.entity.id][source.type].keys()).has(entity.id)) {
             inFrom = true;
@@ -206,8 +205,11 @@ class Query {
           comps.push(entities);
         }
         results = Util.setUnion(results, ...comps);
+      // $lab:coverage:off$
       } else if (source.from === 'reverse') {
-        if (this.world.entityReverse[source.entity.id] && this.world.entityReverse[source.entity.id].hasOwnProperty(source.type)) {
+        if (this.world.entityReverse[source.entity.id]
+          && this.world.entityReverse[source.entity.id].hasOwnProperty(source.type)) {
+      // $lab:coverage:on$
           results = Util.setUnion(results, new Set([...this.world.entityReverse[source.entity.id][source.type].keys()]));
         }
       }
