@@ -192,6 +192,11 @@ module.exports = class World {
     return this.entityPool.get(definition);
   }
 
+  createEntityComponents(definition) {
+
+    return this.entityPool.get(definition, true);
+  }
+
   removeEntity(id) {
 
     let entity;

@@ -28,7 +28,7 @@ lab.experiment('express components', () => {
 
   lab.test('create entity', () => {
 
-    ecs.createEntity({
+    ecs.createEntityComponents({
       Health: { hp: 10 }
     });
 
@@ -39,7 +39,7 @@ lab.experiment('express components', () => {
 
   lab.test('create 2nd entity', () => {
 
-    ecs.createEntity({
+    ecs.createEntityComponents({
       Health: { hp: 10 }
     });
 
@@ -79,10 +79,12 @@ lab.experiment('express components', () => {
 
     const food = ecs.createEntity({
       id: 'sandwich10', // to exersize custom id
-      Food: {}
+      c: {
+        Food: {}
+      }
     });
 
-    const entity = ecs.createEntity({
+    const entity = ecs.createEntityComponents({
       pockets: { type: 'Storage', size: 4 },
       backpack: { type: 'Storage', size: 25 },
       pants: { type: 'EquipmentSlot' },
@@ -137,7 +139,7 @@ lab.experiment('express components', () => {
       }
     });
 
-    const entity = ecs.createEntity({
+    const entity = ecs.createEntityComponents({
       Test: {
       }
     });
@@ -246,7 +248,7 @@ lab.experiment('express components', () => {
 
     ecs.runSystemGroup('equipment');
 
-    const entity = ecs.createEntity({
+    const entity = ecs.createEntityComponents({
       pockets: { type: 'Storage', size: 4 },
       backpack: { type: 'Storage', size: 25 },
       pants: { type: 'EquipmentSlot' },
@@ -257,7 +259,7 @@ lab.experiment('express components', () => {
       }
     });
 
-    const pants = ecs.createEntity({
+    const pants = ecs.createEntityComponents({
       Wearable: { name: 'Nice Pants',
         effects: {
           Burning: {}
@@ -339,7 +341,7 @@ lab.experiment('system queries', () => {
 
     expect(tileSystem.lastResults.size).to.equal(0);
 
-    const tile1 = ecs.createEntity({
+    const tile1 = ecs.createEntityComponents({
       Tile: {
         x: 10,
         y: 0,
@@ -347,7 +349,7 @@ lab.experiment('system queries', () => {
       }
     });
 
-    const tile2 = ecs.createEntity({
+    const tile2 = ecs.createEntityComponents({
       Tile: {
         x: 11,
         y: 0,
@@ -388,29 +390,29 @@ lab.experiment('system queries', () => {
     ecs.registerComponent('Billboard', {});
     ecs.registerComponent('Sprite', {});
 
-    const tile1 = ecs.createEntity({
+    const tile1 = ecs.createEntityComponents({
       Tile: {},
       Billboard: {},
       Sprite: {},
       Hidden: {}
     });
 
-    const tile2 = ecs.createEntity({
+    const tile2 = ecs.createEntityComponents({
       Tile: {},
       Billboard: {},
     });
 
-    const tile3 = ecs.createEntity({
+    const tile3 = ecs.createEntityComponents({
       Tile: {},
       Billboard: {},
       Sprite: {}
     });
 
-    const tile4 = ecs.createEntity({
+    const tile4 = ecs.createEntityComponents({
       Tile: {},
     });
 
-    const tile5 = ecs.createEntity({
+    const tile5 = ecs.createEntityComponents({
       Billboard: {},
     });
 
@@ -437,26 +439,26 @@ lab.experiment('system queries', () => {
     ecs.registerTags(['Billboard']);
     ecs.registerTags('Hidden');
 
-    const tile1 = ecs.createEntity({
+    const tile1 = ecs.createEntityComponents({
       tags: ['Billboard', 'Hidden'],
       Tile: {}
     });
 
-    const tile2 = ecs.createEntity({
+    const tile2 = ecs.createEntityComponents({
       tags: ['Billboard'],
       Tile: {}
     });
 
-    const tile3 = ecs.createEntity({
+    const tile3 = ecs.createEntityComponents({
       tags: ['Billboard'],
       Sprite: {}
     });
 
-    const tile4 = ecs.createEntity({
+    const tile4 = ecs.createEntityComponents({
       Tile: {},
     });
 
-    const tile5 = ecs.createEntity({
+    const tile5 = ecs.createEntityComponents({
       tags: ['Billboard']
     });
 
@@ -513,11 +515,11 @@ lab.experiment('system queries', () => {
 
     ecs.tick();
 
-    const entity1 = ecs.createEntity({
+    const entity1 = ecs.createEntityComponents({
       Comp1: {}
     });
 
-    const entity2 = ecs.createEntity({
+    const entity2 = ecs.createEntityComponents({
       Comp1: {
         greeting: 'hullo'
       }
@@ -550,11 +552,11 @@ lab.experiment('system queries', () => {
 
     ecs.tick();
 
-    const entity1 = ecs.createEntity({
+    const entity1 = ecs.createEntityComponents({
       Comp1: {}
     });
 
-    const entity2 = ecs.createEntity({
+    const entity2 = ecs.createEntityComponents({
       Comp1: {
         greeting: 'hullo'
       }
@@ -582,7 +584,7 @@ lab.experiment('system queries', () => {
     const ecs = new ECS.World();
     ecs.registerComponent('Comp1', {});
 
-    const entity1 = ecs.createEntity({
+    const entity1 = ecs.createEntityComponents({
       Comp1: {}
     });
 
@@ -614,7 +616,7 @@ lab.experiment('entity & component refs', () => {
 
   lab.test('Entity Object', {}, () => {
 
-    const belt = ecs.createEntity({
+    const belt = ecs.createEntityComponents({
       BeltSlots: {}
     });
 
@@ -622,14 +624,14 @@ lab.experiment('entity & component refs', () => {
     const potions = [];
     const beltslots = belt.getComponent('BeltSlots');
     for (const slot of slots) {
-      const potion = ecs.createEntity({
+      const potion = ecs.createEntityComponents({
         Potion: {}
       });
       beltslots.slots[slot] =  potion;
       potions.push(potion);
     }
 
-    const potionf = ecs.createEntity({
+    const potionf = ecs.createEntityComponents({
       Potion: {}
     });
 
@@ -663,7 +665,7 @@ lab.experiment('entity & component refs', () => {
       }
     });
 
-    const belt = ecs.createEntity({
+    const belt = ecs.createEntityComponents({
       BeltSlots2: {}
     });
 
@@ -671,7 +673,7 @@ lab.experiment('entity & component refs', () => {
     const potions = [];
     const beltSlots2 = belt.getComponent('BeltSlots2');
     for (const slot of slots) {
-      const potion = ecs.createEntity({
+      const potion = ecs.createEntityComponents({
         Potion: {}
       });
       beltSlots2.slots.add(potion);
@@ -684,7 +686,7 @@ lab.experiment('entity & component refs', () => {
     expect(beltSlots2.slots.has(potions[1])).to.be.true();
     expect(beltSlots2.slots.has(potions[2])).to.be.true();
 
-    const withValues = ecs.createEntity({
+    const withValues = ecs.createEntityComponents({
       BeltSlots: { slots: { a: potions[0].id, b: potions[2], d: null }}
     });
 
@@ -713,11 +715,11 @@ lab.experiment('entity & component refs', () => {
       }
     });
 
-    const entity = ecs.createEntity({
+    const entity = ecs.createEntityComponents({
       Crying: {}
     });
 
-    const entity2 = ecs.createEntity({
+    const entity2 = ecs.createEntityComponents({
       Ref: { other: entity.id }
     });
 
@@ -726,11 +728,11 @@ lab.experiment('entity & component refs', () => {
 
   lab.test('Reassign same entity ref', () => {
 
-    const entity = ecs.createEntity({
+    const entity = ecs.createEntityComponents({
       Crying: {}
     });
 
-    const entity2 = ecs.createEntity({
+    const entity2 = ecs.createEntityComponents({
       Ref: { other: entity.id }
     });
 
@@ -756,14 +758,14 @@ lab.experiment('entity restore', () => {
     });
 
 
-    const potion1 = ecs.createEntity({
+    const potion1 = ecs.createEntityComponents({
       tags: ['Potion']
     });
-    const potion2 = ecs.createEntity({
+    const potion2 = ecs.createEntityComponents({
       tags: ['Potion']
     });
 
-    const entity = ecs.createEntity({
+    const entity = ecs.createEntityComponents({
       'main': { slot: potion1, type: 'EquipmentSlot' },
       'secondary': { slot: potion2, type: 'EquipmentSlot' }
     });
@@ -786,17 +788,17 @@ lab.experiment('entity restore', () => {
     });
 
 
-    const potion1 = ecs.createEntity({
+    const potion1 = ecs.createEntityComponents({
       tags: ['Potion']
     });
-    const potion2 = ecs.createEntity({
+    const potion2 = ecs.createEntityComponents({
       tags: ['Potion']
     });
-    const potion3 = ecs.createEntity({
+    const potion3 = ecs.createEntityComponents({
       tags: ['Potion']
     });
 
-    const entity = ecs.createEntity({
+    const entity = ecs.createEntityComponents({
       slot1: { type: 'EquipmentSlot', name: 'slot1', slot: potion1 },
       slot2: { type: 'EquipmentSlot', name: 'slot2', slot: potion2 }
     });
@@ -821,7 +823,7 @@ lab.experiment('entity restore', () => {
 
     let entity;
     try {
-      entity = ecs.createEntity({
+      entity = ecs.createEntityComponents({
         Posion: {} //misspelled
       });
     } catch (err) {
@@ -835,7 +837,7 @@ lab.experiment('entity restore', () => {
     ecs.registerComponent('Potion', {
       properties: {}
     });
-    const entity = ecs.createEntity({ Potion: { x: 37 } });
+    const entity = ecs.createEntityComponents({ Potion: { x: 37 } });
     expect(entity.c.Potion.x).to.be.undefined();
 
   });
@@ -849,13 +851,13 @@ lab.experiment('entity restore', () => {
       properties: { 'amount': 5 },
     });
 
-    const entity = ecs.createEntity({
+    const entity = ecs.createEntityComponents({
       NPC: {},
     });
     entity.addComponent('Armor', { amount: 10 }, '*');
     entity.addComponent('Armor', { amount: 30 }, '*');
 
-    const entity2 = ecs.createEntity({
+    const entity2 = ecs.createEntityComponents({
       Other: {},
     });
 
@@ -900,18 +902,18 @@ lab.experiment('entity restore', () => {
       serialize: { skip: true }
     });
 
-    const container = ecs.createEntity({
+    const container = ecs.createEntityComponents({
       SetInventory: {},
       ThrowAway: {}
     });
 
-    const bottle1 = ecs.createEntity({
+    const bottle1 = ecs.createEntityComponents({
       Bottle: {}
     });
-    const bottle2 = ecs.createEntity({
+    const bottle2 = ecs.createEntityComponents({
       Bottle: {}
     });
-    const bottle3 = ecs.createEntity({
+    const bottle3 = ecs.createEntityComponents({
       Bottle: {}
     });
 
@@ -959,15 +961,15 @@ lab.experiment('entity restore', () => {
     setInv.slots.clear()
     expect(setInv.slots.has(bottle2)).to.be.false();
 
-    const bottle4 = ecs.createEntity({
+    const bottle4 = ecs.createEntityComponents({
       Bottle: {}
     });
 
-    const bottle5 = ecs.createEntity({
+    const bottle5 = ecs.createEntityComponents({
       Bottle: {}
     });
 
-    const withValues = ecs.createEntity({
+    const withValues = ecs.createEntityComponents({
       SetInventory: {
         slots: [bottle4, bottle5.id]
       }
@@ -996,7 +998,7 @@ lab.experiment('exporting and restoring', () => {
       },
     });
 
-    const entity = ecs.createEntity({
+    const entity = ecs.createEntityComponents({
       moon: { type: 'AI', order: 'moon' },
       jupiter: { type: 'AI', order: 'jupiter' },
     });
@@ -1025,8 +1027,8 @@ lab.experiment('exporting and restoring', () => {
       },
     });
 
-    const bottle = ecs.createEntity({ Bottle: {} });
-    let npc = ecs.createEntity({
+    const bottle = ecs.createEntityComponents({ Bottle: {} });
+    let npc = ecs.createEntityComponents({
       ring: { type: 'EquipmentSlot', slot: bottle },
       AI: {}
     });
@@ -1035,7 +1037,7 @@ lab.experiment('exporting and restoring', () => {
 
     const old = npc.getObject();
 
-    expect(old.ring.slot).to.equal(bottle.id);
+    expect(old.c.ring.slot).to.equal(bottle.id);
 
     npc.destroy();
     npc = undefined;
@@ -1080,7 +1082,7 @@ lab.experiment('exporting and restoring', () => {
       }
     });
 
-    const entity = ecs.createEntity({
+    const entity = ecs.createEntityComponents({
       Effect: {
         name: 'fire',
         started: Date.now()
@@ -1093,10 +1095,10 @@ lab.experiment('exporting and restoring', () => {
 
     const entity2 = ecs.createEntity(old);
 
-    expect(old.AI).to.not.exist();
+    expect(old.c.AI).to.not.exist();
     //expect(old.Effect.started).to.not.exist();
-    expect(old.Effect.name).to.equal('fire');
-    expect(old.Liquid).to.exist();
+    expect(old.c.Effect.name).to.equal('fire');
+    expect(old.c.Liquid).to.exist();
     expect(entity2.getComponent('Liquid')).to.exist();
   });
 
@@ -1109,18 +1111,18 @@ lab.experiment('advanced queries', () => {
 
     ecs.registerTags(['A', 'B', 'C']);
 
-    const entity1 = ecs.createEntity({
+    const entity1 = ecs.createEntityComponents({
       tags: ['A']
     });
-    const entity2 = ecs.createEntity({
+    const entity2 = ecs.createEntityComponents({
       tags: ['B']
     });
 
-    const entity3 = ecs.createEntity({
+    const entity3 = ecs.createEntityComponents({
       tags: ['B', 'C']
     });
 
-    const entity4 = ecs.createEntity({
+    const entity4 = ecs.createEntityComponents({
       tags: ['B', 'C', 'A']
     });
 
@@ -1148,13 +1150,13 @@ lab.experiment('advanced queries', () => {
       }
     });
 
-    const e4 = ecs.createEntity({
+    const e4 = ecs.createEntityComponents({
       Person: {
         name: 'Bob'
       }
     });
 
-    const e5 = ecs.createEntity({
+    const e5 = ecs.createEntityComponents({
       Item: {
         name: 'plate'
       },

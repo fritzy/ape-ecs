@@ -11,7 +11,7 @@ class EntityPool {
     this.spinUp(spinup);
   }
 
-  get(definition) {
+  get(definition, onlyComponents=false) {
 
     let entity;
     if (this.pool.length === 0) {
@@ -19,7 +19,7 @@ class EntityPool {
     } else {
       entity = this.pool.pop();
     }
-    entity._setup(definition);
+    entity._setup(definition, onlyComponents);
     return entity;
   }
 

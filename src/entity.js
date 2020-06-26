@@ -16,13 +16,17 @@ class Entity {
     this.updatedValues = 0;
   }
 
-  _setup(definition) {
+  _setup(definition, onlyComponents = false) {
 
-    if (definition.id)  {
-      this.id = definition.id;
-      delete definition.id;
-    } else {
+    if (onlyComponents) {
       this.id = idGen.genId();
+    } else {
+      if (definition.id)  {
+        this.id = definition.id;
+        delete definition.id;
+      } else {
+        this.id = idGen.genId();
+      }
     }
     this.world.entities.set(this.id, this);
 
@@ -36,11 +40,23 @@ class Entity {
       delete definition.tags;
     }
 
-    for (const key of Object.keys(definition)) {
-      const name = definition[key].type || key;
-      this.addComponent(name, definition[key], key);
+    if (onlyComponents) {
+      for (const key of Object.keys(definition)) {
+        const name = definition[key].type || key;
+        this.addComponent(name, definition[key], key);
+      }
+    } else {
+      // $lab:coverage:off$
+      if (definition.c) {
+      // $lab:coverage:on$
+        for (const key of Object.keys(definition.c)) {
+          const name = definition.c[key].type || key;
+          this.addComponent(name, definition.c[key], key);
+        }
+      }
     }
   }
+
 
   has(type) {
 
@@ -116,7 +132,10 @@ class Entity {
 
   getObject(componentIds=true) {
 
-    const obj = {};
+    const obj = {
+      id: this.id,
+      c: {}
+    };
     for (const key of Object.keys(this.component)) {
       const comp = this.component[key];
       // $lab:coverage:off$
@@ -124,9 +143,8 @@ class Entity {
         continue;
       }
       // $lab:coverage:on$
-      obj[key] = comp.getObject(componentIds);
+      obj.c[key] = comp.getObject(componentIds);
     }
-    obj.id = this.id;
     return obj;
   }
 

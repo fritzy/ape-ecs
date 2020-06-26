@@ -48,13 +48,15 @@ function benchmarks() {
 
     entities.push(
       ecs.createEntity({
-        Test: {
-          a: 4,
-          b: 5
-        },
-        Test2: {
-          c: 6,
-          d: 7
+        c: {
+          Test: {
+            a: 4,
+            b: 5
+          },
+          Test2: {
+            c: 6,
+            d: 7
+          }
         }
       })
     );
@@ -65,10 +67,10 @@ function benchmarks() {
 
   start = perf_hooks.performance.now();
   for (let i = 0; i < CREATE; i++) {
-    entities[i].component.Test.a = 14;
-    entities[i].component.Test.b = 15;
-    entities[i].component.Test2.c = 16;
-    entities[i].component.Test2.d = 17;
+    entities[i].c.Test.a = 14;
+    entities[i].c.Test.b = 15;
+    entities[i].c.Test2.c = 16;
+    entities[i].c.Test2.d = 17;
   }
   end = perf_hooks.performance.now();
   times.rewriteComp = end - start;
@@ -87,13 +89,15 @@ function benchmarks() {
   for (let i = 0; i < CREATE; i++) {
     entities.push(
       ecs.createEntity({
-        Test: {
-          a: 4,
-          b: 5
-        },
-        Test2: {
-          c: 6,
-          d: 7
+        c: {
+          Test: {
+            a: 4,
+            b: 5
+          },
+          Test2: {
+            c: 6,
+            d: 7
+          }
         }
       })
     );
