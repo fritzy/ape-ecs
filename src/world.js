@@ -12,7 +12,6 @@ const EntityPool = require('./entitypool');
 const componentReserved = new Set(
   [
     'clone',
-    'getObject',
     '_meta',
     '_setup',
     '_updated',
@@ -40,6 +39,7 @@ module.exports = class World {
     this.ticks = 0;
     this.entities = new Map();
     this.types = {};
+    this.typeDefs = new Map();
     this.tags = new Set();
     this.entitiesByComponent = {};
     this.componentsById = new Map();
@@ -150,10 +150,12 @@ module.exports = class World {
         }
         // $lab:coverage:on$
         this.entitiesByComponent[tag] = new Set();
+        this.typeDefs.set(tag, { tag: true });
       }
       return;
     }
     this.entitiesByComponent[tags] = new Set();
+    this.typeDefs.set(tags, { tag: true });
   }
 
   registerComponent(name, definition, spinup=1) {
@@ -161,6 +163,10 @@ module.exports = class World {
     // $lab:coverage:off$
     if (this.entitiesByComponent.hasOwnProperty(name)) {
       throw new Error (`Cannot register component "${name}", name is already taken.`);
+    }
+    this.typeDefs.set(name, definition);
+    if (definition.tag) {
+      return this.registerTags(name);
     }
     // $lab:coverage:on$
     if (!definition.properties) definition.properties = {};
@@ -222,6 +228,29 @@ module.exports = class World {
   createEntityComponents(definition) {
 
     return this.entityPool.get(definition, true);
+  }
+
+  getObject() {
+
+    const obj = [];
+    for (const kv of this.entities) {
+      obj.push(kv[1].getObject());
+    }
+    return obj;
+  }
+
+  createEntities(definition) {
+
+    for (const entityDef of definition) {
+      this.createEntity(entityDef);
+    }
+  }
+
+  copyTypes(world, types) {
+
+    for (const name of types) {
+      this.registerComponent(name, world.typeDefs.get(name));
+    }
   }
 
   removeEntity(id) {

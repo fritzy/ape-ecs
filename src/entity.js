@@ -23,7 +23,6 @@ class Entity {
     } else {
       if (definition.id)  {
         this.id = definition.id;
-        delete definition.id;
       } else {
         this.id = idGen.genId();
       }
@@ -37,11 +36,11 @@ class Entity {
       for (const tag of definition.tags) {
         this.addTag(tag, true);
       }
-      delete definition.tags;
     }
 
     if (onlyComponents) {
       for (const key of Object.keys(definition)) {
+        if (key === 'tags') continue;
         const name = definition[key].type || key;
         this.addComponent(name, definition[key], key);
       }
@@ -134,6 +133,7 @@ class Entity {
 
     const obj = {
       id: this.id,
+      tags: [...this.tags],
       c: {}
     };
     for (const key of Object.keys(this.component)) {
