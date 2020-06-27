@@ -231,11 +231,15 @@ class Query {
       .filter(entity => !!entity)
     );
 
-
     //filter results
     for (const entity of this.results) {
       this._filter(entity);
     }
+
+    if (this.trackAdded) {
+      this.added = new Set(this.results);
+    }
+
     return this;
   }
 
@@ -259,8 +263,9 @@ class Query {
 
     if (!this.executed) {
       this.refresh();
+    } else {
+      this.added.clear();
     }
-    this.added.clear();
     this.removed.clear();
     this.executed = true;
     if (filter === undefined) {

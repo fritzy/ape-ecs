@@ -1251,9 +1251,13 @@ lab.experiment('advanced queries', () => {
     expect(r1.has(e5)).to.be.true();
     expect(r1.has(e6)).to.be.false();
     expect(r1.has(e7)).to.be.true();
-    expect(q1.added.size).to.be.equal(0);
+    expect(q1.added.size).to.be.equal(2);
     expect(q1.removed.size).to.be.equal(0);
+    expect(q1.added.has(e5)).to.be.true();
+    expect(q1.added.has(e6)).to.be.false();
+    expect(q1.added.has(e7)).to.be.true();
 
+    q1.execute();
     ecs.tick();
 
     expect(q1.added.size).to.be.equal(0);
