@@ -9,7 +9,19 @@ const Component = require('./component');
 const ComponentPool = require('./componentpool');
 const EntityPool = require('./entitypool');
 
-const componentMethods = new Set(['stringify', 'clone', 'getObject', Symbol.iterator]);
+const componentReserved = new Set(
+  [
+    'clone',
+    'getObject',
+    '_meta',
+    '_setup',
+    '_updated',
+    '_reset',
+    'getObject',
+    '_addRef',
+    '_deleteRef',
+    'destroy'
+  ]);
 
 /**
  * Main library class for registering Components, Systems, Queries,
@@ -132,6 +144,11 @@ module.exports = class World {
   registerTags(tags) {
     if (Array.isArray(tags)) {
       for (const tag of tags) {
+        // $lab:coverage:off$
+        if (this.entitiesByComponent.hasOwnProperty(tag)) {
+          throw new Error (`Cannot register tag "${tag}", name is already taken.`);
+        }
+        // $lab:coverage:on$
         this.entitiesByComponent[tag] = new Set();
       }
       return;
@@ -141,6 +158,11 @@ module.exports = class World {
 
   registerComponent(name, definition, spinup=1) {
 
+    // $lab:coverage:off$
+    if (this.entitiesByComponent.hasOwnProperty(name)) {
+      throw new Error (`Cannot register component "${name}", name is already taken.`);
+    }
+    // $lab:coverage:on$
     if (!definition.properties) definition.properties = {};
 
     const klass = class CustomComponent extends Component {};
@@ -150,6 +172,11 @@ module.exports = class World {
     const special = {};
     const fields = Object.keys(definition.properties);
     for (const field of fields) {
+      // $lab:coverage:off$
+      if (componentReserved.has(field)) {
+        throw new Error(`Cannot use the reserved field name "${field}"`);
+      }
+      // $lab:coverage:on$
       if (typeof props[field] === 'function') {
         special[field] = props[field];
         continue;

@@ -1213,4 +1213,100 @@ lab.experiment('advanced queries', () => {
     expect(r7.has(e5)).to.be.false();
 
   });
+
+  lab.test('track added and removed', () => {
+
+    const ecs = new ECS.World();
+
+    ecs.registerTags(['A', 'B', 'C']);
+
+    const e1 = ecs.createEntity({
+      tags: ['A']
+    });
+    const e2 = ecs.createEntity({
+      tags: ['B']
+    });
+    const e3 = ecs.createEntity({
+      tags: ['C']
+    });
+    const e4 = ecs.createEntity({
+      tags: ['A', 'B']
+    });
+    const e5 = ecs.createEntity({
+      tags: ['A', 'C']
+    });
+    const e6 = ecs.createEntity({
+      tags: ['C', 'B']
+    });
+    const e7 = ecs.createEntity({
+      tags: ['A', 'B', 'C']
+    });
+
+    const q1 = ecs.createQuery({
+      trackAdded: true,
+    }).fromAll(['A', 'C']).index('test1');
+
+    const r1 = q1.execute();
+
+    expect(r1.has(e5)).to.be.true();
+    expect(r1.has(e6)).to.be.false();
+    expect(r1.has(e7)).to.be.true();
+    expect(q1.added.size).to.be.equal(0);
+    expect(q1.removed.size).to.be.equal(0);
+
+    ecs.tick();
+
+    expect(q1.added.size).to.be.equal(0);
+    expect(q1.removed.size).to.be.equal(0);
+
+    e5.removeTag('C');
+    e1.addTag('C');
+
+    ecs.tick();
+
+    expect(r1.has(e5)).to.be.false();
+    expect(r1.has(e7)).to.be.true();
+    expect(r1.has(e1)).to.be.true();
+    expect(q1.added.has(e1)).to.be.true();
+    expect(q1.added.size).to.be.equal(1);
+    expect(q1.removed.size).to.be.equal(0);
+
+    const q2 = ecs.createQuery({
+      trackRemoved: true,
+    }).fromAll(['A', 'C']).index('test2');
+
+    const r2 = q2.execute();
+
+    expect(r2.has(e1)).to.be.true();
+    expect(r2.has(e6)).to.be.false();
+    expect(r2.has(e5)).to.be.false();
+    expect(r2.has(e7)).to.be.true();
+    expect(q2.added.size).to.be.equal(0);
+    expect(q2.removed.size).to.be.equal(0);
+
+    ecs.tick();
+
+    expect(q2.added.size).to.be.equal(0);
+    expect(q2.removed.size).to.be.equal(0);
+
+    e7.removeTag('A');
+    e3.addTag('A');
+
+    ecs.tick();
+
+    expect(q2.added.size).to.be.equal(0);
+    expect(q2.removed.size).to.be.equal(1);
+    expect(r2.has(e3)).to.be.true();
+    expect(r2.has(e7)).to.be.false();
+    expect(q2.removed.has(e7)).to.be.true();
+
+    const r3 = q1.execute();
+    expect(q1.added.size).to.be.equal(0);
+    expect(q1.removed.size).to.be.equal(0);
+
+    const r4 = q2.execute();
+    expect(q2.added.size).to.be.equal(0);
+    expect(q2.removed.size).to.be.equal(0);
+
+  });
 });

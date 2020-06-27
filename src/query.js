@@ -10,11 +10,17 @@ class Query {
       froms: [],
       filters: []
     };
+
     this.hasStatic = false;
     this.indexed = false;
     this.results = new Set();
     this.executed = false;
+    this.added = new Set();
+    this.removed = new Set();
+
     if (init) {
+      this.trackAdded = init.trackAdded || false;
+      this.trackRemoved = init.trackRemoved || false;
       if (init.from) {
         this.from(init.from);
       }
@@ -147,6 +153,11 @@ class Query {
     if (inFrom) {
       this.results.add(entity);
       this._filter(entity);
+      if (this.trackAdded) {
+        this.added.add(entity);
+      }
+    } else if (this.trackRemoved) {
+      this.removed.add(entity);
     }
   }
 
@@ -249,6 +260,8 @@ class Query {
     if (!this.executed) {
       this.refresh();
     }
+    this.added.clear();
+    this.removed.clear();
     this.executed = true;
     if (filter === undefined) {
       return this.results;
