@@ -6,7 +6,7 @@ let ids = 0;
 
 class Component {
 
-  constructor(entity, initial={}, lookup) {
+  constructor(entity, initial, lookup) {
 
     this._meta = {
       lookup: '',

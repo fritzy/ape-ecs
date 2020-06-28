@@ -25,12 +25,11 @@ class IdGenerator {
   genId(){
 
     this.gen_num++;
-    // $lab:coverage:off$
+    // istanbul ignore if
     if (this.gen_num === 4294967295) {
       this.gen_num = 0;
       this.genPrefix();
     }
-    // $lab:coverage:on$
     return this.prefix + this.gen_num;
   }
 

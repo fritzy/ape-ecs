@@ -2,7 +2,7 @@ const Entity = require('./entity');
 
 class EntityPool {
 
-  constructor(world, spinup=0) {
+  constructor(world, spinup) {
 
     this.world = world;
     this.pool = [];

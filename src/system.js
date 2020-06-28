@@ -31,9 +31,6 @@ class System {
     this._stagedChanges.push(change);
   }
 
-  destroy() {
-  }
-
 }
 
 module.exports = System;

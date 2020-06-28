@@ -1,6 +1,6 @@
 class ComponentPool {
 
-  constructor(world, type, spinup=0) {
+  constructor(world, type, spinup) {
 
     this.world = world;
     this.type = type;

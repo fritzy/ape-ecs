@@ -102,18 +102,15 @@ module.exports = class World {
     const ref = this.entityReverse[target][lookup];
     let count = ref.get(entity);
     count--;
-    /* $lab:coverage:off$ */
+    // istanbul ignore else
     if (count < 1) {
       ref.delete(entity);
     } else {
       ref.set(entity, count);
     }
-    /* $lab:coverage:on$ */
     if (ref.size === 0) {
       delete ref[lookup];
     }
-    /* $lab:coverage:off$ */
-    /* $lab:coverage:on$ */
     this.refs[target].delete([entity, component, prop, sub].join('...'));
     if (this.refs[target].size === 0) {
       delete this.refs[target];
@@ -144,11 +141,10 @@ module.exports = class World {
   registerTags(tags) {
     if (Array.isArray(tags)) {
       for (const tag of tags) {
-        // $lab:coverage:off$
+        // istanbul ignore if
         if (this.entitiesByComponent.hasOwnProperty(tag)) {
           throw new Error (`Cannot register tag "${tag}", name is already taken.`);
         }
-        // $lab:coverage:on$
         this.entitiesByComponent[tag] = new Set();
         this.typeDefs.set(tag, { tag: true });
       }
@@ -160,7 +156,7 @@ module.exports = class World {
 
   registerComponent(name, definition, spinup=1) {
 
-    // $lab:coverage:off$
+    // istanbul ignore if
     if (this.entitiesByComponent.hasOwnProperty(name)) {
       throw new Error (`Cannot register component "${name}", name is already taken.`);
     }
@@ -178,11 +174,10 @@ module.exports = class World {
     const special = {};
     const fields = Object.keys(definition.properties);
     for (const field of fields) {
-      // $lab:coverage:off$
+      // istanbul ignore if
       if (componentReserved.has(field)) {
         throw new Error(`Cannot use the reserved field name "${field}"`);
       }
-      // $lab:coverage:on$
       if (typeof props[field] === 'function') {
         special[field] = props[field];
         continue;
@@ -329,11 +324,10 @@ module.exports = class World {
 
   _entityUpdated(entity) {
 
-    // $lab:coverage:off$
+    // istanbul ignore else
     if (this.config.trackChanges) {
       this.updatedEntities.add(entity);
     }
-    // $lab:coverage:on$
   }
 
   _addEntityComponent(name, entity) {

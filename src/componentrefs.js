@@ -1,10 +1,6 @@
 class EntitySet extends Set {
 
-  // $lab:coverage:off$
-  static get [Symbol.species]() { return this.constructor; }
-  // $lab:coverage:on$
-
-  constructor (component, object = [], field) {
+  constructor (component, object, field) {
 
     super();
     this.component = component;

@@ -1,6 +1,6 @@
 {
   "name": "@fritzy/ecs",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "description": "Entity-Component-System library for game development.",
   "main": "./src/index.js",
   "source": true,
@@ -8,7 +8,7 @@
     "/src"
   ],
   "scripts": {
-    "test": "lab -a \"@hapi/code\" -cv tests --coverage-exclude tests",
+    "test": "nyc mocha tests/index.js",
     "gendocs": "rm -rf out && jsdoc src/",
     "md": "jsdoc2md src/ecs.js",
     "webbench": "webpack-dev-server"
@@ -24,11 +24,12 @@
   },
   "homepage": "https://github.com/fritzy/ecs-js#readme",
   "dependencies": {
-    "@hapi/eslint-plugin-hapi": "^4.3.5"
+    "@hapi/eslint-plugin-hapi": "^4.3.5",
+    "nyc": "^15.1.0"
   },
   "devDependencies": {
-    "@hapi/code": "^5.3.1",
-    "@hapi/lab": "^22.0.4",
+    "chai": "^4.2.0",
+    "mocha": "^8.0.1",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.11.0"

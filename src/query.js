@@ -44,9 +44,7 @@ class Query {
 
   from(entities) {
 
-    /* $lab:coverage:off$ */
     entities = entities.map((e) => (typeof e !== 'string') ? e.id : e);
-    /* $lab:coverage:on$ */
     this.query.froms.push({
       from: 'from',
       entities
@@ -57,11 +55,10 @@ class Query {
 
   fromReverse(entity, componentName) {
 
-    /* $lab:coverage:off$ */
+    // istanbul ignore if
     if(typeof entity !== 'object') {
       entity = this.world.getEntity(entity);
     }
-    /* $lab:coverage:on$ */
     this.query.froms.push({
       from: 'reverse',
       entity,
@@ -137,11 +134,9 @@ class Query {
           inFrom = true;
           break;
         }
-      // $lab:coverage:off$
       } else if (source.from === 'reverse') {
         if (this.world.entityReverse.hasOwnProperty(source.entity.id)
           && this.world.entityReverse[source.entity.id].hasOwnProperty(source.type)) {
-      // $lab:coverage:on$
           const keys = new Set(this.world.entityReverse[source.entity.id][source.type].keys());
           if (new Set(this.world.entityReverse[source.entity.id][source.type].keys()).has(entity.id)) {
             inFrom = true;
@@ -163,14 +158,15 @@ class Query {
 
   index(name) {
 
-    /* $lab:coverage:off$ */
+    // istanbul ignore if
     if (this.hasStatic) {
       throw new Error('Cannot persistently index query with static list of entities.');
     }
+    // istanbul ignore if
     if (this.query.froms.length === 0) {
       throw new Error('Cannot persistently index query without entity source (fromAll, fromAny, fromReverse).');
     }
-    /* $lab:coverage:on$ */
+
     this.world.queryIndexes.set(name, this);
     this.indexed = true;
     return this;
@@ -185,21 +181,19 @@ class Query {
         results = Util.setUnion(results, source.entities);
       } else if (source.from === 'all') {
         if (source.types.length === 1) {
-          /* $lab:coverage:off$ */
+          // istanbul ignore if
           if (!this.world.entitiesByComponent.hasOwnProperty(source.types[0])) {
             throw new Error(`${source.types[0]} is not a registered Component/Tag`);
           }
-          /* $lab:coverage:on$ */
           results = Util.setUnion(results, this.world.entitiesByComponent[source.types[0]]);
         } else {
           const comps = [];
           for (const type of source.types) {
             const entities = this.world.entitiesByComponent[type];
-            /* $lab:coverage:off$ */
+            // istanbul ignore if
             if (entities === undefined) {
               throw new Error(`${type} is not a registered Component/Tag`);
             }
-            /* $lab:coverage:on$ */
             comps.push(entities);
           }
           results = Util.setUnion(results, Util.setIntersection(...comps));
@@ -208,11 +202,10 @@ class Query {
         const comps = [];
         for (const type of source.types) {
           const entities = this.world.entitiesByComponent[type];
-          /* $lab:coverage:off$ */
+          // istanbul ignore if
           if (entities === undefined) {
             throw new Error(`${type} is not a registered Component/Tag`);
           }
-          /* $lab:coverage:on$ */
           comps.push(entities);
         }
         results = Util.setUnion(results, ...comps);

@@ -16,7 +16,7 @@ class Entity {
     this.updatedValues = 0;
   }
 
-  _setup(definition, onlyComponents = false) {
+  _setup(definition, onlyComponents) {
 
     if (onlyComponents) {
       this.id = idGen.genId();
@@ -154,13 +154,11 @@ class Entity {
       for (const ref of this.world.refs[this.id]) {
         const [entityId, componentId, prop, sub] = ref.split('...');
         const entity = this.world.getEntity(entityId);
-        // $lab:coverage:off$
+        // istanbul ignore next
         if (!entity) continue;
-        // $lab:coverage:on$
         const component = entity.world.componentsById.get(componentId);
-        // $lab:coverage:off$
+        // istanbul ignore next
         if (!component) continue;
-        // $lab:coverage:on$
         const path = prop.split('.');
 
         let target = component;
