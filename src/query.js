@@ -44,6 +44,7 @@ class Query {
 
   from(entities) {
 
+    // istanbul ignore next
     entities = entities.map((e) => (typeof e !== 'string') ? e.id : e);
     this.query.froms.push({
       from: 'from',
@@ -134,7 +135,8 @@ class Query {
           inFrom = true;
           break;
         }
-      } else if (source.from === 'reverse') {
+      } else /* istanbul ignore else */ if (source.from === 'reverse') {
+        // istanbul ignore else
         if (this.world.entityReverse.hasOwnProperty(source.entity.id)
           && this.world.entityReverse[source.entity.id].hasOwnProperty(source.type)) {
           const keys = new Set(this.world.entityReverse[source.entity.id][source.type].keys());
@@ -177,6 +179,7 @@ class Query {
     //load in entities using from methods
     let results = new Set();
     for (const source of this.query.froms) {
+      // instanbul ignore else
       if (source.from === 'from') {
         results = Util.setUnion(results, source.entities);
       } else if (source.from === 'all') {
@@ -209,11 +212,10 @@ class Query {
           comps.push(entities);
         }
         results = Util.setUnion(results, ...comps);
-      // $lab:coverage:off$
-      } else if (source.from === 'reverse') {
+      } else /* istanbul ignore else */ if (source.from === 'reverse') {
+        //istanbul ignore else
         if (this.world.entityReverse[source.entity.id]
           && this.world.entityReverse[source.entity.id].hasOwnProperty(source.type)) {
-      // $lab:coverage:on$
           results = Util.setUnion(results, new Set([...this.world.entityReverse[source.entity.id][source.type].keys()]));
         }
       }
@@ -239,9 +241,8 @@ class Query {
   _filter(entity) {
 
     for (const filter of this.query.filters) {
-      /* $lab:coverage:off$ */
+      // istanbul ignore else
       if (filter.filter === 'not') {
-      /* $lab:coverage:on$ */
         for (const type of filter.types) {
           if (entity.has(type)) {
             this.results.delete(entity);
