@@ -7,30 +7,24 @@ class Entity {
 
   constructor() {
 
-    this.component = {};
-    this.c = this.component;
-    this.componentsByType = {};
+    this.types = {};
     this.id = '';
     this.tags = new Set();
     this.updatedComponents = 0;
     this.updatedValues = 0;
   }
 
-  _setup(definition, onlyComponents) {
+  _setup(definition) {
 
-    if (onlyComponents) {
-      this.id = idGen.genId();
+    if (definition.id)  {
+      this.id = definition.id;
     } else {
-      if (definition.id)  {
-        this.id = definition.id;
-      } else {
-        this.id = idGen.genId();
-      }
+      this.id = idGen.genId();
     }
     this.world.entities.set(this.id, this);
 
-    this.updatedComponents = this.world.ticks;
-    this.updatedValues = this.world.ticks;
+    this.updatedComponents = this.world.currentTick;
+    this.updatedValues = this.world.currentTick;
 
     if (definition.tags) {
       for (const tag of definition.tags) {
@@ -38,20 +32,21 @@ class Entity {
       }
     }
 
-    if (onlyComponents) {
-      for (const key of Object.keys(definition)) {
-        if (key === 'tags') continue;
-        const name = definition[key].type || key;
-        this.addComponent(name, definition[key], key);
+    if (definition.components) {
+      for (const compdef of definition.components) {
+        this.addComponent(compdef);
       }
-    } else {
-      // $lab:coverage:off$
-      if (definition.c) {
-      // $lab:coverage:on$
-        for (const key of Object.keys(definition.c)) {
-          const name = definition.c[key].type || key;
-          this.addComponent(name, definition.c[key], key);
-        }
+    }
+
+    if (definition.c) {
+      const defs = definition.c;
+      for (const key of Object.keys(defs)) {
+        const comp = {
+          ...defs[key],
+          lookup: key
+        };
+        if (!comp.type) comp.type = key;
+        this.addComponent(comp);
       }
     }
   }
@@ -64,13 +59,13 @@ class Entity {
 
   getComponents(type) {
 
-    return this.componentsByType[type];
+    return this.types[type];
   }
 
   addTag(tag, skipUpdate=false) {
 
     this.tags.add(tag);
-    this.updatedComponents = this.world.ticks;
+    this.updatedComponents = this.world.currentTick;
     this.world.entitiesByComponent[tag].add(this.id);
     if (!skipUpdate) {
       this.world._entityUpdated(this);
@@ -80,48 +75,49 @@ class Entity {
   removeTag(tag) {
 
     this.tags.delete(tag);
-    this.updatedComponents = this.world.ticks;
+    this.updatedComponents = this.world.currentTick;
     this.world.entitiesByComponent[tag].delete(this.id);
     this.world._entityUpdated(this);
   }
 
-  addComponent(name, properties, lookup) {
+  addComponent(properties) {
 
-    const pool = this.world.componentPool.get(name);
+    const type = properties.type;
+    const pool = this.world.componentPool.get(type);
     if (pool === undefined) {
-      throw new Error(`Component "${name}" has not been registered.`);
+      throw new Error(`Component "${type}" has not been registered.`);
     }
-    lookup = lookup || name;
-    const comp = pool.get(this, properties, lookup);
-    this.component[comp._meta.lookup] = comp;
-    if (!this.componentsByType[name]) {
-      this.componentsByType[name] = new Set();
+    const comp = pool.get(this, properties);
+    /*
+    if (properties.lookup) {
+      this[properties.lookup] = comp;
     }
-    this.componentsByType[name].add(comp);
-    this.world._addEntityComponent(name, this);
-    this.updatedComponents = this.world.ticks;
+    */
+    if (!this.types[type]) {
+      this.types[type] = new Set();
+    }
+    this.types[type].add(comp);
+    this.world._addEntityComponent(type, this);
+    this.updatedComponents = this.world.currentTick;
     this.world._entityUpdated(this);
     return comp;
-  }
-
-  getComponent(lookup) {
-
-    return this.component[lookup];
   }
 
   removeComponent(component) {
 
     if (typeof component === 'string') {
-      component = this.component[component];
+      component = this[component];
     }
     if (component === undefined) {
       return false;
     }
-    delete this.component[component._meta.lookup];
-    this.componentsByType[component.type].delete(component);
+    if (component.lookup) {
+      delete this[component.lookup];
+    }
+    this.types[component.type].delete(component);
 
-    if (this.componentsByType[component.type].size === 0) {
-      delete this.componentsByType[component.type];
+    if (this.types[component.type].size === 0) {
+      delete this.types[component.type];
     }
     this.world._deleteEntityComponent(component);
     this.world._entityUpdated(this);
@@ -134,16 +130,22 @@ class Entity {
     const obj = {
       id: this.id,
       tags: [...this.tags],
+      components: [],
       c: {}
     };
-    for (const key of Object.keys(this.component)) {
-      const comp = this.component[key];
-      // $lab:coverage:off$
-      if (comp.constructor.serialize && comp.constructor.serialize.skip) {
-        continue;
+    for (const type of Object.keys(this.types)) {
+      for (const comp of this.types[type]) {
+        // $lab:coverage:off$
+        if (comp.constructor.serialize && comp.constructor.serialize.skip) {
+          continue;
+        }
+        // $lab:coverage:on$
+        if (comp.lookup) {
+          obj.c[comp.lookup] = comp.getObject(componentIds);
+        } else {
+          obj.components.push(comp.getObject(componentIds));
+        }
       }
-      // $lab:coverage:on$
-      obj.c[key] = comp.getObject(componentIds);
     }
     return obj;
   }
@@ -176,8 +178,10 @@ class Entity {
         }
       }
     }
-    for (const lookup of Object.keys(this.component)) {
-      this.removeComponent(this.component[lookup]);
+    for (const type of Object.keys(this.types)) {
+      for (const component of this.types[type]) {
+        this.removeComponent(component);
+      }
     }
     this.tags.clear();
     this.world.entities.delete(this.id);

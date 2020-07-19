@@ -5,7 +5,7 @@ class System {
     this.world = world;
     this._stagedChanges = [];
     this.changes = [];
-    this.lastTick = this.world.ticks;
+    this.lastTick = this.world.currentTick;
     if (this.constructor.subscriptions) {
       for (const sub of this.constructor.subscriptions) {
         this.world.subscribe(this, sub);

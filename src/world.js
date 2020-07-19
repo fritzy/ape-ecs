@@ -19,7 +19,18 @@ const componentReserved = new Set(
     'getObject',
     '_addRef',
     '_deleteRef',
+    'lookup',
     'destroy'
+  ]);
+const entityReserved = new Set([
+    'prototype',
+    'this',
+    'c',
+    'types',
+    'id',
+    'tags',
+    'updatedComponents',
+    'updatedValues'
   ]);
 
 /**
@@ -36,7 +47,7 @@ module.exports = class World {
       trackChanges: true,
       entityPool: 10
     }, config);
-    this.ticks = 0;
+    this.currentTick = 0;
     this.entities = new Map();
     this.types = {};
     this.typeDefs = new Map();
@@ -56,14 +67,14 @@ module.exports = class World {
   }
 
   /**
-   * Called in order to increment ecs.ticks, update indexed queries, and update lookups.
+   * Called in order to increment ecs.currentTick, update indexed queries, and update lookups.
    * @method module:ECS#tick
    */
   tick() {
 
-    this.ticks++;
+    this.currentTick++;
     this.updateIndexes();
-    return this.ticks;
+    return this.currentTick;
   }
 
   _addRef(target, entity, component, prop, sub, lookup, type) {
@@ -189,7 +200,6 @@ module.exports = class World {
           return this._meta.values[field];
         },
         set(value) {
-
           this._meta.values[field] = value;
           this._updated();
           return true;
@@ -208,6 +218,27 @@ module.exports = class World {
       primitive,
       special
     };
+    Object.defineProperty(klass.prototype, 'lookup',  {
+      enumerable: true,
+      get() {
+        return this._meta.lookup
+      },
+      set(value) {
+        // istanbul ignore next
+        if (entityReserved.has(value)) {
+          // istanbul ignore next
+          throw new Error(`Cannot have component lookup of reserved word ${value}`);
+        }
+        const old = this._meta.lookup;
+        this._meta.lookup = value;
+        if (old) {
+          delete this.entity[old];
+        }
+        if (value) {
+          this.entity[value] = this;
+        }
+      }
+    });
     klass.subbed = false;
     Object.defineProperty(klass, 'name', { value: name });
     this.componentTypes[name] = klass;
@@ -222,7 +253,26 @@ module.exports = class World {
 
   createEntityComponents(definition) {
 
-    return this.entityPool.get(definition, true);
+    const components = [];
+    let tags;
+    for (const key of Object.keys(definition)) {
+      if (key === 'tags') {
+        tags = definition.tags;
+        continue;
+      }
+      const def = {
+        ...definition[key],
+        lookup: key
+      };
+      if (!def.type) {
+        def.type = key
+      }
+      components.push(def);
+    }
+    return this.entityPool.get({
+      components,
+      tags
+    });
   }
 
   getObject() {
@@ -271,6 +321,11 @@ module.exports = class World {
     return new Set(results.map((id) => this.getEntity(id)));
   }
 
+  getComponent(id) {
+
+    return this.componentsById.get(id);
+  }
+
   createQuery(init) {
 
     return new Query(this, init);
@@ -295,7 +350,7 @@ module.exports = class World {
     }
   }
 
-  addSystem(group, system) {
+  registerSystem(group, system) {
 
     if (typeof system === 'function') {
       system = new system(this);
@@ -313,9 +368,9 @@ module.exports = class World {
     for (const system of systems) {
       let entities;
       system._preUpdate();
-      system.update(this.ticks, entities);
+      system.update(this.currentTick, entities);
       system._postUpdate();
-      system.lastTick = this.ticks;
+      system.lastTick = this.currentTick;
       if (system.changes.length !== 0) {
         system.changes = [];
       }

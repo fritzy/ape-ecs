@@ -9,16 +9,14 @@ class ComponentPool {
     this.spinUp(spinup);
   }
 
-  get(entity, initial, lookup) {
+  get(entity, initial) {
 
     let comp;
     if (this.pool.length === 0) {
-      comp = new this.klass(entity, initial, lookup);
-      //const add = this.world.entitiesByComponent[this.type].size / 2 + 1;
-      //this.spinUp(Math.ceil(add));
+      comp = new this.klass(entity, initial);
     } else {
       comp = this.pool.pop();
-      comp._setup(entity, initial, lookup);
+      comp._setup(entity, initial);
     }
     return comp;
   }

@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "test": "nyc mocha tests/index.js",
+    "testp": "mocha tests/index.js",
     "gendocs": "rm -rf out && jsdoc src/",
     "md": "jsdoc2md src/ecs.js",
     "webbench": "webpack-dev-server"

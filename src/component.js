@@ -6,7 +6,7 @@ let ids = 0;
 
 class Component {
 
-  constructor(entity, initial, lookup) {
+  constructor(entity, initial) {
 
     this._meta = {
       lookup: '',
@@ -16,7 +16,7 @@ class Component {
       ready: false,
       values: {}
     };
-    this._setup(entity, initial, lookup)
+    this._setup(entity, initial)
   }
 
   get entity() {
@@ -24,21 +24,19 @@ class Component {
     return this.world.getEntity(this._meta.entityId);
   }
 
-  _setup(entity, initial, lookup) {
+  _setup(entity, initial) {
 
     if (initial.id) {
       this.id = initial.id;
     } else {
-      //this.id = idGen.genId();
       this.id = idGen.genId();
     }
-    if (lookup === '*') lookup = this.id;
-    this._meta.lookup = lookup;
-    this._meta.updated = this.world.ticks;
+    this._meta.updated = this.world.currentTick;
     this._meta.entityId = entity.id;
-    //this._meta.refs.clear();
+    if (initial.lookup) {
+      this.lookup = initial.lookup;
+    }
     this._meta.values = {};
-    //Object.seal(this._meta);
     this.world.componentsById.set(this.id, this);
 
     const props = this.constructor.props;
@@ -67,7 +65,7 @@ class Component {
   _updated() {
 
     if (this._meta.ready) {
-      this._meta.updated = this.entity.updatedValues = this.world.ticks;
+      this._meta.updated = this.entity.updatedValues = this.world.currentTick;
     }
   }
 
@@ -96,6 +94,7 @@ class Component {
     if (componentIds) {
       obj.id = this.id;
     }
+    obj.lookup = this.lookup;
     return obj;
   }
 
@@ -119,7 +118,6 @@ class Component {
       const [value, prop, sub] = ref.split('||');
       this.world._deleteRef(value, this._meta.entityId, this.id, prop, sub, this._meta.lookup, this.type);
     }
-    //this._meta.refs.clear();
     this.world._sendChange({
       op: 'destroy',
       component: this.id,
