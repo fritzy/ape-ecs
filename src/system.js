@@ -1,3 +1,5 @@
+const Query = require('./query');
+
 class System {
 
   constructor(world) {
@@ -5,6 +7,7 @@ class System {
     this.world = world;
     this._stagedChanges = [];
     this.changes = [];
+    this.queries = [];
     this.lastTick = this.world.currentTick;
     if (this.constructor.subscriptions) {
       for (const sub of this.constructor.subscriptions) {
@@ -17,6 +20,11 @@ class System {
 
   }
 
+  createQuery(init) {
+
+    return new Query(this.world, this, init);
+  }
+
   _preUpdate() {
 
     this.changes = this._stagedChanges;
@@ -24,6 +32,10 @@ class System {
   }
 
   _postUpdate() {
+
+    for (const query of this.queries) {
+      query.clearChanges();
+    }
   }
 
   _recvChange(change) {

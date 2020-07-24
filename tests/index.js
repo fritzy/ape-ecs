@@ -22,6 +22,9 @@ describe('express components', () => {
 
   it('create entity', () => {
 
+    const S1 = class System extends ECS.System {}
+    const s1 = new S1(ecs);
+
     ecs.createEntity({
       components: [
         {
@@ -32,7 +35,7 @@ describe('express components', () => {
       ]
     });
 
-    const results = ecs.createQuery({ all: ['Health'] }).execute();
+    const results = s1.createQuery({ all: ['Health'] }).execute();
 
     expect(results.size).to.equal(1);
   });
@@ -254,7 +257,7 @@ describe('express components', () => {
     ecs.registerSystem('equipment', system);
     ecs.registerSystem('equipment', System2);
 
-    ecs.runSystemGroup('equipment');
+    ecs.runSystems('equipment');
 
     const entity = ecs.createEntityComponents({
       pockets: { type: 'Storage', size: 4 },
@@ -275,12 +278,12 @@ describe('express components', () => {
       }
     });
 
-    ecs.runSystemGroup('equipment');
+    ecs.runSystems('equipment');
     expect(changes.length).to.equal(2);
 
     entity.pants.slot = pants;
 
-    ecs.runSystemGroup('equipment');
+    ecs.runSystems('equipment');
 
     expect(entity.getComponents('EquipmentEffect')).to.exist;
     const eEffects = new Set([...entity.getComponents('EquipmentEffect')][0].effects);
@@ -293,9 +296,9 @@ describe('express components', () => {
 
     //entity.EquipmentSlot.pants.slot = null;
     pants.destroy();
-    ecs.runSystemGroup('equipment');
+    ecs.runSystems('equipment');
 
-    ecs.runSystemGroup('asdf'); //code path for non-existant system
+    ecs.runSystems('asdf'); //code path for non-existant system
     expect(changes2.length).to.be.greaterThan(0);
     expect(changes.length).to.be.greaterThan(0);
     expect(changes[0].target).to.equal(pants.id);
@@ -332,7 +335,7 @@ describe('system queries', () => {
         this.query = this.world.createQuery({
           all: 'Tile',
           not: ['Hidden'],
-          index: this });
+          persist: true });
       }
 
       update(tick) {
@@ -344,7 +347,7 @@ describe('system queries', () => {
     const tileSystem = new TileSystem(ecs);
     ecs.registerSystem('map', tileSystem);
 
-    ecs.runSystemGroup('map');
+    ecs.runSystems('map');
 
     expect(tileSystem.lastResults.size).to.equal(0);
 
@@ -367,7 +370,7 @@ describe('system queries', () => {
 
     ecs.tick()
 
-    ecs.runSystemGroup('map');
+    ecs.runSystems('map');
 
     expect(tileSystem.lastResults.size).to.equal(1);
     expect(tileSystem.lastResults.has(tile1)).to.be.true;
@@ -375,7 +378,7 @@ describe('system queries', () => {
     tile2.removeComponent(tile2.Hidden);
     ecs.tick();
 
-    ecs.runSystemGroup('map');
+    ecs.runSystems('map');
 
     expect(tileSystem.lastResults.size).to.equal(2);
     expect(tileSystem.lastResults.has(tile1)).to.be.true;
@@ -384,7 +387,7 @@ describe('system queries', () => {
     tile1.addComponent({ type: 'Hidden' });
     ecs.updateIndexes(tile1);
 
-    ecs.runSystemGroup('map');
+    ecs.runSystems('map');
 
     expect(tileSystem.lastResults.size).to.equal(1);
     expect(tileSystem.lastResults.has(tile2)).to.be.true;
@@ -469,10 +472,11 @@ describe('system queries', () => {
       tags: ['Billboard']
     });
 
-    const result = ecs.createQuery({
+    const q1 = ecs.createQuery({
       all: ['Tile', 'Billboard'],
       not: ['Sprite', 'Hidden'],
-    }).index('bill').execute();
+    }).persist();
+    const result = q1.execute();
 
     const resultSet = new Set([...result]);
 
@@ -499,7 +503,7 @@ describe('system queries', () => {
     tile1.removeTag('Billboard');
     tile4.addTag('Hidden');
 
-    const result2 = ecs.queryIndexes.get('bill').results;
+    const result2 = q1.results;
 
     expect(tile4.has('Billboard')).to.be.true;
     expect(tile3.has('Tile')).to.be.true;
@@ -534,7 +538,7 @@ describe('system queries', () => {
 
     ecs.tick();
     const ticks = ecs.currentTick;
-    const testQ = ecs.createQuery().fromAll(['Comp1']).index('test');
+    const testQ = ecs.createQuery().fromAll(['Comp1']).persist();
     const results1 = testQ.execute();
     expect(results1.has(entity1)).to.be.true;
     expect(results1.has(entity2)).to.be.true;
@@ -571,7 +575,7 @@ describe('system queries', () => {
 
     ecs.tick();
     const ticks = ecs.currentTick;
-    const testQ = ecs.createQuery().fromAll('Comp1').index('test');
+    const testQ = ecs.createQuery().fromAll('Comp1').persist();
     const results1 = testQ.execute();
     expect(results1.has(entity1)).to.be.true;
     expect(results1.has(entity2)).to.be.true;
@@ -595,7 +599,7 @@ describe('system queries', () => {
       Comp1: {}
     });
 
-    const query = ecs.createQuery().fromAll('Comp1').index('test');
+    const query = ecs.createQuery().fromAll('Comp1').persist();
     const results1 = query.execute();
     expect(results1.has(entity1)).to.be.true;
 
@@ -1181,16 +1185,16 @@ describe('advanced queries', () => {
       }
     });
 
-    const q2 = ecs.createQuery({ reverse: { entity: e4, type: 'InInventory'}, index: 'reverse-1' } );
+    const q2 = ecs.createQuery({ reverse: { entity: e4, type: 'InInventory'}, persist: true } );
     const r2 = q2.execute();
 
     expect(r2.size).to.equal(1);
     expect(r2.has(e5)).to.be.true;
 
-    const q3 = ecs.createQuery({ any: ['B', 'C'], index: 'bc' });
+    const q3 = ecs.createQuery({ any: ['B', 'C'], persist: true });
     const r3 = q3.execute();
 
-    const q4 = ecs.createQuery({ all: ['B', 'C'], index: 'all-bc' });
+    const q4 = ecs.createQuery({ all: ['B', 'C'], persist: true });
     const r3b = q4.execute();
 
     expect(r3.size).to.equal(3);
@@ -1233,6 +1237,11 @@ describe('advanced queries', () => {
   it('track added and removed', () => {
 
     const ecs = new ECS.World();
+    class S1 extends ECS.System {};
+    class S2 extends ECS.System {};
+
+    const s1 = ecs.registerSystem('group1', S1);
+    const s2 = ecs.registerSystem('group2', S2);
 
     ecs.registerTags(['A', 'B', 'C']);
 
@@ -1258,9 +1267,9 @@ describe('advanced queries', () => {
       tags: ['A', 'B', 'C']
     });
 
-    const q1 = ecs.createQuery({
+    const q1 = s1.createQuery({
       trackAdded: true,
-    }).fromAll(['A', 'C']).index('test1');
+    }).fromAll(['A', 'C']).persist();
 
     const r1 = q1.execute();
 
@@ -1273,7 +1282,7 @@ describe('advanced queries', () => {
     expect(q1.added.has(e6)).to.be.false;
     expect(q1.added.has(e7)).to.be.true;
 
-    q1.execute();
+    ecs.runSystems('group1');
     ecs.tick();
 
     expect(q1.added.size).to.be.equal(0);
@@ -1291,9 +1300,9 @@ describe('advanced queries', () => {
     expect(q1.added.size).to.be.equal(1);
     expect(q1.removed.size).to.be.equal(0);
 
-    const q2 = ecs.createQuery({
+    const q2 = s2.createQuery({
       trackRemoved: true,
-    }).fromAll(['A', 'C']).index('test2');
+    }).fromAll(['A', 'C']).persist();
 
     const r2 = q2.execute();
 
@@ -1320,11 +1329,11 @@ describe('advanced queries', () => {
     expect(r2.has(e7)).to.be.false;
     expect(q2.removed.has(e7)).to.be.true;
 
-    const r3 = q1.execute();
+    ecs.runSystems('group1');
     expect(q1.added.size).to.be.equal(0);
     expect(q1.removed.size).to.be.equal(0);
 
-    const r4 = q2.execute();
+    ecs.runSystems('group2');
     expect(q2.added.size).to.be.equal(0);
     expect(q2.removed.size).to.be.equal(0);
 

@@ -58,7 +58,7 @@ module.exports = class World {
     this.updatedEntities = new Set();
     this.componentTypes = {};
     this.components = new Map();
-    this.queryIndexes = new Map();
+    this.queries = [];
     this.subscriptions = new Map();
     this.systems = new Map();
     this.refs = {};
@@ -328,7 +328,7 @@ module.exports = class World {
 
   createQuery(init) {
 
-    return new Query(this, init);
+    return new Query(this, null, init);
   }
 
   subscribe(system, type) {
@@ -359,16 +359,16 @@ module.exports = class World {
       this.systems.set(group, new Set());
     }
     this.systems.get(group).add(system);
+    return system;
   }
 
-  runSystemGroup(group) {
+  runSystems(group) {
 
     const systems = this.systems.get(group);
     if (!systems) return;
     for (const system of systems) {
-      let entities;
       system._preUpdate();
-      system.update(this.currentTick, entities);
+      system.update(this.currentTick);
       system._postUpdate();
       system.lastTick = this.currentTick;
       if (system.changes.length !== 0) {
@@ -409,8 +409,8 @@ module.exports = class World {
 
   _updateIndexesEntity(entity) {
 
-    for (const query of this.queryIndexes) {
-      query[1].update(entity);
+    for (const query of this.queries) {
+      query.update(entity);
     }
   }
 

@@ -3,8 +3,9 @@ const Util = require('./util');
 
 class Query {
 
-  constructor(world, init) {
+  constructor(world, system, init) {
 
+    this.system = system;
     this.world = world;
     this.query = {
       froms: [],
@@ -12,7 +13,7 @@ class Query {
     };
 
     this.hasStatic = false;
-    this.indexed = false;
+    this.persisted = false;
     this.results = new Set();
     this.executed = false;
     this.added = new Set();
@@ -21,6 +22,10 @@ class Query {
     if (init) {
       this.trackAdded = init.trackAdded || false;
       this.trackRemoved = init.trackRemoved || false;
+      // istanbul ignore if
+      if ((this.trackAdded || this.trackRemoved) && !this.system) {
+        throw new Error('Queries cannot track added or removed when initialized outside of a system');
+      }
       if (init.from) {
         this.from(init.from);
       }
@@ -36,8 +41,8 @@ class Query {
       if (init.not) {
         this.not(init.not);
       }
-      if (init.index) {
-        this.index(init.index);
+      if (init.persist) {
+        this.persist();
       }
     }
   }
@@ -158,20 +163,29 @@ class Query {
     }
   }
 
-  index(name) {
+  persist() {
 
     // istanbul ignore if
     if (this.hasStatic) {
-      throw new Error('Cannot persistently index query with static list of entities.');
+      throw new Error('Cannot persist query with static list of entities.');
     }
     // istanbul ignore if
     if (this.query.froms.length === 0) {
-      throw new Error('Cannot persistently index query without entity source (fromAll, fromAny, fromReverse).');
+      throw new Error('Cannot persist query without entity source (fromAll, fromAny, fromReverse).');
     }
 
-    this.world.queryIndexes.set(name, this);
-    this.indexed = true;
+    this.world.queries.push(this);
+    if (this.system !== null) {
+      this.system.queries.push(this);
+    }
+    this.persisted = true;
     return this;
+  }
+
+  clearChanges() {
+
+    this.added.clear();
+    this.removed.clear();
   }
 
   refresh() {
