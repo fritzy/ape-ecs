@@ -62,13 +62,6 @@ class Component {
     });
   }
 
-  _updated() {
-
-    if (this._meta.ready) {
-      this._meta.updated = this.entity.updatedValues = this.world.currentTick;
-    }
-  }
-
   _reset() {
 
     this._meta.lookup = '';

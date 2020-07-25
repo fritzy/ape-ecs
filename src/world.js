@@ -184,6 +184,7 @@ module.exports = class World {
     const primitive = {};
     const special = {};
     const fields = Object.keys(definition.properties);
+    definition.writeHooks = definition.writeHooks || [];
     for (const field of fields) {
       // istanbul ignore if
       if (componentReserved.has(field)) {
@@ -194,22 +195,40 @@ module.exports = class World {
         continue;
       }
       primitive[field] = props[field];
-      Object.defineProperty(klass.prototype, field, {
-        enumerable: true,
-        get() {
-          return this._meta.values[field];
-        },
-        set(value) {
-          this._meta.values[field] = value;
-          this._updated();
-          return true;
-        }
-      });
+      if (definition.writeHooks.length > 0) {
+        Object.defineProperty(klass.prototype, field, {
+          enumerable: true,
+          get() {
+            return this._meta.values[field];
+          },
+          set(value) {
+            for (const hook of this.writeHooks) {
+              value = hook(this, field, value);
+            }
+            this._meta.values[field] = value;
+            this._meta.updated = this.world.currentTick;
+            return true;
+          }
+        });
+      } else {
+        Object.defineProperty(klass.prototype, field, {
+          enumerable: true,
+          get() {
+            return this._meta.values[field];
+          },
+          set(value) {
+            this._meta.values[field] = value;
+            this._meta.updated = this.world.currentTick;
+            return true;
+          }
+        });
+      }
     }
 
     klass.prototype.onInit = definition.init || function onInit() {};
     klass.prototype.onDestroy = definition.destroy || function onDestroy() {};
     klass.prototype.type = name;
+    klass.prototype.writeHooks = definition.writeHooks;
     Object.defineProperty(klass.prototype, 'world', {
       value: this, enumerable: false });
     klass.serialize = definition.serialize || {};

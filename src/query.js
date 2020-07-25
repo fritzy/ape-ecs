@@ -281,10 +281,8 @@ class Query {
     }
     const output = [];
     for (const entity of this.results) {
-      if (
-        !(filter.updatedComponents && entity.updatedComponents < filter.updatedComponents)
-        && !(filter.updatedValues && entity.updatedValues < filter.updatedValues)
-      ) {
+      if (filter.updatedComponents
+        && entity.updatedComponents >= filter.updatedComponents) {
         output.push(entity)
       }
     }

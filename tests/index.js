@@ -306,6 +306,120 @@ describe('express components', () => {
     expect(entity.getComponents('Burning')).to.not.exist;
 
   });
+
+  it('write hooks', () => {
+
+    const world = new ECS.World();
+
+    world.registerComponent('Thing', {
+      properties: {
+        name: 'Thing',
+      }
+    });
+
+    const wand = world.createEntity({
+      components: [
+        {
+          type: 'Thing',
+          lookup: 'Thing',
+          name: 'Wand'
+        }
+      ]
+    });
+
+    world.registerComponent('Tile', {
+      properties: {
+        x: 0,
+        y: 0,
+        other: EntityRef,
+        others: EntitySet,
+        otherMap: EntityObject,
+        coord: '0x0'
+      },
+      writeHooks: [
+        function(tile, prop, value) {
+          if (prop === 'x' || prop === 'y') {
+            value++;
+          }
+          return value;
+        },
+        function(tile, prop, value) {
+          if (prop === 'x') {
+            tile.coord = `${value}x${tile.y}`;
+          } else if (prop === 'y') {
+            tile.coord = `${tile.x}x${value}`;
+          }
+          return value;
+        },
+        function (tile, prop, value) {
+          if (prop === 'other'
+            || prop === 'others'
+            || prop === 'otherMap') {
+            value = wand.id;
+          }
+          return value;
+        }
+      ]
+    });
+
+
+    const sandwich = world.createEntity({
+      components: [
+        {
+          type: 'Thing',
+          name: 'Sandwich',
+          lookup: 'Thing'
+        }
+      ]
+    });
+
+    const beer = world.createEntity({
+      components: [
+        {
+          type: 'Thing',
+          name: 'Beer',
+          lookup: 'Thing'
+        }
+      ]
+    });
+
+    const crayon = world.createEntity({
+      components: [
+        {
+          type: 'Thing',
+          name: 'Crayon',
+          lookup: 'Thing'
+        }
+      ]
+    });
+
+    const e1 = world.createEntity({
+      components: [
+        {
+          type: 'Tile',
+          lookup: 'Tile',
+          other: sandwich,
+          others: [beer],
+        }
+      ]
+    });
+    e1.Tile.otherMap.pocket = crayon;
+
+    expect(e1.Tile.x).to.equal(1);
+    expect(e1.Tile.y).to.equal(1);
+    expect(e1.Tile.coord).to.equal('0x0');
+
+    e1.Tile.x = 14;
+    e1.Tile.y = 2;
+
+    expect(e1.Tile.x).to.equal(15);
+    expect(e1.Tile.y).to.equal(3);
+    expect(e1.Tile.coord).to.equal('15x3');
+    expect(e1.Tile.other).to.equal(wand);
+    expect(e1.Tile.others).to.contain(wand);
+    expect(e1.Tile.otherMap.pocket).to.equal(wand);
+  });
+
 });
 
 describe('system queries', () => {
@@ -542,13 +656,6 @@ describe('system queries', () => {
     const results1 = testQ.execute();
     expect(results1.has(entity1)).to.be.true;
     expect(results1.has(entity2)).to.be.true;
-
-    const comp1 = entity1.Comp1;
-    comp1.greeting = 'Gutten Tag';
-
-    const results2 = testQ.execute({updatedValues: ticks});
-    expect(results2.has(entity1)).to.be.true;
-    expect(results2.has(entity2)).to.be.false;
   });
 
   it('filter by updatedComponents', () => {

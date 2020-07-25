@@ -11,7 +11,6 @@ class Entity {
     this.id = '';
     this.tags = new Set();
     this.updatedComponents = 0;
-    this.updatedValues = 0;
   }
 
   _setup(definition) {
@@ -24,7 +23,6 @@ class Entity {
     this.world.entities.set(this.id, this);
 
     this.updatedComponents = this.world.currentTick;
-    this.updatedValues = this.world.currentTick;
 
     if (definition.tags) {
       for (const tag of definition.tags) {
