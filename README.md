@@ -30,7 +30,7 @@ This arrangement of dynamic data types within an object and freely interacting s
 This library is not a strict/pure Entity-Component-System library for a few reasons:
   * Entities aren't just ids that component can have in common -- they're classes that have properties for all of their components.
   * Components are a little more advanced than just data, but we try to make it feel that way. Components are models with advanced features.
-  * All of the entities, components, and systems are managed by an ECS class as a sort of registery.
+  * All of the entities, components, and systems are managed by an World class as a sort of registery.
 
 I built this library around the ideas and scenarios best illustrated by this [Overwatch Gameplay Architecture and Netcode](https://www.youtube.com/watch?v=W3aieHjyNvw) video (only the first half is very relevant).
 
