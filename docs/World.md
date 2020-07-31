@@ -2,7 +2,7 @@
 
 The world is the main class for **Ape ECS** . From there you can work with `Component`s, `Entity`s, `Query`s, and `System`s. Your application can have more than one world, but all of your `Entity`s, `Component`s, `System`s, and `Query`s will be specific to a given `World` (although there are ways to clone things between worlds).
 
-An instance of `World` is essentially a registry of your game or simulation data, systems, and types. 
+An instance of `World` is essentially a registry of your game or simulation data, systems, and types. You've got to start with a world before you can do anything else. Typically you create your world, register your tags, components, and systems, and then start creating entities and running systems.
 
 ## World constructor
 
@@ -20,6 +20,7 @@ const myWorld = new ApeECS.World({
   - trackChanges: `bool`, default `true`
   - entityPool: `Number`, default `10`
   
+### Notes:
 
 Turning off `trackChanges` removes the events that a `System` can subscribe to.
 
@@ -112,6 +113,9 @@ world.registerComponent('Position', {
 * definition: `Object` -- definition (see below)
 * poolSize: `Number`, integer, default number of this `Component` to create for a memory pool
 
+
+### Notes:
+
 Registers a new Component type to be used with `world.createEntity()` or `entity.addComponent()`.
 
 ☝️ If your Component doesn't need any properties or special options, register a Tag instead with `world.registerTag([])`.
@@ -128,6 +132,8 @@ The second argument to `world.registerComponent` is a definition `Object` that r
 `Object` _(required)_
 
 Each key for the properties `Object` indicates a property for your new `Component`. The value of a `properties` entry can be a `Number`, `String`, `null`, or `Ref function`, and indicates the default value for a property. 
+
+👀 See the [Refs Docs](Refs.md) to learn about the Entity Ref property functions.
 
 ⚠️ Using a mutable value like `{}` `[]` may cause undefined behavior when assigned as a default. If you'd like to use an `Object` type or even advanced type from a game engine, you may assign one to a property when you invoke `world.createEntity` or `entity.addComponent`, but the default during `registerComponent` should be `null`.
 
@@ -166,26 +172,206 @@ An array of functions that are ran when a property is set. You can manipulate th
 
 ## createEntity
 
-## createEnitityComponents
+Create a new Entity, including any initial components (and their initial property values) or tags. It returns a new `Entity` instance.
+
+```js
+const playerEntity = world.createEntity({
+  id: 'Player', // optional
+  tags: ['Character', 'Visible'], //optional
+  components: [ // optional
+    {
+      type: 'Slot',
+      name: 'Left Hand',
+      slotType: 'holdable'
+    },
+    {
+      type: 'Slot',
+      name: 'Right Hand',
+      slotType: 'holdable'
+    },
+    {
+      type: 'Slot',
+      name: 'Body'
+      slotType: 'body'
+    },
+  ],
+  c: { // optional
+    Controls: {
+      boundTo: 'keyboard',
+      keysDown: []
+    },
+    Position: {
+      x: 15,
+      y: 23
+    },
+    Inventory: {
+      type: 'Container' // specified type different than the lookup
+      size: 16
+    },
+    footSlot: {
+      type: 'Slot'
+      name: 'Feet'
+      slotType: 'shoes'
+    }
+  }
+});
+```
+
+### Arguments:
+* definition `Object`, _required_
+  * id: `String`, _optional_, unique identifier (generated if not specified)
+  * tags: `[]String`, _optional_, any registered tags to include
+  * components: `[]Object`, _optional_, initial components
+    * type: `String`, _required_, registered component type
+    * id: `String`, _optional_, unique identifier (generated if not specified)
+    * lookup: `String`, _optional_, lookup value of the component instance in the `Entity`. If not specified, tye component instance has no lookup value, and is only included in the `Set` of `entity.components['ComponentType']` values.
+    * \*properties: initial values for defined properties of the component
+  * c: `Object`: _optional, Components indexed by a lookup value. Equivalant to specifying the `lookup` and `type` in the `components` array property.
+    * `key` is the `lookup` value of the component instance. Also the component type if one is not specified.
+    * `value` is an `Object` defining the initial values of a `Component`
+      * `type`: `String`, _optional_, If not specified, the `lookup` key needs to be a registered `Component` type. 
+      * `id`:  `String`, _optional_, unique identifier (generated if not specified)
+      * \*properties: initial values for defined properties of the component
+
+### Notes: 
+👀 For more information on how lookups work, see the [Entity Docs](Entity.md).
+
+☝️ The createEntity definition schema is the same one used by `entity.getObject` and `world.getObject`. As such, you can save and restore objects by saving the results of these methods and calling `world.createEntity` with the same `Object` to restore it.
+
+💭 **Ape ECS** uses a very fast unique id generator for `Component`s and `Entity`s if you don't specify a given id upon creation. Look at the code in [src/util.js](src/util.js).
 
 ## getObject
 
+Retrieves a serializable object that includes all of the Entities and their Components in the World.
+Returns an array of Entity definitions. See [world.createEntity](#createEntity);
+
+```js
+const saveState = world.getObject();
+const jsonState = JSON.stringify(saveState);
+```
+
 ## createEntities
+
+Just like [world.createEntity](#createEntity) except that it takes an array of `createEntity` definitions.
+
+```js
+world.createEntities([
+  {
+    tags: ['Tile', 'Visible', 'New'],
+    components: [
+      {
+        type: 'Sprite':
+        texture: 'sprites/tiles/ground1.png'
+      }
+    ],
+    c: {
+      Position: {
+        x: 0,
+        y: 0
+      }
+    }
+  },
+  {
+    tags: ['Tile', 'Visible', 'New'],
+    components: [
+      {
+        type: 'Sprite':
+        texture: 'sprites/tiles/ground1.png'
+      }
+    ],
+    c: {
+      Position: {
+        x: 1,
+        y: 0
+      }
+    }
+  },
+  {
+    tags: ['Character', 'Player'],
+    id: 'Player'
+    c: {
+      Position: {
+        x: 0,
+        y: 0
+      }
+    }
+  }
+]);
+```
 
 ## copyTypes
 
+## getEntity
+
+Get an `Entity` instance by it's `id` or `undefined`.
+
+```js
+const entity1 = world.getEntity('aabbccdd-1');
+```
+
+### Arguments
+* id: `String`, _required_, The id of an existing `Entity` instance.
+
 ## removeEntity
 
-## getEntity
+Removes an `Entity` instance from the `world`, initializing its `destroy()`.
+
+### Arguments:
+* id/entity: `String` or `Entity instance` of an existing `Entity`.
+
+### Notes:
+
+☝️ Equivalent to:
+
+```js
+world.getEntity(id).destroy();
+```
 
 ## getEntities
 
+Retrieve a `Set` of all the `Entities` that include a given `Component` type or Tag.
+
+```js
+const tiles = world.getEntities('Tile');
+```
+
+### Notes:
+
+☝️ You could also do this with a `Query`.
+
+```js
+const q1 = world.createQuery().fromAll(['Tile']);
+const tiles = q1.execute();
+```
+
 ## createQuery
 
-## subscribe
+Factory that returns a new `Query` instance.
+
+```js
+const query1 = world.createQuery({ /* config */}).fromAll(['Tile', 'Position']);
+const tiles = query1.execute({ /* filter */ });
+```
+
+### Notes:
+
+👀 See the [Query Docs](Query.md) to learn more about creating them and using them. 
+Queries are a big part of **Ape ECS** and are fairly advanced.
+
+☝️ You can also `createQuery` from a `System`. `Systems` can persist `Queries` which then act as an index to results that automatically stays up to date as `Entity` composition changes.
 
 ## addSystem
+
+Registers a `System` class or instance with the world for later execution.
+
+```js
+class Gravity extends ApeECS.System {}
+
+world.addSystem('movement', Gravity);
+```
 
 ## runSystemGroup
 
 ## updateIndexes
+
+## subscribe
