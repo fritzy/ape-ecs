@@ -1,7 +1,7 @@
 {
-  "name": "@fritzy/ecs",
+  "name": "ape-ecs",
   "version": "0.6.0",
-  "description": "Entity-Component-System library for game development.",
+  "description": "Ape-ECS (Apex) Entity-Component-System library for simulation and game development.",
   "main": "./src/index.js",
   "source": true,
   "files": [

@@ -40,6 +40,7 @@ class Component {
     this.world.componentsById.set(this.id, this);
 
     const props = this.constructor.props;
+    // shallow copy of the property defaults
     const values = Object.assign({}, props.primitive, initial);
     for (const field of props.fields) {
       const value = values[field];
@@ -52,8 +53,8 @@ class Component {
         this[field] = value;
       }
     }
-    this.onInit();
     this._meta.ready = true;
+    this.onInit();
     this.world._sendChange({
       op: 'add',
       component: this.id,
@@ -82,6 +83,11 @@ class Component {
     for (const field of this.constructor.props.fields) {
       if (!obj.hasOwnProperty(field)) {
         obj[field] = this[field].getValue();
+      }
+    }
+    for (const field of this.constructor.serialize.ignore) {
+      if (obj.hasOwnProperty(field)) {
+        delete obj[field];
       }
     }
     if (componentIds) {

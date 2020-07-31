@@ -276,7 +276,10 @@ class Query {
     }
     this.removed.clear();
     this.executed = true;
-    if (filter === undefined) {
+    if (filter === undefined 
+      || (!filter.hasOwnProperty('updatedComponents')
+        && !filter.hasOwnProperty('updatedValues')
+      )) {
       return this.results;
     }
     const output = [];

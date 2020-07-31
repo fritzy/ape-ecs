@@ -231,7 +231,10 @@ module.exports = class World {
     klass.prototype.writeHooks = definition.writeHooks;
     Object.defineProperty(klass.prototype, 'world', {
       value: this, enumerable: false });
-    klass.serialize = definition.serialize || {};
+    klass.serialize = {};
+    definition.serialize = definition.serialize || {};
+    klass.serialize.skip = definition.serialize.skip || false;
+    klass.serialize.ignore = definition.serialize.ignore || [];
     klass.props = {
       fields,
       primitive,

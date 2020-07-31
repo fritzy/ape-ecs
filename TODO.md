@@ -4,9 +4,13 @@
 [x] check field names on registration
 [x] check tag/component names on registration
 [x] test for out-of-order ref deserialization
-[ ] mark components and entities as destroyed and clean up later?
+[-] mark components and entities as destroyed and clean up later?
 [-] port to ES Modules -- was too much of a pain for test coverage
 [x] port testing to mocha+chai.expect+istanbul
-[ ] make component lookup simplermake component lookup simpler 
+[x] make component lookup simpler
+[ ] track component changes in entity
+  - maybe add world.changedEntities Set, and update before every tick() or after every System.update?
+  - maybe not using a getter would be faster for component.entity?
+  - deleted this feature before because it slowed down properties writes 3x
 [ ] update documentation
-  [ ] jsdoc?
+  [-] jsdoc?
