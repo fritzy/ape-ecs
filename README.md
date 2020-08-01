@@ -7,7 +7,13 @@ An [Entity-Component-System](https://en.wikipedia.org/wiki/Entity_component_syst
 * [Overview](https://github.com/fritzy/ape-ecs/blob/lightweight/docs/Overview.md)
 * [API Reference](https://github.com/fritzy/ape-ecs/blob/lightweight/docs/API_Reference.md)
 
-__Some Features__:
+## Install
+
+```sh
+npm install ape-ecs 
+```
+
+## Some Ape ECS Features
 
 * Easy to define Components.
 * Advanced Queries based on Entity-Component composition, Entity references, and the last updated.
@@ -16,9 +22,9 @@ __Some Features__:
 * Export/import support for saving/restoring state.
 * 100% Test Coverage.
 
-__About__:
+## More About ECS
 
-The Entity-Component-System paradigm is great for managing dynamic objects in games and simulations. Instead of binding functionality to data through methods, systems are able to freely manipulate data directly that are retrieved through queries. This encourages dynamic composition of Entities and Systems that can freely interact through shared data. 
+The Entity-Component-System paradigm is great for managing dynamic objects in games and simulations. Instead of binding functionality to data through methods, entities are dynamically composed of any combination of types. Separate systems are then able to query for entities with a given set of types. 
 
 ECS's dynamic data composition and freely interacting systems leads to:
   * More complex and dynamic composition than OOP
@@ -29,25 +35,11 @@ This library has been inspired in part by:
   * [Overwatch Gameplay Architecture and Netcode](https://www.youtube.com/watch?v=W3aieHjyNvw)
   * [Mozilla ECSY](https://blog.mozvr.com/introducing-ecsy/)
 
-__Using This Library__
-  * [Example Game](#exampleGame)
-  * [Install](#install)
-  * [Tests](#tests)
-
-<a name="exampleGame"></a>
 ## Example Game
 
 [Roguelike Example Using @fritzy/ecs + rot.js](https://github.com/fritzy/ecs-js-example)
 
-<a name="install"></a>
-## Install
-
-```sh
-npm install @fritzy/ecs 
-```
-
-<a name="tests"></a>
-## Tests
+## Running the Tests
 
 The goal is to keep test coverage at 100%.
 
@@ -57,4 +49,3 @@ cd ecs-js
 npm install
 npm test
 ```
-
