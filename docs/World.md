@@ -1,8 +1,26 @@
 # World
 
-The world is the main class for **Ape ECS** . From there you can work with `Component`s, `Entity`s, `Query`s, and `System`s. Your application can have more than one world, but all of your `Entity`s, `Component`s, `System`s, and `Query`s will be specific to a given `World` (although there are ways to clone things between worlds).
+The world is the main class for **Ape ECS** . From there you can work with `Components`, `Entities`, `Queries`, and `Systems`. Your application can have more than one world, but all of your `Entities`, `Components`, `Systems`, and `Queries` will be specific to a given `World` (although there are ways to clone things between worlds).
 
 An instance of `World` is essentially a registry of your game or simulation data, systems, and types. You've got to start with a world before you can do anything else. Typically you create your world, register your tags, components, and systems, and then start creating entities and running systems.
+
+## Index
+* [World constructor](#world-constructor)
+* [currentTick](#currenttick)
+* [tick](#tick)
+* [registerComponent](#registercomponent)
+* [registerTags](#registertags)
+* [createEntity](#createentity)
+* [getObject](#getobject)
+* [createEntities](#createentities)
+* [copyTypes](#copytypes)
+* [getEntity](#getEntity)
+* [removeEntity](#removeEntity)
+* [getEntities](#getEntities)
+* [createQuery](#createquery)
+* [registerSystem](#registerSystem)
+* [runSystems](#runSystems)
+* [subscribe](#subscribe)
 
 ## World constructor
 
@@ -37,7 +55,7 @@ const myworld = new ApeECS.World({
 
 ## currentTick
 
-The `currentTick` is a Number integer property incremented by the `world.tick()` method. It can be used to determine how recently `Entity`s and `Component`s have been updated based on their `Entity.updatedComponents` and `Component._meta.updated` values.
+The `currentTick` is a Number integer property incremented by the `world.tick()` method. It can be used to determine how recently `Entities` and `Components` have been updated based on their `Entity.updatedComponents` and `Component._meta.updated` values.
 
 ```js
 const q1 = world.createQuery().fromAll(['Position', 'Tile']);
@@ -50,26 +68,13 @@ const tiles = q1.execute({updatedComponents: world.currentTick - 1 });
 world.tick();
 ```
 
-Increments the `world.currentTick` and manages any housekeeping that **Ape ECS** needs to do on the world between system runs.
-
-## registerTags
-
-```js
-world.registerTicks(['MarkForDelete', 'Invisible', 'IsSandwich']);
-```
-
-Registers any tags that you'll be using for your Entities. 
-
-### Arguments
-* tags: `Array` of `String`s
-
-Tags are used like `Component`s, but they're only a string. You can check if `entity.has('TagName')` just like you would a `Component` name, and use them similarly in `Query`s.
+Increments the `world.currentTick` and manages any housekeeping that **Ape ECS** needs to do on the world between system runs. Once you've run through all of your `Systems` you should `world.tick()` before you do again.
 
 ## registerComponent
 
 Register a new `Component` type in your `World`.
 
-👀 See the [Component Docs](Component.md) for info on how to use `Component`s.
+👀 See the [Component Docs](Component.md) for info on how to use `Components`.
 
 ```js
 world.registerComponent('Position', {
@@ -170,6 +175,19 @@ An array of functions that are ran when a property is set. You can manipulate th
 
 ️⚠️ `writeHooks` are not run during `world.createEntity` or `entity.addComponent`. If you need to take actions on the initial property values, then use the `init` function in the `definition`.
 
+## registerTags
+
+```js
+world.registerTicks(['MarkForDelete', 'Invisible', 'IsSandwich']);
+```
+
+Registers any tags that you'll be using for your Entities. 
+
+### Arguments
+* tags: `[]String`
+
+Tags are used like `Components`, but they're only a string. You can check if `entity.has('TagName')` just like you would a `Component` name, and use them similarly in `Queryies`. They're using for knowing if an `Entity` "is" something, but you don't need any further properties to describe that aspect.
+
 ## createEntity
 
 Create a new Entity, including any initial components (and their initial property values) or tags. It returns a new `Entity` instance.
@@ -238,7 +256,7 @@ const playerEntity = world.createEntity({
 
 ☝️ The createEntity definition schema is the same one used by `entity.getObject` and `world.getObject`. As such, you can save and restore objects by saving the results of these methods and calling `world.createEntity` with the same `Object` to restore it.
 
-💭 **Ape ECS** uses a very fast unique id generator for `Component`s and `Entity`s if you don't specify a given id upon creation. Look at the code in [src/util.js](src/util.js).
+💭 **Ape ECS** uses a very fast unique id generator for `Components` and `Entities` if you don't specify a given id upon creation. Look at the code in [src/util.js](src/util.js).
 
 ## getObject
 
@@ -301,6 +319,16 @@ world.createEntities([
 
 ## copyTypes
 
+Copy registered Component types from another world to this one.
+
+```js
+world.copyTypes(world2, types);
+```
+
+### Arguments:
+* world2: `World instance`, _required_
+* types: `[]String`, _required_, Registered `Component` types that you'd like to copy from world2
+
 ## getEntity
 
 Get an `Entity` instance by it's `id` or `undefined`.
@@ -360,18 +388,44 @@ Queries are a big part of **Ape ECS** and are fairly advanced.
 
 ☝️ You can also `createQuery` from a `System`. `Systems` can persist `Queries` which then act as an index to results that automatically stays up to date as `Entity` composition changes.
 
-## addSystem
+## registerSystem
 
 Registers a `System` class or instance with the world for later execution.
 
 ```js
 class Gravity extends ApeECS.System {}
 
-world.addSystem('movement', Gravity);
+world.registerSystem('movement', Gravity);
 ```
 
-## runSystemGroup
+### Arguments:
+* group: `String` name for the group of Systems
+* system: `System class` or `System instance`
 
-## updateIndexes
+### Notes:
+
+👀 See the [System Docs](System.md) for more information about registering `Systems`.
+
+## runSystems
+
+Runs the added `Systems` that were registered with that specific group, in order.
+
+```js
+world.runSystems(group);
+```
+
+### Notes:
+
+👀 See the [System Docs](System.md) for more information about running `Systems`.
 
 ## subscribe
+
+Subscribe a `System instance` to events from a given `Component` type.
+
+```js
+world.subscribe(system, type);
+```
+
+### Arguments:
+* system: `System instance`, _required_
+* type:  `String`, _required_, registered `Component` type
