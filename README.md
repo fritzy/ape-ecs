@@ -1,13 +1,14 @@
 # Ape-ECS
+![Ape-ECS Hero](https://raw.githubusercontent.com/fritzy/ape-ecs/lightweight/imgs/ape_ecs900.png)
 
 An [Entity-Component-System](https://en.wikipedia.org/wiki/Entity_component_system) library for JavaScript, written in ECMAScript ES2018, intended for use in games and simulations.
 
-__Features__:
+__Some Features__:
 
 * Easy to define Components.
-* Component reference types to Entities (EntityRef, EntitySet, EntityObject)
 * Advanced Queries based on Entity-Component composition, Entity references, and the last updated.
 * Persisted queries are updated as Entity composition changes.
+* Component reference types to Entities (EntityRef, EntitySet, EntityObject)
 * Export/import support for saving/restoring state.
 * 100% Test Coverage.
 
