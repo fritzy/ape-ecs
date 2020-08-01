@@ -5,7 +5,7 @@ An [Entity-Component-System](https://en.wikipedia.org/wiki/Entity_component_syst
 
 ## Documentation
 * [Overview](https://github.com/fritzy/ape-ecs/blob/lightweight/docs/Overview.md)
-* [API Reference](https://github.com/fritzy/ape-ecs/blob/lightweight/docs/API.md)
+* [API Reference](https://github.com/fritzy/ape-ecs/blob/lightweight/docs/API_Reference.md)
 
 __Some Features__:
 
