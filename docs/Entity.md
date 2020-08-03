@@ -79,6 +79,16 @@ Returns a `Set` of `Components` of a given type.
 const pointsSet = entity.getComponents('Point');
 ```
 
+## getOne
+
+Returns the first `Component` of a given type from an `Entity` or `undefined`.
+
+```js
+const point = entity.getOne('Point');
+```
+
+👆 If you only intend to have 1 of given `Component` type on an `Entity`, you might consider using a [lookup](./Component.md#lookup) value.
+
 ## addTag
 
 Adds a tag to the `Entity`.

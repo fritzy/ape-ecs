@@ -55,6 +55,15 @@ class Entity {
     return this.world.entitiesByComponent[type].has(this.id);
   }
 
+  getOne(type) {
+    
+    let component;
+    if (this.types[type]) {
+      component = [...this.types[type]][0];
+    }
+    return component;
+  }
+
   getComponents(type) {
 
     return this.types[type];

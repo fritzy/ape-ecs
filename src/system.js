@@ -14,9 +14,14 @@ class System {
         this.world.subscribe(this, sub);
       }
     }
+    this.init();
   }
 
-  update(tick, entities) {
+  init() {
+
+  }
+
+  update(tick) {
 
   }
 
