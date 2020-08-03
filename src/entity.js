@@ -52,7 +52,7 @@ class Entity {
 
   has(type) {
 
-    return this.world.entitiesByComponent[type].has(this.id)
+    return this.world.entitiesByComponent[type].has(this.id);
   }
 
   getComponents(type) {

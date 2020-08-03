@@ -4,9 +4,4 @@
 
 ## update
 
-## \_preUpdate
-
-## \_postUpdate
-
-## \_recvChange
-
+## Registering and Running

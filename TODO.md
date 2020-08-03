@@ -1,16 +1,12 @@
-[x] test coverage 100%
-[x] Entities composed with components from entity.c.component, Object output the same.
-[x] query can remember added and removed entities if indexed
-[x] check field names on registration
-[x] check tag/component names on registration
-[x] test for out-of-order ref deserialization
-[-] mark components and entities as destroyed and clean up later?
-[-] port to ES Modules -- was too much of a pain for test coverage
-[x] port testing to mocha+chai.expect+istanbul
-[x] make component lookup simpler
+[ ] check for component.ready before calling writehooks
+[ ] rename writeHooks to setterHooks?
+[ ] double check system lifecycle (pre and post functions for query indexes)
+[ ] update example game
 [ ] track component changes in entity
   - maybe add world.changedEntities Set, and update before every tick() or after every System.update?
   - maybe not using a getter would be faster for component.entity?
   - deleted this feature before because it slowed down properties writes 3x
-[ ] update documentation
-  [-] jsdoc?
+[ ] component.entity should make just be a pointer
+[ ] maybe get rid of c. composition for lookups and just have it at the root?
+[ ] add getObject hook
+[ ] System init function rather than overriding the constructor

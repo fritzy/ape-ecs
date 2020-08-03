@@ -5,5 +5,11 @@
 * [Component](./Component.md) - How to work with Components.
 * [System](./System.md) - How to work with Systems.
 * [Query](./Query.md) - How to work with Queries.
-* [Entity Refs](./Refs.md) - How to work with Entity Refs.
+* [Entity Refs](./Entity_Refs.md) - How to work with Entity Refs.
 * [Back to the README](../README.md)
+
+These docs contain emojis to indicate the type of information following.
+
+👆  A relevant titip.  
+⚠️ A warning and possible 🦶🔫.  
+💭 Implementation details.

@@ -1,7 +1,7 @@
 # Ape-ECS
 ![Ape-ECS Hero](https://raw.githubusercontent.com/fritzy/ape-ecs/lightweight/imgs/ape_ecs900wbg.png)
 
-An [Entity-Component-System](https://en.wikipedia.org/wiki/Entity_component_system) library for JavaScript, written in ECMAScript ES2018, intended for use in games and simulations.
+A performant [Entity-Component-System](https://en.wikipedia.org/wiki/Entity_component_system) library for JavaScript, written in ECMAScript ES2018, intended for use in games and simulations.
 
 ## Documentation
 * [Overview](https://github.com/fritzy/ape-ecs/blob/lightweight/docs/Overview.md)
@@ -29,7 +29,7 @@ The Entity-Component-System paradigm is great for managing dynamic objects in ga
 ECS's dynamic data composition and freely interacting systems leads to:
   * More complex and dynamic composition than OOP
   * Improved performance due to lack of API methods
-  * [Emergent Gameplay](https://en.wikipedia.org/wiki/Emergent_gameplay) with logical behavior that the programmer didn't envision.
+  * [Emergent Gameplay](https://en.wikipedia.org/wiki/Emergent_gameplay) with logical behavior extended beyond the programmer's vision.
 
 This library has been inspired in part by:
   * [Overwatch Gameplay Architecture and Netcode](https://www.youtube.com/watch?v=W3aieHjyNvw)
@@ -44,8 +44,8 @@ This library has been inspired in part by:
 The goal is to keep test coverage at 100%.
 
 ```sh
-git clone git@github.com/fritzy/ecs-js.git
-cd ecs-js
+git clone git@github.com/fritzy/ape-ecs.git
+cd ape-ecs
 npm install
 npm test
 ```
