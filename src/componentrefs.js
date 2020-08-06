@@ -26,9 +26,6 @@ class EntitySet extends Set {
     if (value.id) {
       value = value.id;
     }
-    for (const hook of this.component.writeHooks) {
-      value = hook(this.component, this.field, value);
-    }
     this.component._addRef(value, this.field, '__set__');
     super.add(value);
   }
@@ -88,9 +85,6 @@ module.exports = {
 
           const old = comp._meta.values[field];
           value = (value && typeof value !== 'string') ? value.id : value;
-          for (const hook of comp.writeHooks) {
-            value = hook(comp, field, value);
-          }
           if (old && old !== value) {
             comp._deleteRef(old, field, undefined);
           }
@@ -125,9 +119,6 @@ module.exports = {
         const old = obj[prop];
         if (value && value.id) {
           value = value.id;
-        }
-        for (const hook of comp.writeHooks) {
-          value = hook(comp, field, value);
         }
         obj[prop] = value;
         if (old && old !== value) {

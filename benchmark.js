@@ -20,23 +20,26 @@ function output(test) {
   console.log(`${descriptions[test]}: ${(times[test]).toFixed(2)}ms`);
 }
 
+class Test extends ECS.Component {
+  static properties = {
+    a: 1,
+    b: 2
+  };
+}
+class Test2 extends ECS.Component {
+  static properties = {
+    c: 3,
+    d: 4
+  };
+}
+
 function benchmarks() {
   let start, end;
 
 
   const ecs = new ECS.World({ trackChanges: false, entityPool: 100 });
-  ecs.registerComponent('Test', {
-    properties: {
-      a: 1,
-      b: 2
-    }
-  });
-  ecs.registerComponent('Test2', {
-    properties: {
-      c: 3,
-      d: 4
-    }
-  });
+  ecs.registerComponent(Test);
+  ecs.registerComponent(Test2);
 
   const entities = [];
 

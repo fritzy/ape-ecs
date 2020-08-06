@@ -56,7 +56,7 @@ class Entity {
   }
 
   getOne(type) {
-    
+
     let component;
     if (this.types[type]) {
       component = [...this.types[type]][0];
@@ -143,7 +143,7 @@ class Entity {
     for (const type of Object.keys(this.types)) {
       for (const comp of this.types[type]) {
         // $lab:coverage:off$
-        if (comp.constructor.serialize && comp.constructor.serialize.skip) {
+        if (!comp.constructor.serialize) {
           continue;
         }
         // $lab:coverage:on$

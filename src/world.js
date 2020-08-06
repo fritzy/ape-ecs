@@ -50,7 +50,6 @@ module.exports = class World {
     this.currentTick = 0;
     this.entities = new Map();
     this.types = {};
-    this.typeDefs = new Map();
     this.tags = new Set();
     this.entitiesByComponent = {};
     this.componentsById = new Map();
@@ -157,113 +156,34 @@ module.exports = class World {
           throw new Error (`Cannot register tag "${tag}", name is already taken.`);
         }
         this.entitiesByComponent[tag] = new Set();
-        this.typeDefs.set(tag, { tag: true });
+        this.tags.add(tag);
       }
       return;
     }
     this.entitiesByComponent[tags] = new Set();
-    this.typeDefs.set(tags, { tag: true });
+    this.tags.add(tags);
   }
 
-  registerComponent(name, definition, spinup=1) {
+  registerComponent(klass, spinup=1) {
 
-    // istanbul ignore if
-    if (this.entitiesByComponent.hasOwnProperty(name)) {
-      throw new Error (`Cannot register component "${name}", name is already taken.`);
+    const name = klass.name;
+    if (this.tags.has(name)) {
+      throw new Error (`registerComponent: Tag already defined for "${name}"`);
+    } else if (this.componentTypes.hasOwnProperty(name)) {
+      throw new Error (`registerComponent: Component already defined for "${name}"`);
     }
-    this.typeDefs.set(name, definition);
-    if (definition.tag) {
-      return this.registerTags(name);
-    }
-    // $lab:coverage:on$
-    if (!definition.properties) definition.properties = {};
-
-    const klass = class CustomComponent extends Component {};
-
-    const props = definition.properties;
-    const primitive = {};
-    const special = {};
-    const fields = Object.keys(definition.properties);
-    definition.writeHooks = definition.writeHooks || [];
-    for (const field of fields) {
-      // istanbul ignore if
-      if (componentReserved.has(field)) {
-        throw new Error(`Cannot use the reserved field name "${field}"`);
-      }
-      if (typeof props[field] === 'function') {
-        special[field] = props[field];
-        continue;
-      }
-      primitive[field] = props[field];
-      if (definition.writeHooks.length > 0) {
-        Object.defineProperty(klass.prototype, field, {
-          enumerable: true,
-          get() {
-            return this._meta.values[field];
-          },
-          set(value) {
-            for (const hook of this.writeHooks) {
-              value = hook(this, field, value);
-            }
-            this._meta.values[field] = value;
-            this._meta.updated = this.world.currentTick;
-            return true;
-          }
-        });
-      } else {
-        Object.defineProperty(klass.prototype, field, {
-          enumerable: true,
-          get() {
-            return this._meta.values[field];
-          },
-          set(value) {
-            this._meta.values[field] = value;
-            this._meta.updated = this.world.currentTick;
-            return true;
-          }
-        });
-      }
-    }
-
-    klass.prototype.onInit = definition.init || function onInit() {};
-    klass.prototype.onDestroy = definition.destroy || function onDestroy() {};
-    klass.prototype.type = name;
-    klass.prototype.writeHooks = definition.writeHooks;
-    Object.defineProperty(klass.prototype, 'world', {
-      value: this, enumerable: false });
-    klass.serialize = {};
-    definition.serialize = definition.serialize || {};
-    klass.serialize.skip = definition.serialize.skip || false;
-    klass.serialize.ignore = definition.serialize.ignore || [];
-    klass.props = {
-      fields,
-      primitive,
-      special
-    };
-    Object.defineProperty(klass.prototype, 'lookup',  {
-      enumerable: true,
-      get() {
-        return this._meta.lookup
-      },
-      set(value) {
-        // istanbul ignore next
-        if (entityReserved.has(value)) {
-          // istanbul ignore next
-          throw new Error(`Cannot have component lookup of reserved word ${value}`);
-        }
-        const old = this._meta.lookup;
-        this._meta.lookup = value;
-        if (old) {
-          delete this.entity[old];
-        }
-        if (value) {
-          this.entity[value] = this;
-        }
-      }
-    });
-    klass.subbed = false;
-    Object.defineProperty(klass, 'name', { value: name });
+    klass.prototype.world = this;
     this.componentTypes[name] = klass;
+    klass.fields = Object.keys(klass.properties);
+    klass.primitives = {};
+    klass.factories = {};
+    for (const field of klass.fields) {
+      if (typeof klass.properties[field] === 'function') {
+        klass.factories[field] = klass.properties[field];
+      } else {
+        klass.primitives[field] = klass.properties[field];
+      }
+    }
     this.entitiesByComponent[name] = new Set();
     this.componentPool.set(name, new ComponentPool(this, name, spinup));
   }
@@ -316,7 +236,14 @@ module.exports = class World {
   copyTypes(world, types) {
 
     for (const name of types) {
-      this.registerComponent(name, world.typeDefs.get(name));
+      if (world.tags.has(name)) {
+        this.registerTags(name);
+      } else {
+        const klass = world.componentTypes[name];
+        this.componentTypes[name] = klass;
+        this.entitiesByComponent[name] = new Set();
+        this.componentPool.set(name, new ComponentPool(this, name, 1));
+      }
     }
   }
 

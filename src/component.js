@@ -1,10 +1,14 @@
-const ComponentRefs = require('./componentrefs');
-const IdGenerator = require('./util').IdGenerator;
+const Util = require('./util');
 
-const idGen = new IdGenerator();
-let ids = 0;
+const idGen = new Util.IdGenerator();
+let tick = 0;
 
 class Component {
+
+  static properties = {};
+  static serialize = true;
+  static serializeFields = null;
+  static subbed = false;
 
   constructor(entity, initial) {
 
@@ -17,102 +21,39 @@ class Component {
       values: {}
     };
     this._setup(entity, initial)
+    Object.freeze();
   }
 
-  get entity() {
+  init(initial) {
 
-    return this.world.getEntity(this._meta.entityId);
   }
 
-  _setup(entity, initial) {
+  get type() {
 
-    if (initial.id) {
-      this.id = initial.id;
-    } else {
-      this.id = idGen.genId();
-    }
-    this._meta.updated = this.world.currentTick;
-    this._meta.entityId = entity.id;
-    if (initial.lookup) {
-      this.lookup = initial.lookup;
-    }
-    this._meta.values = {};
-    this.world.componentsById.set(this.id, this);
-
-    const props = this.constructor.props;
-    // shallow copy of the property defaults
-    const values = Object.assign({}, props.primitive, initial);
-    for (const field of props.fields) {
-      const value = values[field];
-      if (props.special.hasOwnProperty(field)) {
-        const res = props.special[field](this, value, field);
-        if (res !== undefined) {
-          this[field] = res;
-        }
-      } else {
-        this[field] = value;
-      }
-    }
-    this._meta.ready = true;
-    this.onInit();
-    this.world._sendChange({
-      op: 'add',
-      component: this.id,
-      entity: this._meta.entityId,
-      type: this.type
-    });
+    return this.constructor.name;
   }
 
-  _reset() {
+  get lookup() {
 
-    this._meta.lookup = '';
-    this._meta.updated = 0;
-    this._meta.entityId = 0;
-    this._meta.ready = false;
-    this._meta.refs.clear();
-    this._meta.values = {};
+    return this._meta.lookup;
   }
 
-  getObject(componentIds=true) {
+  set lookup(value) {
 
-    const props = this.constructor.props;
-    const obj = Object.assign({
-      entity: this._meta.entityId,
-      type: this.type
-    }, this._meta.values);
-    for (const field of this.constructor.props.fields) {
-      if (!obj.hasOwnProperty(field)) {
-        obj[field] = this[field].getValue();
-      }
+    const old = this._meta.lookup;
+    this._meta.lookup = value;
+    if (old) {
+      delete this.entity[old];
     }
-    for (const field of this.constructor.serialize.ignore) {
-      if (obj.hasOwnProperty(field)) {
-        delete obj[field];
-      }
+    if (value) {
+      this.entity[value] = this;
     }
-    if (componentIds) {
-      obj.id = this.id;
-    }
-    obj.lookup = this.lookup;
-    return obj;
-  }
-
-
-  _addRef(value, prop, sub) {
-
-    this._meta.refs.add(`${value}||${prop}||${sub}`);
-    this.world._addRef(value, this._meta.entityId, this.id, prop, sub, this._meta.lookup, this.type);
-  }
-
-  _deleteRef(value, prop, sub) {
-
-    this._meta.refs.delete(`${value}||${prop}||${sub}`);
-    this.world._deleteRef(value, this._meta.entityId, this.id, prop, sub, this._meta.lookup, this.type);
   }
 
   destroy() {
 
-    this.onDestroy();
+    this.preDestroy();
+    this._meta.values = {};
     for (const ref of this._meta.refs) {
       const [value, prop, sub] = ref.split('||');
       this.world._deleteRef(value, this._meta.entityId, this.id, prop, sub, this._meta.lookup, this.type);
@@ -125,6 +66,108 @@ class Component {
     });
     this.world.componentsById.delete(this.id);
     this.world.componentPool.get(this.type).release(this);
+    this.postDestroy();
+  }
+
+  preDestroy() {
+  }
+
+  postDestroy() {
+  }
+
+  getObject(withIds=true) {
+
+    const obj = {
+      type: this.constructor.name
+    };
+    if (withIds) {
+      obj.id = this.id;
+      obj.entity = this.entity.id;
+    }
+    const fields = this.constructor.serializeFields || this.constructor.fields;
+    for (const field of fields) {
+      if (this[field] !== undefined && typeof this[field].getValue === 'function') {
+        obj[field] = this[field].getValue();
+      } else if (this._meta.values.hasOwnProperty(field)) {
+        obj[field] = this._meta.values[field];
+      } else {
+        obj[field] = this[field];
+      }
+    }
+    if (this._meta.lookup) {
+      obj.lookup = this._meta.lookup;
+    }
+    return obj;
+  }
+
+  _setup(entity, initial) {
+
+    this.entity = entity;
+    this.id = initial.id || idGen.genId();
+    this._meta.updated = this.world.currentTick;
+    this._meta.entityId = entity.id;
+    if (initial.lookup) {
+      this.lookup = initial.lookup;
+    }
+    this._meta.values = {};
+    this.world.componentsById.set(this.id, this);
+
+    const fields = this.constructor.fields;
+    const primitives = this.constructor.primitives;
+    const factories = this.constructor.factories;
+    // shallow copy of the property defaults
+    const values = Object.assign({}, primitives, initial);
+    for (const field of fields) {
+      const value = values[field];
+      if (factories.hasOwnProperty(field)) {
+        const res = factories[field](this, value, field);
+        if (res !== undefined) {
+          this[field] = res;
+        }
+      } else {
+        this[field] = value;
+      }
+    }
+    this._meta.ready = true;
+    this.init(initial);
+    this.world._sendChange({
+      op: 'add',
+      component: this.id,
+      entity: this._meta.entityId,
+      type: this.type
+    });
+
+  }
+
+  _reset() {
+
+    this._meta.lookup = '';
+    this._meta.updated = 0;
+    this._meta.entityId = 0;
+    this._meta.ready = false;
+    this._meta.refs.clear();
+    this._meta.values = {};
+  }
+
+  update(values) {
+
+    if (values) {
+      delete values.type;
+      Object.assign(this, values);
+    }
+    this._meta.updated = this.entity.updateValues = this.world.currentTick;
+  }
+
+  _addRef(value, prop, sub) {
+
+    this._meta.refs.add(`${value}||${prop}||${sub}`);
+    this.world._addRef(value, this._meta.entityId, this.id, prop, sub, this._meta.lookup, this.type);
+  }
+
+  _deleteRef(value, prop, sub) {
+
+    this._meta.refs.delete(`${value}||${prop}||${sub}`);
+    this.world._deleteRef(value, this._meta.entityId, this.id, prop, sub, this._meta.lookup, this.type);
   }
 }
 

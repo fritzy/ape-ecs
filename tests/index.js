@@ -9,16 +9,19 @@ const {
   ComponentObject
 } = require('../src/componentrefs');
 
+class Health extends ECS.Component {
+  static properties = {
+    max: 25,
+    hp: 25,
+    armor: 0
+  };
+}
+
 describe('express components', () => {
 
   const ecs = new ECS.World();
-  ecs.registerComponent('Health', {
-    properties: {
-      max: 25,
-      hp: 25,
-      armor: 0
-    }
-  });
+
+  ecs.registerComponent(Health);
 
   it('create entity', () => {
 
@@ -53,32 +56,32 @@ describe('express components', () => {
 
   it('entity refs', () => {
 
-    ecs.registerComponent('Storage', {
-      properties: {
+    class Storage extends ECS.Component {
+      static properties = {
         name: 'inventory',
         size: 20,
         items: EntitySet
-      },
-      many: true,
-      mapBy: 'name'
-    });
+      };
+    }
 
-    ecs.registerComponent('EquipmentSlot', {
-      properties: {
+    class EquipmentSlot extends ECS.Component {
+      static properties = {
         name: 'finger',
         slot: EntityRef,
         effects: []
-      },
-      many: true,
-      mapBy: 'name'
-    });
+      };
+    }
 
-    ecs.registerComponent('Food', {
-      properties: {
+    class Food extends ECS.Component {
+      static properties = {
         rot: 300,
         restore: 2
-      },
-    });
+      };
+    }
+
+    ecs.registerComponent(Storage);
+    ecs.registerComponent(EquipmentSlot);
+    ecs.registerComponent(Food);
 
     const food = ecs.createEntity({
       id: 'sandwich10', // to exersize custom id
@@ -100,6 +103,7 @@ describe('express components', () => {
         max: 10
       }
     });
+
 
     entity.pockets.items.add(food);
     expect(entity.pockets.items.has(food)).to.be.true;
@@ -131,19 +135,24 @@ describe('express components', () => {
     let hit = false;
 
     const ecs = new ECS.World();
-    ecs.registerComponent('Test', {
-      properties: {
+
+    class Test extends ECS.Component {
+      static properties = {
         x: null,
         y: 0
-      },
-      destroy() {
+      };
+
+      preDestroy() {
         this.x = null;
         hit = true;
-      },
+      }
+
       init() {
         this.y++;
       }
-    });
+
+    }
+    ecs.registerComponent(Test);
 
     const entity = ecs.createEntityComponents({
       Test: {
@@ -229,27 +238,27 @@ describe('express components', () => {
     System2.subscriptions = ['EquipmentSlot'];
     /* $lab:coverage:on */
 
-    ecs.registerComponent('EquipmentEffect', {
-      properties: {
+    class EquipmentEffect extends ECS.Component {
+      static properties = {
         equipment: '',
         effects: []
-      },
-      many: true
-    });
+      };
+    }
 
-    ecs.registerComponent('Wearable', {
-      properties: {
+    class Wearable extends ECS.Component {
+      static properties = {
         name: 'ring',
         effects: [
           { type: 'Burning' }
         ]
-      },
-    });
+      };
+    }
 
-    ecs.registerComponent('Burning', {
-      properties: {
-      },
-    });
+    class Burning extends ECS.Component {};
+
+    ecs.registerComponent(EquipmentEffect);
+    ecs.registerComponent(Wearable);
+    ecs.registerComponent(Burning);
 
     const system = new System(ecs);
     //const system2 = new System2(ecs);
@@ -307,119 +316,6 @@ describe('express components', () => {
 
   });
 
-  it('write hooks', () => {
-
-    const world = new ECS.World();
-
-    world.registerComponent('Thing', {
-      properties: {
-        name: 'Thing',
-      }
-    });
-
-    const wand = world.createEntity({
-      components: [
-        {
-          type: 'Thing',
-          lookup: 'Thing',
-          name: 'Wand'
-        }
-      ]
-    });
-
-    world.registerComponent('Tile', {
-      properties: {
-        x: 0,
-        y: 0,
-        other: EntityRef,
-        others: EntitySet,
-        otherMap: EntityObject,
-        coord: '0x0'
-      },
-      writeHooks: [
-        function(tile, prop, value) {
-          if (prop === 'x' || prop === 'y') {
-            value++;
-          }
-          return value;
-        },
-        function(tile, prop, value) {
-          if (prop === 'x') {
-            tile.coord = `${value}x${tile.y}`;
-          } else if (prop === 'y') {
-            tile.coord = `${tile.x}x${value}`;
-          }
-          return value;
-        },
-        function (tile, prop, value) {
-          if (prop === 'other'
-            || prop === 'others'
-            || prop === 'otherMap') {
-            value = wand.id;
-          }
-          return value;
-        }
-      ]
-    });
-
-
-    const sandwich = world.createEntity({
-      components: [
-        {
-          type: 'Thing',
-          name: 'Sandwich',
-          lookup: 'Thing'
-        }
-      ]
-    });
-
-    const beer = world.createEntity({
-      components: [
-        {
-          type: 'Thing',
-          name: 'Beer',
-          lookup: 'Thing'
-        }
-      ]
-    });
-
-    const crayon = world.createEntity({
-      components: [
-        {
-          type: 'Thing',
-          name: 'Crayon',
-          lookup: 'Thing'
-        }
-      ]
-    });
-
-    const e1 = world.createEntity({
-      components: [
-        {
-          type: 'Tile',
-          lookup: 'Tile',
-          other: sandwich,
-          others: [beer],
-        }
-      ]
-    });
-    e1.Tile.otherMap.pocket = crayon;
-
-    expect(e1.Tile.x).to.equal(1);
-    expect(e1.Tile.y).to.equal(1);
-    expect(e1.Tile.coord).to.equal('0x0');
-
-    e1.Tile.x = 14;
-    e1.Tile.y = 2;
-
-    expect(e1.Tile.x).to.equal(15);
-    expect(e1.Tile.y).to.equal(3);
-    expect(e1.Tile.coord).to.equal('15x3');
-    expect(e1.Tile.other).to.equal(wand);
-    expect(e1.Tile.others).to.contain(wand);
-    expect(e1.Tile.otherMap.pocket).to.equal(wand);
-  });
-
 });
 
 describe('system queries', () => {
@@ -428,17 +324,18 @@ describe('system queries', () => {
 
   it('add and remove forbidden component', () => {
 
-    ecs.registerComponent('Tile', {
-      properties: {
+    class Tile extends ECS.Component {
+      static properties = {
         x: 0,
         y: 0,
         level: 0
-      }
-    });
+      };
+    }
 
-    ecs.registerComponent('Hidden', {
-      properties: {}
-    });
+    class Hidden extends ECS.Component {}
+
+    ecs.registerComponent(Tile);
+    ecs.registerComponent(Hidden);
 
     class TileSystem extends ECS.System {
 
@@ -511,8 +408,10 @@ describe('system queries', () => {
 
   it('multiple has and hasnt', () => {
 
-    ecs.registerComponent('Billboard', {});
-    ecs.registerComponent('Sprite', {});
+    class Billboard extends ECS.Component {};
+    class Sprite extends ECS.Component {};
+    ecs.registerComponent(Billboard);
+    ecs.registerComponent(Sprite);
 
     const tile1 = ecs.createEntityComponents({
       Tile: {},
@@ -558,8 +457,11 @@ describe('system queries', () => {
   it('tags', () => {
 
     const ecs = new ECS.World();
-    ecs.registerComponent('Tile', {});
-    ecs.registerComponent('Sprite', {});
+    class Tile extends ECS.Component {};
+    class Sprite extends ECS.Component {};
+
+    ecs.registerComponent(Tile);
+    ecs.registerComponent(Sprite);
     ecs.registerTags(['Billboard']);
     ecs.registerTags('Hidden');
 
@@ -632,11 +534,12 @@ describe('system queries', () => {
   it('filter by updatedValues', () => {
 
     const ecs = new ECS.World();
-    ecs.registerComponent('Comp1', {
-      properties: {
+    class Comp1 extends ECS.Component {
+      static properties = {
         greeting: 'hi'
-      }
-    });
+      };
+    }
+    ecs.registerComponent(Comp1);
 
     ecs.tick();
 
@@ -661,12 +564,14 @@ describe('system queries', () => {
   it('filter by updatedComponents', () => {
 
     const ecs = new ECS.World();
-    ecs.registerComponent('Comp1', {
-      properties: {
+    class Comp1 extends ECS.Component {
+      static properties = {
         greeting: 'hi'
-      }
-    });
-    ecs.registerComponent('Comp2', {});
+      };
+    }
+    class Comp2 extends ECS.Component {}
+    ecs.registerComponent(Comp1);
+    ecs.registerComponent(Comp2);
 
     ecs.tick();
 
@@ -700,7 +605,8 @@ describe('system queries', () => {
   it('destroyed entity should be cleared', () => {
 
     const ecs = new ECS.World();
-    ecs.registerComponent('Comp1', {});
+    class Comp1 extends ECS.Component {}
+    ecs.registerComponent(Comp1);
 
     const entity1 = ecs.createEntityComponents({
       Comp1: {}
@@ -725,12 +631,15 @@ describe('entity & component refs', () => {
 
   const ecs = new ECS.World();
 
-  ecs.registerComponent('BeltSlots', {
-    properties: {
+  class BeltSlots extends ECS.Component {
+    static properties = {
       slots: EntityObject,
-    }
-  });
-  ecs.registerComponent('Potion', {});
+    };
+  }
+  class Potion extends ECS.Component {}
+
+  ecs.registerComponent(BeltSlots);
+  ecs.registerComponent(Potion);
 
   it('Entity Object', () => {
 
@@ -777,11 +686,12 @@ describe('entity & component refs', () => {
 
   it('Entity Set', () => {
 
-    ecs.registerComponent('BeltSlots2', {
-      properties: {
+    class BeltSlots2 extends ECS.Component {
+      static properties = {
         slots: EntitySet,
-      }
-    });
+      };
+    }
+    ecs.registerComponent(BeltSlots2);
 
     const belt = ecs.createEntityComponents({
       BeltSlots2: {}
@@ -823,16 +733,19 @@ describe('entity & component refs', () => {
 
   });
 
-  ecs.registerComponent('Crying', {});
-  ecs.registerComponent('Angry', {});
+  class Crying extends ECS.Component {}
+  class Angry extends ECS.Component {}
+  ecs.registerComponent(Crying);
+  ecs.registerComponent(Angry);
 
   it('Assign entity ref by id', () => {
 
-    ecs.registerComponent('Ref', {
-      properties: {
+    class Ref extends ECS.Component {
+      static properties = {
         other: EntityRef
-      }
-    });
+      };
+    }
+    ecs.registerComponent(Ref);
 
     const entity = ecs.createEntityComponents({
       Crying: {}
@@ -869,12 +782,14 @@ describe('entity restore', () => {
 
     const ecs = new ECS.World();
     ecs.registerTags(['Potion']);
-    ecs.registerComponent('EquipmentSlot', {
-      properties: {
+
+    class EquipmentSlot extends ECS.Component {
+      static properties = {
         name: 'finger',
         slot: EntityRef
-      }
-    });
+      };
+    }
+    ecs.registerComponent(EquipmentSlot);
 
 
     const potion1 = ecs.createEntityComponents({
@@ -898,13 +813,14 @@ describe('entity restore', () => {
 
     const ecs = new ECS.World();
     ecs.registerTags('Potion');
-    ecs.registerComponent('EquipmentSlot', {
-      properties: {
+
+    class EquipmentSlot extends ECS.Component {
+      static properties = {
         name: 'finger',
         slot: EntityRef
-      },
-      many: true
-    });
+      };
+    }
+    ecs.registerComponent(EquipmentSlot);
 
 
     const potion1 = ecs.createEntityComponents({
@@ -940,7 +856,7 @@ describe('entity restore', () => {
   it('Unregistered component throws', () => {
 
     const ecs = new ECS.World();
-    ecs.registerComponent('Potion', {});
+    ecs.registerComponent(class Potion extends ECS.Component {});
 
     const badName = () => {
       const entity = ecs.createEntityComponents({
@@ -953,21 +869,19 @@ describe('entity restore', () => {
   it('Unassigned field is not set', () => {
 
     const ecs = new ECS.World();
-    ecs.registerComponent('Potion', {
-      properties: {}
-    });
+    class Potion extends ECS.Component {};
+    ecs.registerComponent(Potion);
     const entity = ecs.createEntityComponents({ Potion: { x: 37 } });
     expect(entity.Potion.x).to.be.undefined;
-
   });
 
   it('removeComponentByName many', () => {
 
     const ecs = new ECS.World();
-    ecs.registerComponent('NPC', {});
-    ecs.registerComponent('Other', {});
-    ecs.registerComponent('Armor', {
-      properties: { 'amount': 5 },
+    ecs.registerComponent(class NPC extends ECS.Component {});
+    ecs.registerComponent(class Other extends ECS.Component {});
+    ecs.registerComponent(class Armor extends ECS.Component {
+      static properties = { 'amount': 5 };
     });
 
     const entity = ecs.createEntityComponents({
@@ -1005,21 +919,21 @@ describe('entity restore', () => {
   it('EntitySet', () => {
 
     const ecs = new ECS.World();
-    ecs.registerComponent('SetInventory', {
-      properties: {
+    class SetInventory extends ECS.Component {
+      static properties = {
         slots: EntitySet
-      }
-    });
-    ecs.registerComponent('Bottle', {
-     properties: {
-      }
-    });
-    ecs.registerComponent('ThrowAway', {
-      properties: {
+      };
+    }
+    class Bottle extends ECS.Component {}
+    class ThrowAway extends ECS.Component {
+      static properties = {
         a: 1,
-      },
-      serialize: { skip: true }
-    });
+      };
+      static serialize = false;
+    }
+    ecs.registerComponent(SetInventory);
+    ecs.registerComponent(Bottle);
+    ecs.registerComponent(ThrowAway);
 
     const container = ecs.createEntityComponents({
       SetInventory: {},
@@ -1111,11 +1025,12 @@ describe('exporting and restoring', () => {
   it('get object and stringify component', () => {
 
     const ecs = new ECS.World();
-    ecs.registerComponent('AI', {
-      properties: {
+    class AI extends ECS.Component {
+      static properties = {
         order: 'sun'
-      },
-    });
+      };
+    }
+    ecs.registerComponent(AI);
 
     const entity = ecs.createEntityComponents({
       moon: { type: 'AI', order: 'moon' },
@@ -1132,19 +1047,23 @@ describe('exporting and restoring', () => {
   it('getObject on entity', () => {
 
     const ecs = new ECS.World();
-    ecs.registerComponent('EquipmentSlot', {
-      properties: {
+    class EquipmentSlot extends ECS.Component {
+      static properties = {
         name: 'ring',
         slot: EntityRef
-      },
-    });
-    ecs.registerComponent('Bottle', {});
-    ecs.registerComponent('AI', {});
-    ecs.registerComponent('Effect', {
-      properties: {
+      };
+    }
+    class Bottle extends ECS.Component {}
+    class AI extends ECS.Component {}
+    class Effect extends ECS.Component {
+      static properties = {
         name: 'fire'
-      },
-    });
+      };
+    }
+    ecs.registerComponent(EquipmentSlot);
+    ecs.registerComponent(Bottle);
+    ecs.registerComponent(AI);
+    ecs.registerComponent(Effect);
 
     const bottle = ecs.createEntityComponents({ Bottle: {} });
     let npc = ecs.createEntityComponents({
@@ -1176,30 +1095,22 @@ describe('exporting and restoring', () => {
   it('property skipping', () => {
 
     const ecs = new ECS.World();
-    ecs.registerComponent('Effect', {
-      properties: {
+    class Effect extends ECS.Component {
+      static properties = {
         name: 'fire',
         started: ''
-      },
-      serialize: {
-        skip: false,
-      }
-    });
-    ecs.registerComponent('AI', {
-      properties: {
-        name: 'thingy',
-      },
-      serialize: {
-        skip: true,
-        ignore: []
-      }
-    });
+      };
+    }
+    class AI extends ECS.Component {
+      static properties = {
+        name: 'thingy'
+      };
+    }
+    ecs.registerComponent(Effect);
+    ecs.registerComponent(AI);
 
-    ecs.registerComponent('Liquid', {
-      properties: {},
-      serialize: {
-      }
-    });
+    class Liquid extends ECS.Component {}
+    ecs.registerComponent(Liquid);
 
     const entity = ecs.createEntityComponents({
       Effect: {
@@ -1260,22 +1171,25 @@ describe('advanced queries', () => {
     expect(r.has(entity2)).to.be.true;
     expect(r.has(entity3)).to.be.true;
 
-    ecs.registerComponent('Person', {
-      properties: {
+    class Person extends ECS.Component {
+      static properties = {
         name: 'Bill'
-      }
-    });
-    ecs.registerComponent('Item', {
-      properties: {
+      };
+    }
+    class Item extends ECS.Component {
+      static properties = {
         name: 'knife'
-      }
-    });
-
-    ecs.registerComponent('InInventory', {
-      properties: {
+      };
+    }
+    class InInventory extends ECS.Component {
+      static properties = {
         person: EntityRef
-      }
-    });
+      };
+    }
+
+    ecs.registerComponent(Person);
+    ecs.registerComponent(Item);
+    ecs.registerComponent(InInventory);
 
     const e4 = ecs.createEntityComponents({
       Person: {
@@ -1453,11 +1367,12 @@ describe('serialize and deserialize', () => {
 
     const worldA = new ECS.World();
 
-    worldA.registerComponent('Inventory', {
-      properties: {
+    class Inventory extends ECS.Component {
+      static properties = {
         main: EntitySet
-      }
-    });
+      };
+    }
+    worldA.registerComponent(Inventory);
 
     worldA.registerTags(['Bottle', 'Item', 'NPC']);
 
@@ -1479,11 +1394,13 @@ describe('serialize and deserialize', () => {
 
     const worldB = new ECS.World();
 
-    worldB.registerComponent('Inventory', {
-      properties: {
+    class Inventory2 extends ECS.Component {
+      static properties = {
         main: EntitySet
-      }
-    });
+      };
+    }
+    Object.defineProperty(Inventory2, 'name', { value: 'Inventory' });
+    worldB.registerComponent(Inventory2);
 
     worldB.registerTags(['Bottle', 'Item', 'NPC']);
 

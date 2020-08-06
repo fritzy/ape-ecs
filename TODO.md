@@ -1,5 +1,3 @@
-[ ] check for component.ready before calling writehooks
-[ ] rename writeHooks to setterHooks?
 [ ] double check system lifecycle (pre and post functions for query indexes)
 [ ] update example game
 [ ] track component changes in entity
@@ -8,5 +6,5 @@
   - deleted this feature before because it slowed down properties writes 3x
 [ ] component.entity should make just be a pointer
 [ ] maybe get rid of c. composition for lookups and just have it at the root?
-[ ] add getObject hook
 [ ] System init function rather than overriding the constructor
+[ ] Remove world.createEntityComponents
