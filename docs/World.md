@@ -36,7 +36,7 @@ const myWorld = new ApeECS.World({
 ### Arguments:
 * config: `Object`, optional
   - trackChanges: `bool`, default `true`
-  - entityPool: `Number`, default `10`
+  - entityPool: `Number`, default `1`
   
 ### Notes:
 
@@ -401,6 +401,15 @@ world.registerSystem('movement', Gravity);
 ### Arguments:
 * group: `String` name for the group of Systems
 * system: `System class` or `System instance`
+
+### Returns: System instance.
+
+You can have one, many, or all of your `Systems` in a single "group."
+You might have a "startup" group of `Systems` that initializes a level, a "turn" group that runs for every user turn, and a "frame" group that runs for every rendered frame of animation.
+If you always run all of your 'Systems` every time, you could just register them all with the same group.
+If you want to be able to run any `System` at an time in any order, you could register every `System` with a unique group.
+
+
 
 ### Notes:
 

@@ -1,8 +1,30 @@
 # Component
 
-Components are the datatypes we use in ECS.
-In **Ape ECS** Components are single shallow Objects with predefined properties.
+Components are the datatypes we use in the Entity-Component-System paradigm (ECS).
+In **Ape ECS** Components are single shallow Objects managed by JS classes.
 Those properties can reference JavaScript types and special Entity Reference values.
+
+```js
+class EquipmentSlot extends ApeECS.Component {
+
+  static parameters = {
+    name: 'Right Hand',
+    slotType: 'wieldable',
+    slot: ApeECS.EntityRef
+  };
+
+  //default
+  static serialize = true;
+  // defaults to null, which behaves the same as all fields like this
+  static serializeFields = ['name', 'slotType', 'slot']; 
+
+  init(values) {
+  }
+
+  preDestroy() {
+  }
+}
+```
 
 👀 See the [Entity Ref Docs](./Refs.md) for more on Entity Reference properties.
 
