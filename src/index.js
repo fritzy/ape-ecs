@@ -1,4 +1,4 @@
-const { EntityRef, EntitySet, EntityObject } = require('./componentrefs');
+const { EntityRef, EntitySet, EntityObject } = require('./entityrefs');
 module.exports = {
   World: require('./world'),
   System: require('./system'),

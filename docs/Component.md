@@ -94,9 +94,9 @@ For example, if you have a game engine sprite, you might have a Component that c
 
 ## lookup
 
-Setting the lookup property will map the `Component` within its `Entity` by that value for convenience in addition to the set of Components of that type within the `entity.components['ComponentTypeNameHere']` `Set`.
+Setting the lookup property will map the `Component` within its `entity.c` by that value for convenience. As always, that same `Component` will still be accessible within `entity.types`.
 
-```js
+ ```js
 const entity = world.createEntity({
   components: [
     {
@@ -108,7 +108,7 @@ const entity = world.createEntity({
   ]
 });
 
-console.log(entity.position.x); // 3
+console.log(entity.c.position.x); // 3
 
 for (const position of entity.types.Position) {
   console.log(position.x, position.y);
@@ -116,7 +116,7 @@ for (const position of entity.types.Position) {
 // 3 10
 ```
 
-You can also set the lookup in an `Entity` creation factory the `c` property.
+You can also set the lookup in an `Entity` creation factory on the `c` property.
 
 This is equivalant to the above:
 ```js
@@ -130,6 +130,14 @@ const entity = world.createEntity({
   }
 });
 ```
+
+## init
+
+You can override the `init` method of your `Component`.
+It's ran after the `Component` has been created through any of the factory methods.
+
+**Arguments:**
+* initialValues: `Object` values that were passed as the initial property values. Does not include the results of any `setters` or defaults.
 
 ## entity
 
@@ -162,7 +170,6 @@ console.log(obj);
 
 💭 `component.getObject` is called by [entity.getObject](./Entity.md#getobject) and [world.getObject](./World.md#getobject) unless you specify the static property `serialize = false` on the Component class.
 
-
 ## destroy
 
 Destroy the component.
@@ -171,7 +178,60 @@ Destroy the component.
 someComponent.destroy();
 ```
 
-Before any other actions are taken, the `init` function you can define in [world.registerComponent](./World.md#registercomponent) is ran if specified.
+Before any other actions are taken, the `preDestroy` function is run.
 
 💭 This has the same effect as [entity.removeComponent](./Entity.md#removecomponent). This clears all the data in the component and releases it back to the `Component` pool of its type.
 
+## Setters and Getters
+
+You can add setters and getters for any property that you defined.
+
+```js
+class Position extends ApeECS.Component {
+  static properties = {
+    x: 0,
+    y: 0,
+    coord: '0x0'
+  }
+
+  get x() {
+    return this._meta.values.x;
+  }
+
+  set x(value) {
+    this._meta.values.x = value;
+    this.coord = `${this.x}x${this.y}`;
+  }
+
+  get y() {
+    return this._meta.values.y;
+  }
+
+  set y(value) {
+    this._meta.values.y = value;
+    this.coord = `${this.x}x${this.y}`;
+  }
+}
+```
+
+If you define a setter for a property, be sure to store it in the `_meta.values` `Object` since you won't be able to store it under the same name.
+
+`getObject` assumes that if a `_meta.values` property is set, that it's the serializable version. You may need to override `getObject` or store your value elsewhere in `_meta` if this assumption is incorrect.
+
+⭐️ Some of you may have noticed that we could have done the above example more efficiently. 
+You get a gold star, but I needed a more complete example.
+Here's the simpler version:
+
+```js
+class Position extends ApeECS.Component {
+  static properties = {
+    x: 0,
+    y: 0,
+    coord: '0x0'
+  }
+
+  get coord() {
+    return `${this.x}x${this.y}`;
+  }
+}
+ ```

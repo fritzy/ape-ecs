@@ -2,12 +2,9 @@ const expect = require('chai').expect;
 const ECS = require('../src/index');
 const {
   EntityRef,
-  ComponentRef,
   EntitySet,
   EntityObject,
-  ComponentSet,
-  ComponentObject
-} = require('../src/componentrefs');
+} = ECS;
 
 class Health extends ECS.Component {
   static properties = {
