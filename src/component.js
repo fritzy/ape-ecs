@@ -155,7 +155,7 @@ class Component {
       delete values.type;
       Object.assign(this, values);
     }
-    this._meta.updated = this.entity.updateValues = this.world.currentTick;
+    this._meta.updated = this.entity.updatedValues = this.world.currentTick;
   }
 
   _addRef(value, prop, sub) {

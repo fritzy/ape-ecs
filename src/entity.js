@@ -12,6 +12,7 @@ class Entity {
     this.id = '';
     this.tags = new Set();
     this.updatedComponents = 0;
+    this.updatedValues = 0;
   }
 
   _setup(definition) {

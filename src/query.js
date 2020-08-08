@@ -27,19 +27,19 @@ class Query {
         throw new Error('Queries cannot track added or removed when initialized outside of a system');
       }
       if (init.from) {
-        this.from(init.from);
+        this.from(...init.from);
       }
       if (init.reverse) {
         this.fromReverse(init.reverse.entity, init.reverse.type);
       }
       if (init.all) {
-        this.fromAll(init.all);
+        this.fromAll(...init.all);
       }
       if (init.any) {
-        this.fromAny(init.any);
+        this.fromAny(...init.any);
       }
       if (init.not) {
-        this.not(init.not);
+        this.not(...init.not);
       }
       if (init.persist) {
         this.persist();
@@ -47,7 +47,7 @@ class Query {
     }
   }
 
-  from(entities) {
+  from(...entities) {
 
     // istanbul ignore next
     entities = entities.map((e) => (typeof e !== 'string') ? e.id : e);
@@ -73,9 +73,8 @@ class Query {
     return this;
   }
 
-  fromAll(types) {
+  fromAll(...types) {
 
-    if (typeof types === 'string') types = [types];
     this.query.froms.push({
       from: 'all',
       types
@@ -83,7 +82,7 @@ class Query {
     return this;
   }
 
-  fromAny(types) {
+  fromAny(...types) {
 
     this.query.froms.push({
       from: 'any',
@@ -92,7 +91,7 @@ class Query {
     return this;
   }
 
-  not(types) {
+  not(...types) {
 
     this.query.filters.push({
       filter: 'not',
@@ -163,7 +162,7 @@ class Query {
     }
   }
 
-  persist() {
+  persist(trackAdded, trackRemoved) {
 
     // istanbul ignore if
     if (this.hasStatic) {
@@ -177,6 +176,13 @@ class Query {
     this.world.queries.push(this);
     if (this.system !== null) {
       this.system.queries.push(this);
+    }
+
+    if (typeof trackAdded === 'boolean') {
+      this.trackAdded = trackAdded;
+    }
+    if (typeof trackRemoved === 'boolean' ) {
+      this.trackRemoved = trackRemoved;
     }
     this.persisted = true;
     return this;
@@ -284,8 +290,10 @@ class Query {
     }
     const output = [];
     for (const entity of this.results) {
-      if (filter.updatedComponents
-        && entity.updatedComponents >= filter.updatedComponents) {
+      if (
+        !(filter.updatedComponents && entity.updatedComponents < filter.updatedComponents)
+        && !(filter.updatedValues && entity.updatedValues < filter.updatedValues)
+      ) {
         output.push(entity)
       }
     }

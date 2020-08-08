@@ -46,7 +46,7 @@ describe('express components', () => {
       Health: { hp: 10 }
     });
 
-    const results = ecs.createQuery().fromAll(['Health']).execute();
+    const results = ecs.createQuery().fromAll('Health').execute();
 
     expect(results.size).to.equal(2);
   });
@@ -340,7 +340,7 @@ describe('system queries', () => {
 
         this.lastResults = [];
         this.query = this.world.createQuery({
-          all: 'Tile',
+          all: ['Tile'],
           not: ['Hidden'],
           persist: true });
       }
@@ -436,8 +436,8 @@ describe('system queries', () => {
     });
 
     const result = ecs.createQuery()
-      .fromAll(['Tile', 'Billboard'])
-      .not(['Sprite', 'Hidden'])
+      .fromAll('Tile', 'Billboard')
+      .not('Sprite', 'Hidden')
       .execute();
 
     const resultSet = new Set([...result]);
@@ -551,7 +551,7 @@ describe('system queries', () => {
 
     ecs.tick();
     const ticks = ecs.currentTick;
-    const testQ = ecs.createQuery().fromAll(['Comp1']).persist();
+    const testQ = ecs.createQuery().fromAll('Comp1').persist();
     const results1 = testQ.execute();
     expect(results1.has(entity1)).to.be.true;
     expect(results1.has(entity2)).to.be.true;
@@ -1286,7 +1286,7 @@ describe('advanced queries', () => {
 
     const q1 = s1.createQuery({
       trackAdded: true,
-    }).fromAll(['A', 'C']).persist();
+    }).fromAll('A', 'C').persist();
 
     const r1 = q1.execute();
 
@@ -1319,7 +1319,7 @@ describe('advanced queries', () => {
 
     const q2 = s2.createQuery({
       trackRemoved: true,
-    }).fromAll(['A', 'C']).persist();
+    }).fromAll('A', 'C').persist();
 
     const r2 = q2.execute();
 
@@ -1402,7 +1402,7 @@ describe('serialize and deserialize', () => {
 
     worldB.createEntities(entities1);
 
-    const q1 = worldB.createQuery().fromAll(['NPC']);
+    const q1 = worldB.createQuery().fromAll('NPC');
     const r1 = [...q1.execute()];
     const npc2 = r1[0]
     const bottle2 = [...npc2.c.Inventory.main][0];
