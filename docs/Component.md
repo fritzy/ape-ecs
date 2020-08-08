@@ -1,8 +1,8 @@
 # Component
 
 Components are the datatypes we use in the Entity-Component-System paradigm (ECS).
-In **Ape ECS** Components are single shallow Objects managed by JS classes.
-Those properties can reference JavaScript types and special Entity Reference values.
+In **Ape ECS**, Components are single shallow Objects managed by JS classes.
+Those properties can be JavaScript types and special Entity Reference values.
 
 ```js
 class EquipmentSlot extends ApeECS.Component {
@@ -26,9 +26,9 @@ class EquipmentSlot extends ApeECS.Component {
 }
 ```
 
-👀 See the [Entity Ref Docs](./Refs.md) for more on Entity Reference properties.
-
 👀 See the [World registerComponent documentation](./World.md#registercomponent) for information on how to define a new Component type.
+
+👀 See the [Entity Ref Docs](./Refs.md) for more on Entity Reference properties.
 
 Components can only exist when they're part of an Entity.
 You can have any number of the same Component type within an Entity.
@@ -37,82 +37,14 @@ Component instances are destroyed through [component.destroy](#destroy) or [enti
 
 Component property values can be accessed and changed directly on the Component instance like any other object.
 
-️⚠️ Due to an optimization, Component properties are not reflected through introspection, like `console.log`, but they're there if you defined them with `world.registerComponent`. Properties are actually getter/setters on the Component prototype and stored within `component._meta.values`, so you can't enumerate them or inspect them directly.
+⚠️ You _should_ run [component.update()](#update) after you update properties on a `Component`, or update those properties by passing an object with your new values to `component.update()`. Currently, the only consequences for not calling this method are:
+* `component.updated` won't be updated to the current tick
+* `entity.updatedValues` won't be updated to the current tick
+* Query filters by `lastUpdated` won't be accurate.
 
-## Example
+In future versions, there may be more features tied to this functionality.
 
-```js
-world.registerComponent('Position', {
-  properties: {
-    x: 0,
-    y: 0
-  }
-}, 10);
-
-world.registerComponent('Buff', {
-  properties: {
-    armor: 10
-  }
-}, 10);
-
-const entity = world.createEntity({
-  components: [
-    {
-      type: 'Buff',
-      armor: 10
-    }
-    {
-      type: 'Buff',
-      armor: 3
-    }
-  ],
-  c: {
-  Position: 
-    x: 3,
-    y: 28
-  }
-});
-
-console.log(entity.Position.x, entity.Position.y); // 3  28
-entity.Position.x = 13;
-entity.Position.y = 4;
-console.log(entity.Position.x, entity.Position.y); // 13  4
-for (const buff of entity.types.Buff) {
-  console.log(buff.armor);
-}
-// 10
-// 3
-console.log(entity.getObject());
-/*
-{
-  id: 'aaabbbccc-32',
-  tags: [],
-  components: [
-    {
-      id: 'lkjasdf-2',
-      type: 'Buff',
-      armor: 10
-    },
-    {
-      id: 'lkjasdf-3',
-      type: 'Buff',
-      armor: 3
-    }
-  ],
-  c: {
-    Position: {
-      id: 'lkjasdf-4',
-      type: 'Position',
-      lookup: 'Position',
-      x: 13,
-      y: 4
-    }
-  }
-}
-*/
-```
-
-## creating
+## Creating Component Instances
 
 There are a few factory functions for creating Components. When you create `Entities` you can include the initial components and their values.
 
@@ -155,6 +87,10 @@ You can access any property directly on a `Component` instance that you have reg
 See the [example](#example) at the [top of this document](#component).
 
 ⚠️ If you assign any new properties to a `Component` that you didn't register, they won't behave properly.
+
+⚠️ When you override a `Component` method, be wary of inserting game logic to Components as it quickly turns your game into an `EC` game rather than an ECS. You'll lose some of the benefits of this approach. You might also make logic that limits you in the future, like the ability to run the same Components on a server and a client. Keep your game logic in your `Systems` and override `Component` methods only for data formatting and access.
+
+For example, if you have a game engine sprite, you might have a Component that contains all of the necessary information to stand up a sprite, and a reference to the game engine sprite instance itself. When you store the sprite you may need to remove the sprite instance from the Component, because it can't be serialized. You can do that by overriding `getObject`. But resist the tempation to re-create the game engine sprite in `init`. That won't work on your server. Instead, tag any new Entitys that have an unititialized Sprite `Component` with "New" or "NewSprite". You can then have a `System` `Query` that checks for `Query.fromAll(['Sprite', 'New'])` to initialize it for you.
 
 ## lookup
 
@@ -218,9 +154,14 @@ console.log(obj);
 }
 ```
 
-☝️ If you included any registered properties in the `{ serialize: { ignore: [] }}` during [world.registerComponent](./World#registercomponent), then those properties won't be in the resulting object.
+☝️ If you have a static array for `serializeFields`, then only those fields will be in the resulting object.
 
 ☝️ You can use the results of `component.getObject` as the component in [entity.addComponent](./Entity.md#addcomponent) and as a component part in [world.createEntity](./World.md#createentity) and [world.createEntities](./World.md#createentities).
+
+💭 `getObject` will grab `meta.values` for a given property, if available.
+
+💭 `component.getObject` is called by [entity.getObject](./Entity.md#getobject) and [world.getObject](./World.md#getobject) unless you specify the static property `serialize = false` on the Component class.
+
 
 ## destroy
 

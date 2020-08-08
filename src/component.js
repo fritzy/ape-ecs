@@ -43,10 +43,10 @@ class Component {
     const old = this._meta.lookup;
     this._meta.lookup = value;
     if (old) {
-      delete this.entity[old];
+      delete this.entity.c[old];
     }
     if (value) {
-      this.entity[value] = this;
+      this.entity.c[value] = this;
     }
   }
 

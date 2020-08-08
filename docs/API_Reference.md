@@ -10,6 +10,6 @@
 
 These docs contain emojis to indicate the type of information following.
 
-👆  A relevant tip.  
+👆 A relevant tip.  
 ⚠️ A warning and possible 🦶🔫.  
 💭 Implementation details.

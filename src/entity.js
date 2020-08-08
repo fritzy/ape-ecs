@@ -8,6 +8,7 @@ class Entity {
   constructor() {
 
     this.types = {};
+    this.c = {};
     this.id = '';
     this.tags = new Set();
     this.updatedComponents = 0;
@@ -95,11 +96,6 @@ class Entity {
       throw new Error(`Component "${type}" has not been registered.`);
     }
     const comp = pool.get(this, properties);
-    /*
-    if (properties.lookup) {
-      this[properties.lookup] = comp;
-    }
-    */
     if (!this.types[type]) {
       this.types[type] = new Set();
     }
@@ -113,13 +109,13 @@ class Entity {
   removeComponent(component) {
 
     if (typeof component === 'string') {
-      component = this[component];
+      component = this.c[component];
     }
     if (component === undefined) {
       return false;
     }
     if (component.lookup) {
-      delete this[component.lookup];
+      delete this.c[component.lookup];
     }
     this.types[component.type].delete(component);
 
