@@ -178,13 +178,13 @@ An array of functions that are ran when a property is set. You can manipulate th
 ## registerTags
 
 ```js
-world.registerTicks(['MarkForDelete', 'Invisible', 'IsSandwich']);
+world.registerTicks('MarkForDelete', 'Invisible', 'IsSandwich');
 ```
 
 Registers any tags that you'll be using for your Entities. 
 
 ### Arguments
-* tags: `[]String`
+* ...tags: `String`
 
 Tags are used like `Components`, but they're only a string. You can check if `entity.has('TagName')` just like you would a `Component` name, and use them similarly in `Queryies`. They're using for knowing if an `Entity` "is" something, but you don't need any further properties to describe that aspect.
 

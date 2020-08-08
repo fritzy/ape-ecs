@@ -458,8 +458,7 @@ describe('system queries', () => {
 
     ecs.registerComponent(Tile);
     ecs.registerComponent(Sprite);
-    ecs.registerTags(['Billboard']);
-    ecs.registerTags('Hidden');
+    ecs.registerTags('Billboard', 'Hidden');
 
     const tile1 = ecs.createEntityComponents({
       tags: ['Billboard', 'Hidden'],
@@ -777,7 +776,7 @@ describe('entity restore', () => {
   it('restore mapped object', () => {
 
     const ecs = new ECS.World();
-    ecs.registerTags(['Potion']);
+    ecs.registerTags('Potion');
 
     class EquipmentSlot extends ECS.Component {
       static properties = {
@@ -1143,7 +1142,7 @@ describe('advanced queries', () => {
 
     const ecs = new ECS.World();
 
-    ecs.registerTags(['A', 'B', 'C']);
+    ecs.registerTags('A', 'B', 'C');
 
     const entity1 = ecs.createEntityComponents({
       tags: ['A']
@@ -1260,7 +1259,7 @@ describe('advanced queries', () => {
     const s1 = ecs.registerSystem('group1', S1);
     const s2 = ecs.registerSystem('group2', S2);
 
-    ecs.registerTags(['A', 'B', 'C']);
+    ecs.registerTags('A', 'B', 'C');
 
     const e1 = ecs.createEntity({
       tags: ['A']
@@ -1370,7 +1369,7 @@ describe('serialize and deserialize', () => {
     }
     worldA.registerComponent(Inventory);
 
-    worldA.registerTags(['Bottle', 'Item', 'NPC']);
+    worldA.registerTags('Bottle', 'Item', 'NPC');
 
     const npc = worldA.createEntity({
       id: 'npc1',
@@ -1398,7 +1397,7 @@ describe('serialize and deserialize', () => {
     Object.defineProperty(Inventory2, 'name', { value: 'Inventory' });
     worldB.registerComponent(Inventory2);
 
-    worldB.registerTags(['Bottle', 'Item', 'NPC']);
+    worldB.registerTags('Bottle', 'Item', 'NPC');
 
     worldB.createEntities(entities1);
 

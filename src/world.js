@@ -148,20 +148,15 @@ module.exports = class World {
    * @example
    * ecs.registerTags['Item', 'Blocked']);
    */
-  registerTags(tags) {
-    if (Array.isArray(tags)) {
-      for (const tag of tags) {
-        // istanbul ignore if
-        if (this.entitiesByComponent.hasOwnProperty(tag)) {
-          throw new Error (`Cannot register tag "${tag}", name is already taken.`);
-        }
-        this.entitiesByComponent[tag] = new Set();
-        this.tags.add(tag);
+  registerTags(...tags) {
+    for (const tag of tags) {
+      // istanbul ignore if
+      if (this.entitiesByComponent.hasOwnProperty(tag)) {
+        throw new Error (`Cannot register tag "${tag}", name is already taken.`);
       }
-      return;
+      this.entitiesByComponent[tag] = new Set();
+      this.tags.add(tag);
     }
-    this.entitiesByComponent[tags] = new Set();
-    this.tags.add(tags);
   }
 
   registerComponent(klass, spinup=1) {
