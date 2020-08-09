@@ -61,3 +61,15 @@ You should set up all of your queries in `init()` and do your system logic on th
 ## Performance
 
 ## Future
+
+Here's some of the things we're thinking about for the future.
+We'd love to review your pull requests for these things.
+
+* Query optimizations (Bitmask?)
+  * Benchmark for Queries
+* TypeScript d.ts files.
+* Network support (commands and rewind).
+* Patterns and Examples
+
+We'd also love to see pull requests for improving the docs.
+Grammar errors, inconsistencies, and inaccuracies all need to be fixed!

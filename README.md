@@ -94,7 +94,8 @@ const frame = world.createEntity({
   }
 })
 
-// yeah, these are cop-outs, but this README example is getting long
+// see world.creatEntity and world.createEntities
+// in docs/World.md for more details
 world.registerSystem('frame', require('./move.js'));
 world.createEntities(require('./saveGame.json'));
 
@@ -109,6 +110,8 @@ function update(time) {
     deltaFrame: delta / 16.667
   });
   world.runSystems('frame');
+  // run update again the next browser render call
+  // every 16ms or so
   window.requestAnimationFrame(update);
 }
 update(0);

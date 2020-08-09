@@ -4,7 +4,7 @@
 * [Component](./Component.md) - How to work with Components.
 * [System](./System.md) - How to work with Systems.
 * [Query](./Query.md) - How to work with Queries.
-* [Entity Refs](./Entity_Refs.md) - How to work with Entity Refs.
+* [Entity Refences](./Entity_Refs.md) - How to work with Entity References.
 
 ## Other Documentation
 * [Overview](./Overview.md) - Overview of how the peices fit together in **Ape ECS**

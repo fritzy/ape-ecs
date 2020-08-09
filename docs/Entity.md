@@ -114,7 +114,7 @@ Creates a new `Component` instance of a given type and adds it to the `Entity`.
 ```js
 entity.addComponent({
   type: 'Point', //required
-  label: 'point', //optional
+  key: 'point', //optional
   id: 'asdf-1' //optional -- don't do this unless you're restoring
   x: 123, // set the initial values of properties previously registered
   y: 321
@@ -122,7 +122,7 @@ entity.addComponent({
 });
 ```
 
-Setting a label makes the `Component` instance accessible as a property of the `Entity`.
+Setting a key makes the `Component` instance accessible as a property of the `Entity`.
 
 💭 It can sometimes be useful to set a custom id for an `Entity`, but there may not be a valid usecase for a new `Component`. You should generally only specify the `id` in `addComponent` if you're restoring a previous `Component` from `getObject`.
 
@@ -159,7 +159,7 @@ console.log(obj)
 {
   id: 'lkjsadf-34',
   tags: ['Visible'],
-  components: [ //anything without a label will be in components
+  components: [ //anything without a key will be in components
     {
       id: 'fffff-39',
       type: 'Buff',
@@ -181,7 +181,7 @@ console.log(obj)
       pixiSprite: null
     }
   ],
-  c: { //anything will a label will end up under c
+  c: { //anything will a key will end up under c
     point: {
       id: 'asdlfkj-9334',
       type: 'Point',
@@ -192,13 +192,13 @@ console.log(obj)
 }
 ```
 
-The returning object includes the `Entity` id, tags, array of Components, and an object called "c" with labeled `Components`.
+The returning object includes the `Entity` id, tags, array of Components, and an object called "c" with keyed `Components`.
 
 👆 You can use this resulting Object to save state and restore with `world.createEntity` later.
 
 👀 See also [world.getObject](World.md#getobject) and [component.getObject](./Component.md#getobject).
 
-💭 `world.getObject` calls this method on all entities to geneate it's result. This method calls all of its `Components` `getObject` to get its result.
+💭 `world.getObject` calls this method on all entities to generate its result. This method calls all of its `Components` `getObject` to get its result.
 
 ## destroy
 

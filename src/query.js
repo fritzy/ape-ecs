@@ -103,7 +103,6 @@ class Query {
   update(entity) {
 
     let inFrom = false;
-    this.results.delete(entity);
     for (const source of this.query.froms) {
       if (source.from === 'all') {
         const potential = [];
@@ -158,6 +157,7 @@ class Query {
         this.added.add(entity);
       }
     } else if (this.trackRemoved) {
+      this.results.delete(entity);
       this.removed.add(entity);
     }
   }
