@@ -13,7 +13,7 @@ class Component {
   constructor(entity, initial) {
 
     this._meta = {
-      lookup: '',
+      key: '',
       updated: 0,
       entityId: '',
       refs: new Set(),
@@ -33,15 +33,15 @@ class Component {
     return this.constructor.name;
   }
 
-  get lookup() {
+  get key() {
 
-    return this._meta.lookup;
+    return this._meta.key;
   }
 
-  set lookup(value) {
+  set key(value) {
 
-    const old = this._meta.lookup;
-    this._meta.lookup = value;
+    const old = this._meta.key;
+    this._meta.key = value;
     if (old) {
       delete this.entity.c[old];
     }
@@ -56,7 +56,7 @@ class Component {
     this._meta.values = {};
     for (const ref of this._meta.refs) {
       const [value, prop, sub] = ref.split('||');
-      this.world._deleteRef(value, this._meta.entityId, this.id, prop, sub, this._meta.lookup, this.type);
+      this.world._deleteRef(value, this._meta.entityId, this.id, prop, sub, this._meta.key, this.type);
     }
     this.world._sendChange({
       op: 'destroy',
@@ -94,8 +94,8 @@ class Component {
         obj[field] = this[field];
       }
     }
-    if (this._meta.lookup) {
-      obj.lookup = this._meta.lookup;
+    if (this._meta.key) {
+      obj.key = this._meta.key;
     }
     return obj;
   }
@@ -106,8 +106,8 @@ class Component {
     this.id = initial.id || idGen.genId();
     this._meta.updated = this.world.currentTick;
     this._meta.entityId = entity.id;
-    if (initial.lookup) {
-      this.lookup = initial.lookup;
+    if (initial.key) {
+      this.key = initial.key;
     }
     this._meta.values = {};
     this.world.componentsById.set(this.id, this);
@@ -141,7 +141,7 @@ class Component {
 
   _reset() {
 
-    this._meta.lookup = '';
+    this._meta.key = '';
     this._meta.updated = 0;
     this._meta.entityId = 0;
     this._meta.ready = false;
@@ -161,13 +161,13 @@ class Component {
   _addRef(value, prop, sub) {
 
     this._meta.refs.add(`${value}||${prop}||${sub}`);
-    this.world._addRef(value, this._meta.entityId, this.id, prop, sub, this._meta.lookup, this.type);
+    this.world._addRef(value, this._meta.entityId, this.id, prop, sub, this._meta.key, this.type);
   }
 
   _deleteRef(value, prop, sub) {
 
     this._meta.refs.delete(`${value}||${prop}||${sub}`);
-    this.world._deleteRef(value, this._meta.entityId, this.id, prop, sub, this._meta.lookup, this.type);
+    this.world._deleteRef(value, this._meta.entityId, this.id, prop, sub, this._meta.key, this.type);
   }
 }
 

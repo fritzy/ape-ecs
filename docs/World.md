@@ -14,12 +14,13 @@ An instance of `World` is essentially a registry of your game or simulation data
 * [getObject](#getobject)
 * [createEntities](#createentities)
 * [copyTypes](#copytypes)
-* [getEntity](#getEntity)
-* [removeEntity](#removeEntity)
-* [getEntities](#getEntities)
+* [getEntity](#getentity)
+* [removeEntity](#removeentity)
+* [getEntities](#getentities)
+* [getComponent](#getcomponent)
 * [createQuery](#createquery)
-* [registerSystem](#registerSystem)
-* [runSystems](#runSystems)
+* [registerSystem](#registersystem)
+* [runSystems](#runsystems)
 * [subscribe](#subscribe)
 
 ## World constructor
@@ -223,7 +224,7 @@ const playerEntity = world.createEntity({
       y: 23
     },
     Inventory: {
-      type: 'Container' // specified type different than the lookup
+      type: 'Container' // specified type different than the key
       size: 16
     },
     footSlot: {
@@ -242,17 +243,17 @@ const playerEntity = world.createEntity({
   * components: `[]Object`, _optional_, initial components
     * type: `String`, _required_, registered component type
     * id: `String`, _optional_, unique identifier (generated if not specified)
-    * lookup: `String`, _optional_, lookup value of the component instance in the `Entity`. If not specified, tye component instance has no lookup value, and is only included in the `Set` of `entity.components['ComponentType']` values.
+    * key: `String`, _optional_, key value of the component instance in the `Entity`. If not specified, tye component instance has no key value, and is only included in the `Set` of `entity.components['ComponentType']` values.
     * \*properties: initial values for defined properties of the component
-  * c: `Object`: _optional, Components indexed by a lookup value. Equivalant to specifying the `lookup` and `type` in the `components` array property.
-    * `key` is the `lookup` value of the component instance. Also the component type if one is not specified.
+  * c: `Object`: _optional, Components indexed by a key value. Equivalant to specifying the `key` and `type` in the `components` array property.
+    * `key` is the `key` value of the component instance. Also the component type if one is not specified.
     * `value` is an `Object` defining the initial values of a `Component`
-      * `type`: `String`, _optional_, If not specified, the `lookup` key needs to be a registered `Component` type. 
+      * `type`: `String`, _optional_, If not specified, the `key` key needs to be a registered `Component` type. 
       * `id`:  `String`, _optional_, unique identifier (generated if not specified)
       * \*properties: initial values for defined properties of the component
 
 ### Notes: 
-👀 For more information on how lookups work, see the [Entity Docs](Entity.md).
+👀 For more information on how keys work, see the [Entity Docs](Entity.md).
 
 ☝️ The createEntity definition schema is the same one used by `entity.getObject` and `world.getObject`. As such, you can save and restore objects by saving the results of these methods and calling `world.createEntity` with the same `Object` to restore it.
 
@@ -368,16 +369,27 @@ const tiles = world.getEntities('Tile');
 ☝️ You could also do this with a `Query`.
 
 ```js
-const q1 = world.createQuery().fromAll(['Tile']);
+const q1 = world.createQuery().fromAll('Tile');
 const tiles = q1.execute();
 ```
+
+## getComponent
+
+Get an `Component` instance by its `id`.
+
+```js
+const component = world.getComponent('alakjds-123');
+```
+
+**Arguments**:
+* id: `String`, _required_, unique id of a component
 
 ## createQuery
 
 Factory that returns a new `Query` instance.
 
 ```js
-const query1 = world.createQuery({ /* config */}).fromAll(['Tile', 'Position']);
+const query1 = world.createQuery({ /* config */}).fromAll('Tile', 'Position');
 const tiles = query1.execute({ /* filter */ });
 ```
 

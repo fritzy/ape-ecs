@@ -29,7 +29,7 @@ describe('express components', () => {
       components: [
         {
           type: 'Health',
-          lookup: 'Health',
+          key: 'Health',
           hp: 10
         }
       ]
@@ -85,7 +85,7 @@ describe('express components', () => {
       components: [
         {
           type: 'Food',
-          lookup: 'Food'
+          key: 'Food'
         }
       ]
     });
@@ -834,7 +834,7 @@ describe('entity restore', () => {
     });
     entity.addComponent({
       type: 'EquipmentSlot',
-      lookup: 'slot3',
+      key: 'slot3',
       name: 'slot3',
       slot: potion3
     });
@@ -1126,11 +1126,11 @@ describe('exporting and restoring', () => {
     expect(old.c.Liquid).to.exist;
     expect(entity2.c.Liquid).to.exist;
 
-    entity2.c.Liquid.lookup = 'OtherLiquid';
+    entity2.c.Liquid.key = 'OtherLiquid';
     expect(entity2.c.Liquid).to.not.exist;
     expect(entity2.c.OtherLiquid).to.exist;
 
-    entity2.c.OtherLiquid.lookup = undefined;
+    entity2.c.OtherLiquid.key = undefined;
     expect(entity2.c.OtherLiquid).to.not.exist;
     expect(entity2.c.Liquid).to.not.exist;
   });

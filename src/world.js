@@ -19,7 +19,7 @@ const componentReserved = new Set(
     'getObject',
     '_addRef',
     '_deleteRef',
-    'lookup',
+    'key',
     'destroy'
   ]);
 const entityReserved = new Set([
@@ -66,7 +66,7 @@ module.exports = class World {
   }
 
   /**
-   * Called in order to increment ecs.currentTick, update indexed queries, and update lookups.
+   * Called in order to increment ecs.currentTick, update indexed queries, and update key.
    * @method module:ECS#tick
    */
   tick() {
@@ -76,7 +76,7 @@ module.exports = class World {
     return this.currentTick;
   }
 
-  _addRef(target, entity, component, prop, sub, lookup, type) {
+  _addRef(target, entity, component, prop, sub, key, type) {
 
     if (!this.refs[target]) {
       this.refs[target] = new Set();
@@ -85,10 +85,10 @@ module.exports = class World {
     if(!this.entityReverse.hasOwnProperty(target)) {
       this.entityReverse[target] = {};
     }
-    if(!this.entityReverse[target].hasOwnProperty(lookup)) {
-      this.entityReverse[target][lookup] = new Map();
+    if(!this.entityReverse[target].hasOwnProperty(key)) {
+      this.entityReverse[target][key] = new Map();
     }
-    const reverse = this.entityReverse[target][lookup];
+    const reverse = this.entityReverse[target][key];
     let count = reverse.get(entity);
     /* $lab:coverage:off$ */
     if (count === undefined) {
@@ -107,9 +107,9 @@ module.exports = class World {
     });
   }
 
-  _deleteRef(target, entity, component, prop, sub, lookup, type) {
+  _deleteRef(target, entity, component, prop, sub, key, type) {
 
-    const ref = this.entityReverse[target][lookup];
+    const ref = this.entityReverse[target][key];
     let count = ref.get(entity);
     count--;
     // istanbul ignore else
@@ -119,7 +119,7 @@ module.exports = class World {
       ref.set(entity, count);
     }
     if (ref.size === 0) {
-      delete ref[lookup];
+      delete ref[key];
     }
     this.refs[target].delete([entity, component, prop, sub].join('...'));
     if (this.refs[target].size === 0) {
@@ -199,7 +199,7 @@ module.exports = class World {
       }
       const def = {
         ...definition[key],
-        lookup: key
+        key
       };
       if (!def.type) {
         def.type = key

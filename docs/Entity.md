@@ -8,7 +8,7 @@ You can create entities with the factories [world.createEntity](./World.md#creat
 Your results from a [Query](./Query.md) will be a `Set` of `Entities`.
 
 You can check to see if a given entity has at least one of a given `Component` type or `tag` with [entity.has](#has).
-You can iterate through all of the instance of a given `Component` type within an entity with the [types property](#types). Any `Component` that has its [lookup property](./Component.md#lookup) set will be available as a property directly on the `Entity` instance.
+You can iterate through all of the instance of a given `Component` type within an entity with the [types property](#types). Any `Component` that has its [key property](./Component.md#key) set will be available as a property directly on the `Entity` instance.
 
 At any point, you can dyamically [entity.addComponent](#addcomponent) and [entity.removeComponent](#removecomponent) at any point.
 
@@ -87,7 +87,7 @@ Returns the first `Component` of a given type from an `Entity` or `undefined`.
 const point = entity.getOne('Point');
 ```
 
-👆 If you only intend to have 1 of given `Component` type on an `Entity`, you might consider using a [lookup](./Component.md#lookup) value.
+👆 If you only intend to have 1 of given `Component` type on an `Entity`, you might consider using a [key](./Component.md#key) value.
 
 ## addTag
 

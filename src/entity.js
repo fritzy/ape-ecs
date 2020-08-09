@@ -43,7 +43,7 @@ class Entity {
       for (const key of Object.keys(defs)) {
         const comp = {
           ...defs[key],
-          lookup: key
+          key
         };
         if (!comp.type) comp.type = key;
         this.addComponent(comp);
@@ -115,8 +115,8 @@ class Entity {
     if (component === undefined) {
       return false;
     }
-    if (component.lookup) {
-      delete this.c[component.lookup];
+    if (component.key) {
+      delete this.c[component.key];
     }
     this.types[component.type].delete(component);
 
@@ -144,8 +144,8 @@ class Entity {
           continue;
         }
         // $lab:coverage:on$
-        if (comp.lookup) {
-          obj.c[comp.lookup] = comp.getObject(componentIds);
+        if (comp.key) {
+          obj.c[comp.key] = comp.getObject(componentIds);
         } else {
           obj.components.push(comp.getObject(componentIds));
         }

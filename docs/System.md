@@ -13,7 +13,7 @@ class Gravity extends ApeECS.System {
     // We want it to be kept up to date, so we persist it.
     this.massesQuery = this.createQuery.fromAll(['Position', 'Movement', 'Mass']).persist();
     // Let's pretend we have an Entity with the id 'Frame' with a Component
-    //  with a lookup called 'frameInfo' that has the deltaTime as property.
+    //  with a key called 'frameInfo' that has the deltaTime as property.
     // Cool.
     this.frameInfo = this.world.getEntity('Frame').frameInfo;
   }

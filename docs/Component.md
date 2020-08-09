@@ -60,8 +60,8 @@ Regardless of the method you use to create a `Component`, the format is as follo
 {
   type: 'Position', // Component Type
   id: 'hi-there', // optional, unique id, auto generated if not provided
-  lookup: 'position', // optional, if set you can access the component by this value from the Entity instance
-  // see below for more on lookups
+  key: 'position', // optional, if set you can access the component by this value from the Entity instance
+  // see below for more on keys
   x: 34, // set the initial value of any property defined when registered
   y: 3 // another property that you previously defined
   // you don't have to assign values to all of your properties
@@ -92,16 +92,16 @@ See the [example](#example) at the [top of this document](#component).
 
 For example, if you have a game engine sprite, you might have a Component that contains all of the necessary information to stand up a sprite, and a reference to the game engine sprite instance itself. When you store the sprite you may need to remove the sprite instance from the Component, because it can't be serialized. You can do that by overriding `getObject`. But resist the tempation to re-create the game engine sprite in `init`. That won't work on your server. Instead, tag any new Entitys that have an unititialized Sprite `Component` with "New" or "NewSprite". You can then have a `System` `Query` that checks for `Query.fromAll(['Sprite', 'New'])` to initialize it for you.
 
-## lookup
+## key
 
-Setting the lookup property will map the `Component` within its `entity.c` by that value for convenience. As always, that same `Component` will still be accessible within `entity.types`.
+Setting the key property will map the `Component` within its `entity.c` by that value for convenience. As always, that same `Component` will still be accessible within `entity.types`.
 
  ```js
 const entity = world.createEntity({
   components: [
     {
       type: 'Position',
-      lookup: 'position',
+      key: 'position',
       x: 3,
       y: 10
     }
@@ -116,7 +116,12 @@ for (const position of entity.types.Position) {
 // 3 10
 ```
 
-You can also set the lookup in an `Entity` creation factory on the `c` property.
+👆 Setting the `key` property is completely optional.
+If a `Component` instance doesn't have a key, it doesn't show up in the `entity.c` Object, but it will still be retrievable with [entity.getComponents(type)](./Entity.md#getcomponents) and the `entity.types[type]`. Each return `Sets` of Components on the Entity of a given type.
+
+For example, an `Entity` representing a character may have many Component instances of the type "Buff", but only one "Inventory" Component. In that case, it doesn't make sense to have a `key` on any of the Buff instances, but it does on the "Inventory" component for convenience.
+
+👆 You can also set the key in an `Entity` creation factory on the `c` property.
 
 This is equivalant to the above:
 ```js
@@ -156,7 +161,7 @@ console.log(obj);
   type: 'Point', // component type name
   id: 'aabbbcc-37', // generated or assigned component id
   entityId: 'kjasdlf-03', // generated or assigned entity id
-  lookup: 'point', // assigned lookup, if set
+  key: 'point', // assigned key, if set
   x: 38, // any properties that you registered
   y: 44
 }
@@ -176,7 +181,7 @@ Destroy the component.
 
 ```js
 someComponent.destroy();
-```
+```at 
 
 Before any other actions are taken, the `preDestroy` function is run.
 
