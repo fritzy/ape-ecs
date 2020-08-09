@@ -44,6 +44,16 @@ Component property values can be accessed and changed directly on the Component 
 
 In future versions, there may be more features tied to this functionality.
 
+### Index
+* [Creating Component Instances](#creating-component-instances)
+* [id](#id)
+* [properties](#properties)
+* [key](#key)
+* [init](#init)
+* [entity](#entity)
+* [getObject](#getobject)
+* [destroy](#destroy)
+
 ## Creating Component Instances
 
 There are a few factory functions for creating Components. When you create `Entities` you can include the initial components and their values.

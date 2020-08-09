@@ -22,6 +22,98 @@ npm install ape-ecs
 * Export/import support for saving/restoring state.
 * 100% Test Coverage.
 
+## Example
+
+```js
+const ApeECS = require('ape-ecs');
+
+class Gravity extends ApeECS.System {
+  init() {
+    this.mainQuery = this.createQuery().fromAll('Position', 'Physics');
+  }
+
+  update(tick) {
+    const entities = this.mainQuery.execute();
+    const frameInfo = this.world.getEntity('frame');
+    for (const entity of entities) {
+      const point = entity.getOne('Position');
+      if (!entity.has('Vector')) {
+        entity.addComponent({
+          type: 'Vector',
+          mx: 0,
+          my: 0
+        })
+      }
+      const vector = entity.getOne('Vector');
+      vector.my += 9.807 * frame.time.deltaTime * .01;
+      vector.update();
+    }
+  }
+}
+
+class Position extends ApeECS.Component {
+  static properties = {
+    x: 0,
+    y: 0
+  }
+}
+
+class Vector extends ApeECS.Component {
+  static properties = {
+    mx: 0,
+    my: 0,
+    speed: 0
+  }
+
+  get speed() {
+    return Math.sqrt(this.mx**2 + this.my**2);
+  }
+}
+
+class FrameInfo extends ApeECS.Component {
+  static properties = {
+    deltaTime: 0,
+    deltaFrame: 0,
+    time: 0
+  }
+}
+
+const world = new ApeECS.World();
+world.registerComponent(Position);
+world.registerComponent(Vectory);
+world.registerComponent(FrameInfo);
+world.registerTags('Physics');
+world.registerSystem('frame', Gravity);
+
+const frame = world.createEntity({
+  id: 'frame',
+  c: {
+    time: {
+      type: 'FrameInfo',
+    }
+  }
+})
+
+// yeah, these are cop-outs, but this README example is getting long
+world.registerSystem('frame', require('./move.js'));
+world.createEntities(require('./saveGame.json'));
+
+let lastTime = 0;
+
+function update(time) {
+  const delta = time - lastTime;
+  time = lastTime;
+  frame.time.update({
+    time: time,
+    deltaTime: delta,
+    deltaFrame: delta / 16.667
+  });
+  world.runSystems('frame');
+  window.requestAnimationFrame(update);
+}
+update(0);
+```
+
 ## More About ECS
 
 The Entity-Component-System paradigm is great for managing dynamic objects in games and simulations. Instead of binding functionality to data through methods, entities are dynamically composed of any combination of types. Separate systems are then able to query for entities with a given set of types. 
