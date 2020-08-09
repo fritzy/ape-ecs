@@ -78,103 +78,45 @@ Register a new `Component` type in your `World`.
 👀 See the [Component Docs](Component.md) for info on how to use `Components`.
 
 ```js
-world.registerComponent('Position', {
-  properties: { // required
+class Position extends ApeECS.Component {
+  static properties = {
     x: 0,
     y: 0,
     coord: '0x0',
-    parent: ApeECS.Refs.EntityRef
-  },
+    parent: ApeECS.EntityRef
+  }
+
+  static serialize = true; // optional, default
+  static serializeFields = ['x', 'y']; // optional
+  // default is null, when serializeFields not specified, all properties are serialized
+
   init() { // optional
     this.coord = `${this.x}x${this.y}`;
-  },
-  destroy() { //optional
+  }
+
+  preDestroy() { //optional
     console.log('Boom?');
-  },
-  serialize: { // optional
-    skip: false,
-    ignore: ['coord']
-  },
-  writeHooks: [ //optional
-    function (compInstance, field, value) {
-      switch(field) {
-        case 'x':
-          compInstance.coord = `${value}x${compInstance.y}`;
-          break;
-        case 'y':
-          compInstance.coord = `${compInstance.x}x${value}`;
-          break;
-        case 'coord':
-          value = `${compInstance.x}x${compInstance.y}`;
-      }
-      return value;
-    }
-  ]
-},
-100 /* optional */ );
+  }
+
+  get coord() {
+    return `${this.x}x${this.y}`;
+  }
+
+}
+
+world.registerComponent(Position, 100);
 ```
 
 ### Arguments
-* name: `String` -- unique name for the `Component` type.
-* definition: `Object` -- definition (see below)
+* definition: `<ApeECS.Component>`
 * poolSize: `Number`, integer, default number of this `Component` to create for a memory pool
 
 
-### Notes:
-
 Registers a new Component type to be used with `world.createEntity()` or `entity.addComponent()`.
 
-☝️ If your Component doesn't need any properties or special options, register a Tag instead with `world.registerTag([])`.
+☝️ If your Component doesn't need any properties or special options, register a Tag instead with `world.registerTag()`.
 
-💭 **Ape ECS** dynamically creates a `class` when you register a component. Have a peak at the source code in `src/world.js`.
-
-### Component Definition
-
-The second argument to `world.registerComponent` is a definition `Object` that requires `properties` at a minimum.
-
-😅 Don't be intimidated by the full `definition` of a `Component`. All you need for most cases is `properties`.
-
-#### properties
-`Object` _(required)_
-
-Each key for the properties `Object` indicates a property for your new `Component`. The value of a `properties` entry can be a `Number`, `String`, `null`, or `Ref function`, and indicates the default value for a property. 
-
-👀 See the [Refs Docs](Refs.md) to learn about the Entity Ref property functions.
-
-⚠️ Using a mutable value like `{}` `[]` may cause undefined behavior when assigned as a default. If you'd like to use an `Object` type or even advanced type from a game engine, you may assign one to a property when you invoke `world.createEntity` or `entity.addComponent`, but the default during `registerComponent` should be `null`.
-
-⚠️ Deep value changes of a mutable type like `Object` in a `Component` will not trigger a `writeHooks` function, nor will it update `component._meta.updated`.
-
-#### init
-`function` _(optional)_
-
-This function is ran after the `Component` has been created from `world.createEntity` or `entity.addComponent`.
-The `this` context is the `Component` instance.
-
-#### destroy
-`function` _(optional)_
-
-This function is ran right before a `Component` is destroyed, either from `entity.removeComponent` or `entity.destroy`.
-The `this` context is the `Component` instance.
-
-#### serialize
-`Object` _(optional)_
-
-The serialize `Object` has two properties: `skip` and `ignore`. If `skip` is `true` (it's `false` by default), then the component is skipped entirely during `world.getObject` or `entity.getObject`. Any fields listed in the `ignore` array are skipped from `getObject`.
-
-#### writeHooks
-`[]function` _(optional)_
-
-```js
-[
-  function (component, field, value) {
-    return value;
-  }
-]
-```
-An array of functions that are ran when a property is set. You can manipulate the value before returning it and take other actions on the `Component` instance.
-
-️⚠️ `writeHooks` are not run during `world.createEntity` or `entity.addComponent`. If you need to take actions on the initial property values, then use the `init` function in the `definition`.
+👀 See the [Component docs](./Component.md) in learn how to properly extend `ApeECS.Component`.
 
 ## registerTags
 
