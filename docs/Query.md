@@ -166,7 +166,11 @@ Indicate that the Query should be persisted, turning it into a live index of Ent
 The properties `query.added` and `query.removed` are `Sets` that you can check during your `system.update` if tracked.
 
 👆 A query can be persisted without having to track added or removed.
-Whenever an Entity changes Component or Tag composition, it's checked against all persisted Queries when the `system.update` happens.
+Whenever an Entity changes Component or Tag composition, it's checked against all persisted Queries when the `world.tick()` or after a `system.update(tick)` happens.
+
+👆 Peristed queries only update their results after `system.update` or during `world.tick()`.
+If you want to update your persisted queries at other times, run [world.updateIndexes()](./World.md#updateindexes).
+
 
 ⚠ Queries cannot be persisted if they use `from` a static set of Entities, or if they're not created from a System.
 

@@ -102,17 +102,16 @@ class Query {
 
   update(entity) {
 
+    if (entity.destroyed) {
+      this._removeEntity(entity);
+      return;
+    }
     let inFrom = false;
     for (const source of this.query.froms) {
       if (source.from === 'all') {
-        const potential = [];
-        for (const type of source.types) {
-          potential.push(this.world.entitiesByComponent[type]);
-        }
-        potential.sort((a, b) => a.size - b.size);
         let found = true;
-        for (const entities of potential) {
-          if (!entities.has(entity.id)) {
+        for (const type of source.types) {
+          if (!entity.has(type)) {
             found = false;
             break;
           }
@@ -123,13 +122,9 @@ class Query {
         }
       } else if (source.from === 'any') {
         const potential = [];
-        for (const type of source.types) {
-          potential.push(this.world.entitiesByComponent[type]);
-        }
-        potential.sort((a, b) => b.size - a.size);
         let found = false;
-        for (const entities of potential) {
-          if (entities.has(entity.id)) {
+        for (const type of source.types) {
+          if (entity.has(type)) {
             found = true;
             break;
           }
@@ -156,10 +151,16 @@ class Query {
       if (this.trackAdded) {
         this.added.add(entity);
       }
-    } else if (this.trackRemoved) {
-      this.results.delete(entity);
+    } else {
+      this._removeEntity(entity);
+    }
+  }
+
+  _removeEntity(entity) {
+    if (this.results.has(entity) && this.trackRemoved) {
       this.removed.add(entity);
     }
+    this.results.delete(entity);
   }
 
   persist(trackAdded, trackRemoved) {
@@ -282,7 +283,7 @@ class Query {
     }
     this.removed.clear();
     this.executed = true;
-    if (filter === undefined 
+    if (filter === undefined
       || (!filter.hasOwnProperty('updatedComponents')
         && !filter.hasOwnProperty('updatedValues')
       )) {

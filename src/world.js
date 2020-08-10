@@ -188,30 +188,6 @@ module.exports = class World {
     return this.entityPool.get(definition);
   }
 
-  createEntityComponents(definition) {
-
-    const components = [];
-    let tags;
-    for (const key of Object.keys(definition)) {
-      if (key === 'tags') {
-        tags = definition.tags;
-        continue;
-      }
-      const def = {
-        ...definition[key],
-        key
-      };
-      if (!def.type) {
-        def.type = key
-      }
-      components.push(def);
-    }
-    return this.entityPool.get({
-      components,
-      tags
-    });
-  }
-
   getObject() {
 
     const obj = [];

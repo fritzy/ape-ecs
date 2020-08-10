@@ -1,5 +1,6 @@
-* [ ] double check system lifecycle (pre and post functions for query indexes)
-* [ ] Remove world.createEntityComponents
+* [x] double check system lifecycle (pre and post functions for query indexes)
+  * [x] pooled resources shouldn't release until system end
+* [x] Remove world.createEntityComponents
 * [ ] rename add \_meta.svalues, update refs to use svalues?
 * [ ] check component parameters for reserved values at registration
 * [ ] check component types and tags for registration collisions

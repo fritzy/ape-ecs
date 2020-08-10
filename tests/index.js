@@ -42,8 +42,10 @@ describe('express components', () => {
 
   it('create 2nd entity', () => {
 
-    ecs.createEntityComponents({
-      Health: { hp: 10 }
+    ecs.createEntity({
+      c: {
+        Health: { hp: 10 }
+      }
     });
 
     const results = ecs.createQuery().fromAll('Health').execute();
@@ -90,14 +92,16 @@ describe('express components', () => {
       ]
     });
 
-    const entity = ecs.createEntityComponents({
-      pockets: { type: 'Storage', size: 4 },
-      backpack: { type: 'Storage', size: 25 },
-      pants: { type: 'EquipmentSlot' },
-      shirt: { type: 'EquipmentSlot' },
-      Health: {
-        hp: 10,
-        max: 10
+    const entity = ecs.createEntity({
+      c: {
+        pockets: { type: 'Storage', size: 4 },
+        backpack: { type: 'Storage', size: 25 },
+        pants: { type: 'EquipmentSlot' },
+        shirt: { type: 'EquipmentSlot' },
+        Health: {
+          hp: 10,
+          max: 10
+        }
       }
     });
 
@@ -151,8 +155,10 @@ describe('express components', () => {
     }
     ecs.registerComponent(Test);
 
-    const entity = ecs.createEntityComponents({
-      Test: {
+    const entity = ecs.createEntity({
+      c: {
+        Test: {
+        }
       }
     });
 
@@ -265,22 +271,26 @@ describe('express components', () => {
 
     ecs.runSystems('equipment');
 
-    const entity = ecs.createEntityComponents({
-      pockets: { type: 'Storage', size: 4 },
-      backpack: { type: 'Storage', size: 25 },
-      pants: { type: 'EquipmentSlot' },
-      shirt: { type: 'EquipmentSlot' },
-      Health: {
-        hp: 10,
-        max: 10
+    const entity = ecs.createEntity({
+      c: {
+        pockets: { type: 'Storage', size: 4 },
+        backpack: { type: 'Storage', size: 25 },
+        pants: { type: 'EquipmentSlot' },
+        shirt: { type: 'EquipmentSlot' },
+        Health: {
+          hp: 10,
+          max: 10
+        }
       }
     });
 
-    const pants = ecs.createEntityComponents({
-      Wearable: { name: 'Nice Pants',
-        effects: [
-          { type: 'Burning' }
-        ]
+    const pants = ecs.createEntity({
+      c: {
+        Wearable: { name: 'Nice Pants',
+          effects: [
+            { type: 'Burning' }
+          ]
+        }
       }
     });
 
@@ -358,21 +368,25 @@ describe('system queries', () => {
 
     expect(tileSystem.lastResults.size).to.equal(0);
 
-    const tile1 = ecs.createEntityComponents({
-      Tile: {
-        x: 10,
-        y: 0,
-        level: 0
+    const tile1 = ecs.createEntity({
+      c: {
+        Tile: {
+          x: 10,
+          y: 0,
+          level: 0
+        }
       }
     });
 
-    const tile2 = ecs.createEntityComponents({
-      Tile: {
-        x: 11,
-        y: 0,
-        level: 0
-      },
-      Hidden: {}
+    const tile2 = ecs.createEntity({
+      c: {
+        Tile: {
+          x: 11,
+          y: 0,
+          level: 0
+        },
+        Hidden: {}
+      }
     });
 
     ecs.tick()
@@ -409,30 +423,40 @@ describe('system queries', () => {
     ecs.registerComponent(Billboard);
     ecs.registerComponent(Sprite);
 
-    const tile1 = ecs.createEntityComponents({
-      Tile: {},
-      Billboard: {},
-      Sprite: {},
-      Hidden: {}
+    const tile1 = ecs.createEntity({
+      c: {
+        Tile: {},
+        Billboard: {},
+        Sprite: {},
+        Hidden: {}
+      }
     });
 
-    const tile2 = ecs.createEntityComponents({
-      Tile: {},
-      Billboard: {},
+    const tile2 = ecs.createEntity({
+      c: {
+        Tile: {},
+        Billboard: {},
+      }
     });
 
-    const tile3 = ecs.createEntityComponents({
-      Tile: {},
-      Billboard: {},
-      Sprite: {}
+    const tile3 = ecs.createEntity({
+      c: {
+        Tile: {},
+        Billboard: {},
+        Sprite: {}
+      }
     });
 
-    const tile4 = ecs.createEntityComponents({
-      Tile: {},
+    const tile4 = ecs.createEntity({
+      c: {
+        Tile: {},
+      }
     });
 
-    const tile5 = ecs.createEntityComponents({
-      Billboard: {},
+    const tile5 = ecs.createEntity({
+      c: {
+        Billboard: {},
+      }
     });
 
     const result = ecs.createQuery()
@@ -460,26 +484,34 @@ describe('system queries', () => {
     ecs.registerComponent(Sprite);
     ecs.registerTags('Billboard', 'Hidden');
 
-    const tile1 = ecs.createEntityComponents({
+    const tile1 = ecs.createEntity({
       tags: ['Billboard', 'Hidden'],
-      Tile: {}
+      c: {
+        Tile: {}
+      }
     });
 
-    const tile2 = ecs.createEntityComponents({
+    const tile2 = ecs.createEntity({
       tags: ['Billboard'],
-      Tile: {}
+      c: {
+        Tile: {}
+      }
     });
 
-    const tile3 = ecs.createEntityComponents({
+    const tile3 = ecs.createEntity({
       tags: ['Billboard'],
-      Sprite: {}
+      c: {
+        Sprite: {}
+      }
     });
 
-    const tile4 = ecs.createEntityComponents({
-      Tile: {},
+    const tile4 = ecs.createEntity({
+      c: {
+        Tile: {},
+      }
     });
 
-    const tile5 = ecs.createEntityComponents({
+    const tile5 = ecs.createEntity({
       tags: ['Billboard']
     });
 
@@ -538,13 +570,17 @@ describe('system queries', () => {
 
     ecs.tick();
 
-    const entity1 = ecs.createEntityComponents({
-      Comp1: {}
+    const entity1 = ecs.createEntity({
+      c: {
+        Comp1: {}
+      }
     });
 
-    const entity2 = ecs.createEntityComponents({
-      Comp1: {
-        greeting: 'hullo'
+    const entity2 = ecs.createEntity({
+      c: {
+        Comp1: {
+          greeting: 'hullo'
+        }
       }
     });
 
@@ -570,13 +606,17 @@ describe('system queries', () => {
 
     ecs.tick();
 
-    const entity1 = ecs.createEntityComponents({
-      Comp1: {}
+    const entity1 = ecs.createEntity({
+      c: {
+        Comp1: {}
+      }
     });
 
-    const entity2 = ecs.createEntityComponents({
-      Comp1: {
-        greeting: 'hullo'
+    const entity2 = ecs.createEntity({
+      c: {
+        Comp1: {
+          greeting: 'hullo'
+        }
       }
     });
 
@@ -603,8 +643,10 @@ describe('system queries', () => {
     class Comp1 extends ECS.Component {}
     ecs.registerComponent(Comp1);
 
-    const entity1 = ecs.createEntityComponents({
-      Comp1: {}
+    const entity1 = ecs.createEntity({
+      c: {
+        Comp1: {}
+      }
     });
 
     const query = ecs.createQuery().fromAll('Comp1').persist();
@@ -638,23 +680,29 @@ describe('entity & component refs', () => {
 
   it('Entity Object', () => {
 
-    const belt = ecs.createEntityComponents({
-      BeltSlots: {}
+    const belt = ecs.createEntity({
+      c: {
+        BeltSlots: {}
+      }
     });
 
     const slots = ['a', 'b', 'c'];
     const potions = [];
     const beltslots = belt.c.BeltSlots;
     for (const slot of slots) {
-      const potion = ecs.createEntityComponents({
-        Potion: {}
+      const potion = ecs.createEntity({
+        c: {
+          Potion: {}
+        }
       });
       beltslots.slots[slot] =  potion;
       potions.push(potion);
     }
 
-    const potionf = ecs.createEntityComponents({
-      Potion: {}
+    const potionf = ecs.createEntity({
+      c: {
+        Potion: {}
+      }
     });
 
     //expect(beltslots.slots[Symbol.iterator]).to.not.exist;
@@ -688,16 +736,20 @@ describe('entity & component refs', () => {
     }
     ecs.registerComponent(BeltSlots2);
 
-    const belt = ecs.createEntityComponents({
-      BeltSlots2: {}
+    const belt = ecs.createEntity({
+      c: {
+        BeltSlots2: {}
+      }
     });
 
     const slots = ['a', 'b', 'c'];
     const potions = [];
     const beltSlots2 = belt.c.BeltSlots2;
     for (const slot of slots) {
-      const potion = ecs.createEntityComponents({
-        Potion: {}
+      const potion = ecs.createEntity({
+        c: {
+          Potion: {}
+        }
       });
       beltSlots2.slots.add(potion);
       potions.push(potion);
@@ -710,8 +762,10 @@ describe('entity & component refs', () => {
     expect(beltSlots2.slots.has(potions[1])).to.be.true;
     expect(beltSlots2.slots.has(potions[2])).to.be.true;
 
-    const withValues = ecs.createEntityComponents({
-      BeltSlots: { slots: { a: potions[0].id, b: potions[2], d: null }}
+    const withValues = ecs.createEntity({
+      c: {
+        BeltSlots: { slots: { a: potions[0].id, b: potions[2], d: null }}
+      }
     });
 
     expect(withValues.c.BeltSlots.slots.a).to.equal(potions[0]);
@@ -742,12 +796,16 @@ describe('entity & component refs', () => {
     }
     ecs.registerComponent(Ref);
 
-    const entity = ecs.createEntityComponents({
-      Crying: {}
+    const entity = ecs.createEntity({
+      c: {
+        Crying: {}
+      }
     });
 
-    const entity2 = ecs.createEntityComponents({
-      Ref: { other: entity.id }
+    const entity2 = ecs.createEntity({
+      c: {
+        Ref: { other: entity.id }
+      }
     });
 
     expect(entity2.c.Ref.other).to.equal(entity);
@@ -755,12 +813,16 @@ describe('entity & component refs', () => {
 
   it('Reassign same entity ref', () => {
 
-    const entity = ecs.createEntityComponents({
-      Crying: {}
+    const entity = ecs.createEntity({
+      c: {
+        Crying: {}
+      }
     });
 
-    const entity2 = ecs.createEntityComponents({
-      Ref: { other: entity.id }
+    const entity2 = ecs.createEntity({
+      c: {
+        Ref: { other: entity.id }
+      }
     });
 
     const ref2 = entity2.c.Ref;
@@ -787,16 +849,18 @@ describe('entity restore', () => {
     ecs.registerComponent(EquipmentSlot);
 
 
-    const potion1 = ecs.createEntityComponents({
+    const potion1 = ecs.createEntity({
       tags: ['Potion']
     });
-    const potion2 = ecs.createEntityComponents({
+    const potion2 = ecs.createEntity({
       tags: ['Potion']
     });
 
-    const entity = ecs.createEntityComponents({
-      'main': { slot: potion1, type: 'EquipmentSlot' },
-      'secondary': { slot: potion2, type: 'EquipmentSlot' }
+    const entity = ecs.createEntity({
+      c: {
+        'main': { slot: potion1, type: 'EquipmentSlot' },
+        'secondary': { slot: potion2, type: 'EquipmentSlot' }
+      }
     });
 
     expect(entity.c.main.slot).to.equal(potion1);
@@ -818,25 +882,29 @@ describe('entity restore', () => {
     ecs.registerComponent(EquipmentSlot);
 
 
-    const potion1 = ecs.createEntityComponents({
+    const potion1 = ecs.createEntity({
       tags: ['Potion']
     });
-    const potion2 = ecs.createEntityComponents({
+    const potion2 = ecs.createEntity({
       tags: ['Potion']
     });
-    const potion3 = ecs.createEntityComponents({
+    const potion3 = ecs.createEntity({
       tags: ['Potion']
     });
 
-    const entity = ecs.createEntityComponents({
-      slot1: { type: 'EquipmentSlot', name: 'slot1', slot: potion1 },
-      slot2: { type: 'EquipmentSlot', name: 'slot2', slot: potion2 }
-    });
-    entity.addComponent({
-      type: 'EquipmentSlot',
-      key: 'slot3',
-      name: 'slot3',
-      slot: potion3
+    const entity = ecs.createEntity({
+      components: [
+        {
+          type: 'EquipmentSlot',
+          key: 'slot3',
+          name: 'slot3',
+          slot: potion3
+        }
+      ],
+      c: {
+        slot1: { type: 'EquipmentSlot', name: 'slot1', slot: potion1 },
+        slot2: { type: 'EquipmentSlot', name: 'slot2', slot: potion2 }
+      }
     });
 
 
@@ -854,8 +922,10 @@ describe('entity restore', () => {
     ecs.registerComponent(class Potion extends ECS.Component {});
 
     const badName = () => {
-      const entity = ecs.createEntityComponents({
-        Posion: {} //misspelled
+      const entity = ecs.createEntity({
+        c: {
+          Posion: {} //misspelled
+        }
       });
     };
     expect(badName).to.throw();
@@ -866,7 +936,11 @@ describe('entity restore', () => {
     const ecs = new ECS.World();
     class Potion extends ECS.Component {};
     ecs.registerComponent(Potion);
-    const entity = ecs.createEntityComponents({ Potion: { x: 37 } });
+    const entity = ecs.createEntity({
+      c: {
+        Potion: { x: 37 }
+      }
+    });
     expect(entity.c.Potion.x).to.be.undefined;
   });
 
@@ -879,14 +953,18 @@ describe('entity restore', () => {
       static properties = { 'amount': 5 };
     });
 
-    const entity = ecs.createEntityComponents({
-      NPC: {},
+    const entity = ecs.createEntity({
+      c: {
+        NPC: {},
+      }
     });
     entity.addComponent({ type: 'Armor', amount: 10 });
     entity.addComponent({ type: 'Armor', amount: 30 });
 
-    const entity2 = ecs.createEntityComponents({
-      Other: {},
+    const entity2 = ecs.createEntity({
+      c: {
+        Other: {}
+      }
     });
 
     expect(entity.has('NPC')).to.be.true;
@@ -930,19 +1008,27 @@ describe('entity restore', () => {
     ecs.registerComponent(Bottle);
     ecs.registerComponent(ThrowAway);
 
-    const container = ecs.createEntityComponents({
-      SetInventory: {},
-      ThrowAway: {}
+    const container = ecs.createEntity({
+      c: {
+        SetInventory: {},
+        ThrowAway: {}
+      }
     });
 
-    const bottle1 = ecs.createEntityComponents({
-      Bottle: {}
+    const bottle1 = ecs.createEntity({
+      c: {
+        Bottle: {}
+      }
     });
-    const bottle2 = ecs.createEntityComponents({
-      Bottle: {}
+    const bottle2 = ecs.createEntity({
+      c: {
+        Bottle: {}
+      }
     });
-    const bottle3 = ecs.createEntityComponents({
-      Bottle: {}
+    const bottle3 = ecs.createEntity({
+      c: {
+        Bottle: {}
+      }
     });
 
     const setInv = container.c.SetInventory;
@@ -989,17 +1075,23 @@ describe('entity restore', () => {
     setInv.slots.clear()
     expect(setInv.slots.has(bottle2)).to.be.false;
 
-    const bottle4 = ecs.createEntityComponents({
-      Bottle: {}
+    const bottle4 = ecs.createEntity({
+      c: {
+        Bottle: {}
+      }
     });
 
-    const bottle5 = ecs.createEntityComponents({
-      Bottle: {}
+    const bottle5 = ecs.createEntity({
+      c: {
+        Bottle: {}
+      }
     });
 
-    const withValues = ecs.createEntityComponents({
-      SetInventory: {
-        slots: [bottle4, bottle5.id]
+    const withValues = ecs.createEntity({
+      c: {
+        SetInventory: {
+          slots: [bottle4, bottle5.id]
+        }
       }
     });
 
@@ -1027,9 +1119,11 @@ describe('exporting and restoring', () => {
     }
     ecs.registerComponent(AI);
 
-    const entity = ecs.createEntityComponents({
-      moon: { type: 'AI', order: 'moon' },
-      jupiter: { type: 'AI', order: 'jupiter' },
+    const entity = ecs.createEntity({
+      c: {
+        moon: { type: 'AI', order: 'moon' },
+        jupiter: { type: 'AI', order: 'jupiter' },
+      }
     });
 
     const moon = entity.c.moon;
@@ -1060,10 +1154,16 @@ describe('exporting and restoring', () => {
     ecs.registerComponent(AI);
     ecs.registerComponent(Effect);
 
-    const bottle = ecs.createEntityComponents({ Bottle: {} });
-    let npc = ecs.createEntityComponents({
-      ring: { type: 'EquipmentSlot', slot: bottle },
-      AI: {}
+    const bottle = ecs.createEntity({
+      c: {
+        Bottle: {}
+      }
+    });
+    let npc = ecs.createEntity({
+      c: {
+        ring: { type: 'EquipmentSlot', slot: bottle },
+        AI: {}
+      }
     });
     npc.addComponent({ type: 'Effect', name: 'wet' });
     npc.addComponent({ type: 'Effect', name: 'annoyed' });
@@ -1107,13 +1207,15 @@ describe('exporting and restoring', () => {
     class Liquid extends ECS.Component {}
     ecs.registerComponent(Liquid);
 
-    const entity = ecs.createEntityComponents({
-      Effect: {
-        name: 'fire',
-        started: Date.now()
-      },
-      AI: {},
-      Liquid: {}
+    const entity = ecs.createEntity({
+      c: {
+        Effect: {
+          name: 'fire',
+          started: Date.now()
+        },
+        AI: {},
+        Liquid: {}
+      }
     });
 
     const old = entity.getObject();
@@ -1144,18 +1246,18 @@ describe('advanced queries', () => {
 
     ecs.registerTags('A', 'B', 'C');
 
-    const entity1 = ecs.createEntityComponents({
+    const entity1 = ecs.createEntity({
       tags: ['A']
     });
-    const entity2 = ecs.createEntityComponents({
+    const entity2 = ecs.createEntity({
       tags: ['B']
     });
 
-    const entity3 = ecs.createEntityComponents({
+    const entity3 = ecs.createEntity({
       tags: ['B', 'C']
     });
 
-    const entity4 = ecs.createEntityComponents({
+    const entity4 = ecs.createEntity({
       tags: ['B', 'C', 'A']
     });
 
@@ -1186,18 +1288,22 @@ describe('advanced queries', () => {
     ecs.registerComponent(Item);
     ecs.registerComponent(InInventory);
 
-    const e4 = ecs.createEntityComponents({
-      Person: {
-        name: 'Bob'
+    const e4 = ecs.createEntity({
+      c: {
+        Person: {
+          name: 'Bob'
+        }
       }
     });
 
-    const e5 = ecs.createEntityComponents({
-      Item: {
-        name: 'plate'
-      },
-      InInventory: {
-        person: e4
+    const e5 = ecs.createEntity({
+      c: {
+        Item: {
+          name: 'plate'
+        },
+        InInventory: {
+          person: e4
+        }
       }
     });
 

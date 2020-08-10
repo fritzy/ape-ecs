@@ -6,9 +6,14 @@ class EntityPool {
 
     this.world = world;
     this.pool = [];
+    this.destroyed = [];
     this.worldEntity = class WorldEntity extends Entity {};
     this.worldEntity.prototype.world = this.world;
     this.spinUp(spinup);
+  }
+
+  destroy(entity) {
+    this.destroyed.push(entity);
   }
 
   get(definition, onlyComponents=false) {
@@ -23,9 +28,12 @@ class EntityPool {
     return entity;
   }
 
-  release(entity) {
+  release() {
 
-    this.pool.push(entity);
+    while (this.destroyed.length > 0) {
+      const entity = this.destroyed.pop();
+      this.pool.push(entity);
+    }
   }
 
   spinUp(count) {

@@ -13,10 +13,12 @@ class Entity {
     this.tags = new Set();
     this.updatedComponents = 0;
     this.updatedValues = 0;
+    this.destroyed = false;
   }
 
   _setup(definition) {
 
+    this.destroyed = false;
     if (definition.id)  {
       this.id = definition.id;
     } else {
@@ -54,7 +56,8 @@ class Entity {
 
   has(type) {
 
-    return this.world.entitiesByComponent[type].has(this.id);
+    return (!this.destroyed
+      && (this.types.hasOwnProperty(type) || this.tags.has(type)));
   }
 
   getOne(type) {
@@ -190,7 +193,8 @@ class Entity {
     this.tags.clear();
     this.world.entities.delete(this.id);
     delete this.world.entityReverse[this.id];
-    this.world.entityPool.release(this);
+    this.destroyed = true;
+    this.world.entityPool.destroy(this);
   }
 }
 
