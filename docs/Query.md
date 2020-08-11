@@ -32,7 +32,7 @@ A common pattern is to create your persisted queries in a System init.
 class ApplyMove extends ApeECS.System {
 
   init() {
-    this.moveQuery = this.createQuery().fromAll(['Sprite', 'Position', 'MoveAction']).persist();
+    this.moveQuery = this.createQuery().fromAll('Sprite', 'Position', 'MoveAction').persist();
   }
 
   update(tick) {

@@ -59,7 +59,7 @@ const myworld = new ApeECS.World({
 The `currentTick` is a Number integer property incremented by the `world.tick()` method. It can be used to determine how recently `Entities` and `Components` have been updated based on their `Entity.updatedComponents` and `Component._meta.updated` values.
 
 ```js
-const q1 = world.createQuery().fromAll(['Position', 'Tile']);
+const q1 = world.createQuery().fromAll('Position', 'Tile');
 const tiles = q1.execute({updatedComponents: world.currentTick - 1 });
 ```
 

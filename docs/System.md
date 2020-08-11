@@ -11,7 +11,7 @@ class Gravity extends ApeECS.System {
   init() {
     // We're going to want a query that gives us Entitys that must have all of these Components at least.
     // We want it to be kept up to date, so we persist it.
-    this.massesQuery = this.createQuery.fromAll(['Position', 'Movement', 'Mass']).persist();
+    this.massesQuery = this.createQuery.fromAll('Position', 'Movement', 'Mass').persist();
     // Let's pretend we have an Entity with the id 'Frame' with a Component
     //  with a key called 'frameInfo' that has the deltaTime as property.
     // Cool.
@@ -41,7 +41,7 @@ Method that runs when the System is first set up. It's meant for you to override
 ```js
 class MoveTurn extends System {
   init() {
-    this.moveActionsQuery = this.createQuery().fromAll(['Character', 'MoveAction', 'Position']).persist();
+    this.moveActionsQuery = this.createQuery().fromAll('Character', 'MoveAction', 'Position').persist();
     this.map = this.world.getEntity('Map');
   }
   // ...
@@ -106,7 +106,7 @@ This method is a `Query` factory.
 ```js
 class MoveTurn extends System {
   init() {
-    this.moveActionsQuery = this.createQuery().fromAll(['Character', 'MoveAction', 'Position']).persist();
+    this.moveActionsQuery = this.createQuery().fromAll('Character', 'MoveAction', 'Position').persist();
   }
 }
 ```
