@@ -325,6 +325,173 @@ describe('express components', () => {
 
 });
 
+
+describe('tag update queries', () => {
+
+  const ecs = new ECS.World();
+
+
+  // this tests uses createQuery with currentTick - 1
+  // where one of the fromAll is a tag
+  //
+  // we add a tag using both skipUpdate true and false
+  // this test currently shows that an update will fire
+  // twice regardless of the value of skipUpdate
+  it('tag updates only fire once', () => {
+
+    // a simple array which we push "events" to
+    // this helps us check what happened when in the tests below
+    let events = [];
+
+    class Sprite3D extends ECS.Component {
+      static properties = {
+        x: 0,
+        y: 0,
+        z: 0,
+        img: '',
+      };
+    }
+
+    let changes = [];
+    /* $lab:coverage:off$ */
+    class System extends ECS.System {
+
+      constructor(world) {
+        super(world);
+      }
+
+      update(tick) {
+
+        super.update()
+
+        events.push({t:'tick', a0:this.world.currentTick})
+
+        this.handleCreation();
+        this.handleUpdates();
+
+      }
+
+      handleCreation() {
+        const q1 = this.world.createQuery().fromAll('Sprite3D', 's_new');
+        const qr = q1.execute({updatedComponents: this.world.currentTick - 1 });
+        
+        for(let e of qr) {
+          events.push({t:'handleCreation', e:e.id})
+          e.removeTag('s_new');
+        }
+      }
+
+      handleUpdates() {
+        const q1 = this.world.createQuery().fromAll('Sprite3D');
+        const qr = q1.execute({updatedComponents: this.world.currentTick - 1 });
+
+        for(let e of qr) {
+          events.push({t:'handleUpdates', e:e.id})
+        }
+      }
+
+      createSprite(x,y,z,img) {
+        const entity = this.world.createEntity({
+          components: [
+            {
+              type: 'Sprite3D',
+              key: 's',
+              x,
+              y,
+              z,
+              img,
+            },
+          ]
+        });
+
+        entity.addTag('s_new');
+
+        events.push({t:'create', e:entity.id})
+        return entity;
+      }
+
+      tintRed(e, flag) {
+        e0.addTag('s_tint_red', flag);
+        events.push({t:'tintRed', e:e.id})
+      }
+
+    }
+
+    let tags = ['s_new', 's_tint_red'];
+
+    ecs.registerComponent(Sprite3D);
+    ecs.registerTags(...tags);
+
+    const system = new System(ecs);
+
+    ecs.registerSystem('spr', system);
+
+    // a local arrow function to tick the system
+    const ttick = () => {
+      ecs.runSystems('spr');
+      ecs.tick();
+    }
+
+    // tick a few times to prove no activity
+
+    ttick();
+    ttick();
+
+    const e0 = system.createSprite(1,1,1,'one');
+
+    // tick a few times to clear out any updates
+
+    ttick();
+    ttick();
+    ttick();
+    ttick();
+    ttick();
+
+    // loop over the below sequence twice
+    //    0 for skipUpdate = false
+    //    1 for skipUpdate = true
+
+    for(let i = 0; i < 2; i++) {
+
+       // wipe events to compare below
+      events = [];
+
+      const skipUpdate = (i===0)?false:true;
+
+      // tint the sprite (add a tag)
+      system.tintRed(e0, skipUpdate);
+
+      ttick();
+      ttick();
+      ttick();
+      ttick();
+
+      if( false ) {
+        console.log(`Events for skipUpdate: ${skipUpdate}`);
+        for(const ev of events) {
+          console.log(ev);
+        }
+      }
+
+      if( !skipUpdate ) {
+        expect(events[0].t).to.equal('tintRed');
+        expect(events[1].t).to.equal('tick');
+        expect(events[2]).to.eql({t:'handleUpdates', e:e0.id });
+        expect(events[3].t).to.equal('tick');
+        expect(events[4].t).to.equal('tick');
+      } else {
+        expect(events[0].t).to.equal('tintRed');
+        expect(events[1].t).to.equal('tick');
+        expect(events[2].t).to.equal('tick');
+        expect(events[3].t).to.equal('tick');
+      }
+    }
+
+  });
+
+});
+
+
 describe('system queries', () => {
 
   const ecs = new ECS.World();
