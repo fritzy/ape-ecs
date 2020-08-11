@@ -264,6 +264,9 @@ module.exports = class World {
 
     if (this.componentTypes[operation.type].subbed) {
       const systems = this.subscriptions.get(operation.type);
+      if(!systems) {
+        return;
+      }
       for (const system of systems) {
         system._recvChange(operation);
       }
