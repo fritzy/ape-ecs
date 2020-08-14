@@ -323,6 +323,89 @@ describe('express components', () => {
 
   });
 
+
+
+  it('system subscriptions with updated components', () => {
+
+    let changes = [];
+    /* $lab:coverage:off$ */
+    class System extends ECS.System {
+
+      constructor(world) {
+
+        super(world);
+        this.world.subscribe(this, 'Food');
+      }
+
+      update(tick) {
+
+        super.update()
+        for (const cng of this.changes) {
+          changes.push(cng);
+        }
+      }
+    }
+
+    const system = new System(ecs);
+
+    ecs.registerSystem('equipment', system);
+
+    ecs.runSystems('equipment');
+
+    const e0 = ecs.createEntity({
+      c: {
+        food: { type: 'Food', rot: 4 },
+      }
+    });
+
+    ecs.runSystems('equipment');
+
+    e0.removeComponent(e0.c.food);
+
+    ecs.runSystems('equipment');
+
+    const e1 = ecs.createEntity({
+      c: {
+        food: { type: 'Food', rot: 5 },
+      }
+    });
+
+    ecs.runSystems('equipment');
+
+    expect(e1.c.food.rot).to.equal(5);
+    expect(e1.c.food.restore).to.equal(2);
+
+    e1.c.food.update({rot:6});
+
+    expect(e1.c.food.rot).to.equal(6);
+    expect(e1.c.food.restore).to.equal(2);
+
+    ecs.runSystems('equipment');
+
+    e1.c.food.update({rot:0,restore:0});
+
+    expect(e1.c.food.rot).to.equal(0);
+    expect(e1.c.food.restore).to.equal(0);
+
+    ecs.runSystems('equipment');
+
+    expect(e1.c.food.rot).to.equal(0);
+    expect(e1.c.food.restore).to.equal(0);
+
+    expect(changes[0].op).to.equal('add');
+    expect(changes[1].op).to.equal('destroy');
+    expect(changes[2].op).to.equal('add');
+    expect(changes[3].op).to.equal('change');
+    expect(changes[3].props).to.be.eql(['rot']);
+    expect(changes[4].props).to.be.eql(['rot', 'restore']);
+
+  });
+
+
+
+
+
+
 });
 
 describe('system queries', () => {

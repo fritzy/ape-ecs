@@ -154,6 +154,11 @@ class Component {
     if (values) {
       delete values.type;
       Object.assign(this, values);
+      const change = {op:'change', props: [], component: this.id, entity: this._meta.entityId, type: this.type};
+      for(const prop in values) {
+        change.props.push(prop);
+      }
+      this.world._sendChange(change);
     }
     this._meta.updated = this.entity.updatedValues = this.world.currentTick;
   }
