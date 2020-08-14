@@ -24,15 +24,14 @@
     "url": "https://github.com/fritzy/ape-ecs/issues"
   },
   "homepage": "https://github.com/fritzy/ape-ecs#readme",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
+    "@hapi/eslint-plugin-hapi": "^4.3.5",
     "chai": "^4.2.0",
-    "mocha": "^8.0.1",
+    "mocha": "^8.1.1",
+    "nyc": "^15.1.0",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11",
-    "webpack-dev-server": "^3.11.0",
-    "@hapi/eslint-plugin-hapi": "^4.3.5",
-    "nyc": "^15.1.0"
+    "webpack-dev-server": "^3.11.0"
   }
 }
