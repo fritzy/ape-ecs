@@ -17,6 +17,9 @@ class EquipmentSlot extends ApeECS.Component {
   static serialize = true;
   // defaults to null, which behaves the same as all fields like this
   static serializeFields = ['name', 'slotType', 'slot']; 
+  // defaults to false, when true it sends change events
+  // on property changes through component.update()
+  static changeEvents = false;
 
   init(values) {
   }
@@ -50,6 +53,7 @@ In future versions, there may be more features tied to this functionality.
 * [properties](#properties)
 * [key](#key)
 * [init](#init)
+* [update](#update)
 * [entity](#entity)
 * [getObject](#getobject)
 * [destroy](#destroy)
@@ -153,6 +157,18 @@ It's ran after the `Component` has been created through any of the factory metho
 
 **Arguments:**
 * initialValues: `Object` values that were passed as the initial property values. Does not include the results of any `setters` or defaults.
+
+## update
+
+Method to mark Component as updated, optionally update properties, optionally send [world.subscribe()](./World.md#subscribe) change event.
+
+**Arguments:**
+* values: `Object`, _optional_, properties and values of component to update
+
+You can update the properties on a Component directly, but [query.execute()](./Query.md#execute) will not be able to filter by updatedValues if you don't.
+Additionally, if you [world.subscribe()](./World.md#subscribe) to a Component type, you won't get change events unless you use this method to update values.
+
+👆 You'll also need to set the static property `changeEvents = true` if you want change subscription events.
 
 ## entity
 

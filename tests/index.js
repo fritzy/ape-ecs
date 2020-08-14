@@ -328,45 +328,48 @@ describe('express components', () => {
   it('system subscriptions with updated components', () => {
 
     let changes = [];
-    /* $lab:coverage:off$ */
+
     class System extends ECS.System {
 
-      constructor(world) {
+      init() {
 
-        super(world);
-        this.world.subscribe(this, 'Food');
+        this.world.subscribe(this, 'Food2');
       }
 
       update(tick) {
 
-        super.update()
         for (const cng of this.changes) {
           changes.push(cng);
         }
       }
     }
 
+    class Food2 extends ECS.Component {
+      static properties = {
+        rot: 300,
+        restore: 2
+      };
+      static changeEvents = true;
+    }
+
+    ecs.registerComponent(Food2);
     const system = new System(ecs);
-
     ecs.registerSystem('equipment', system);
-
     ecs.runSystems('equipment');
 
     const e0 = ecs.createEntity({
       c: {
-        food: { type: 'Food', rot: 4 },
+        food: { type: 'Food2', rot: 4 },
       }
     });
 
     ecs.runSystems('equipment');
-
     e0.removeComponent(e0.c.food);
-
     ecs.runSystems('equipment');
 
     const e1 = ecs.createEntity({
       c: {
-        food: { type: 'Food', rot: 5 },
+        food: { type: 'Food2', rot: 5 },
       }
     });
 
@@ -398,14 +401,7 @@ describe('express components', () => {
     expect(changes[3].op).to.equal('change');
     expect(changes[3].props).to.be.eql(['rot']);
     expect(changes[4].props).to.be.eql(['rot', 'restore']);
-
   });
-
-
-
-
-
-
 });
 
 describe('system queries', () => {
