@@ -21,7 +21,6 @@ An instance of `World` is essentially a registry of your game or simulation data
 * [createQuery](#createquery)
 * [registerSystem](#registersystem)
 * [runSystems](#runsystems)
-* [subscribe](#subscribe)
 
 ## World constructor
 
@@ -380,15 +379,3 @@ world.runSystems(group);
 ### Notes:
 
 👀 See the [System Docs](System.md) for more information about running `Systems`.
-
-## subscribe
-
-Subscribe a `System instance` to events from a given `Component` type.
-
-```js
-world.subscribe(system, type);
-```
-
-### Arguments:
-* system: `System instance`, _required_
-* type:  `String`, _required_, registered `Component` type

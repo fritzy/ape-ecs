@@ -179,15 +179,13 @@ describe('express components', () => {
     /* $lab:coverage:off$ */
     class System extends ECS.System {
 
-      constructor(world) {
+      init() {
 
-        super(world);
-        this.world.subscribe(this, 'EquipmentSlot');
+        this.subscribe('EquipmentSlot');
       }
 
       update(tick) {
 
-        super.update()
         changes = this.changes;
         for (const change of this.changes) {
           const parent = this.world.getEntity(change.entity);
@@ -226,12 +224,6 @@ describe('express components', () => {
     }
 
     class System2 extends ECS.System {
-
-      constructor(world) {
-
-        super(world);
-        //this.world.subscribe(this, 'EquipmentSlot');
-      }
 
       update(tick) {
 
@@ -333,7 +325,7 @@ describe('express components', () => {
 
       init() {
 
-        this.world.subscribe(this, 'Food2');
+        this.subscribe('Food2');
       }
 
       update(tick) {

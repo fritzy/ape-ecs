@@ -101,9 +101,9 @@ module.exports = class World {
       op: 'addRef',
       component: component,
       type: type,
+      property: prop,
       target,
-      entity,
-      prop
+      entity
     });
   }
 
@@ -131,7 +131,7 @@ module.exports = class World {
       type: type,
       target,
       entity,
-      prop
+      property: prop
     });
   }
 
@@ -249,15 +249,6 @@ module.exports = class World {
   createQuery(init) {
 
     return new Query(this, null, init);
-  }
-
-  subscribe(system, type) {
-
-    if (!this.subscriptions.has(type)) {
-      this.componentTypes[type].subbed = true;
-      this.subscriptions.set(type, new Set());
-    }
-    this.subscriptions.get(type).add(system);
   }
 
   _sendChange(operation) {

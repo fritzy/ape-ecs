@@ -160,13 +160,13 @@ It's ran after the `Component` has been created through any of the factory metho
 
 ## update
 
-Method to mark Component as updated, optionally update properties, optionally send [world.subscribe()](./World.md#subscribe) change event.
+Method to mark Component as updated, optionally update properties, optionally send [system.subscribe()](./System.md#subscribe) change event.
 
 **Arguments:**
 * values: `Object`, _optional_, properties and values of component to update
 
 You can update the properties on a Component directly, but [query.execute()](./Query.md#execute) will not be able to filter by updatedValues if you don't.
-Additionally, if you [world.subscribe()](./World.md#subscribe) to a Component type, you won't get change events unless you use this method to update values.
+Additionally, if you [system.subscribe()](./System.md#subscribe) to a Component type, you won't get change events unless you use this method to update values.
 
 👆 You'll also need to set the static property `changeEvents = true` if you want change subscription events.
 

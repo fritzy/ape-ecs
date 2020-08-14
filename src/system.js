@@ -11,7 +11,7 @@ class System {
     this.lastTick = this.world.currentTick;
     if (this.constructor.subscriptions) {
       for (const sub of this.constructor.subscriptions) {
-        this.world.subscribe(this, sub);
+        this.subscribe(sub);
       }
     }
     this.init();
@@ -28,6 +28,15 @@ class System {
   createQuery(init) {
 
     return new Query(this.world, this, init);
+  }
+
+  subscribe(type) {
+
+    if (!this.world.subscriptions.has(type)) {
+      this.world.componentTypes[type].subbed = true;
+      this.world.subscriptions.set(type, new Set());
+    }
+    this.world.subscriptions.get(type).add(this);
   }
 
   _preUpdate() {
