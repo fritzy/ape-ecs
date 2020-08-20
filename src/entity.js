@@ -1,6 +1,5 @@
 const BaseComponent = require('./component');
 const IdGenerator = require('./util').IdGenerator;
-
 const idGen = new IdGenerator();
 
 class Entity {
@@ -71,7 +70,7 @@ class Entity {
 
   getComponents(type) {
 
-    return this.types[type];
+    return this.types[type] || new Set();
   }
 
   addTag(tag, skipUpdate=false) {

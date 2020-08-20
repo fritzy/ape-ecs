@@ -24,6 +24,11 @@ class Component {
     Object.freeze();
   }
 
+  preInit(initial) {
+
+    return initial;
+  }
+
   init(initial) {
 
   }
@@ -116,6 +121,7 @@ class Component {
     const primitives = this.constructor.primitives;
     const factories = this.constructor.factories;
     // shallow copy of the property defaults
+    initial = this.preInit(initial);
     const values = Object.assign({}, primitives, initial);
     for (const field of fields) {
       const value = values[field];

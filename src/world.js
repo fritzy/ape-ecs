@@ -11,26 +11,22 @@ const EntityPool = require('./entitypool');
 
 const componentReserved = new Set(
   [
+    'constructor',
+    'init',
+    'type',
+    'key',
+    'destroy',
+    'preDestroy',
+    'postDestroy',
+    'getObject',
+    '_setup',
+    '_reset',
+    'update',
     'clone',
     '_meta',
-    '_setup',
-    '_updated',
-    '_reset',
-    'getObject',
     '_addRef',
     '_deleteRef',
-    'key',
-    'destroy'
-  ]);
-const entityReserved = new Set([
-    'prototype',
-    'this',
-    'c',
-    'types',
-    'id',
-    'tags',
-    'updatedComponents',
-    'updatedValues'
+    'prototype'
   ]);
 
 /**
@@ -173,6 +169,9 @@ module.exports = class World {
     klass.primitives = {};
     klass.factories = {};
     for (const field of klass.fields) {
+      if (componentReserved.has(field)) {
+        throw new Error(`Error registering ${klass.name}: Reserved property name "${field}"`);
+      }
       if (typeof klass.properties[field] === 'function') {
         klass.factories[field] = klass.properties[field];
       } else {

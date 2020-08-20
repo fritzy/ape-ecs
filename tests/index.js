@@ -293,11 +293,11 @@ describe('express components', () => {
 
     ecs.runSystems('equipment');
 
-    expect(entity.getComponents('EquipmentEffect')).to.exist;
+    expect(entity.getComponents('EquipmentEffect')).to.not.be.empty;
     const eEffects = new Set([...entity.getComponents('EquipmentEffect')][0].effects);
 
     expect(eEffects.has(effectExt.id)).to.be.true;
-    expect(entity.getComponents('Burning')).to.exist;
+    expect(entity.getComponents('Burning')).to.not.be.empty;
     expect(changes.length).to.equal(1);
     expect(changes[0].op).to.equal('addRef');
     expect(changes[0].target).to.equal(pants.id);
@@ -310,8 +310,8 @@ describe('express components', () => {
     expect(changes2.length).to.be.greaterThan(0);
     expect(changes.length).to.be.greaterThan(0);
     expect(changes[0].target).to.equal(pants.id);
-    expect(entity.getComponents('EquipmentEffect')).to.not.exist;
-    expect(entity.getComponents('Burning')).to.not.exist;
+    expect(entity.getComponents('EquipmentEffect')).to.be.empty;
+    expect(entity.getComponents('Burning')).to.be.empty;
 
   });
 

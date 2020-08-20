@@ -44,6 +44,7 @@ Component property values can be accessed and changed directly on the Component 
 * `component.updated` won't be updated to the current tick
 * `entity.updatedValues` won't be updated to the current tick
 * Query filters by `lastUpdated` won't be accurate.
+* Change events won't be produced.
 
 In future versions, there may be more features tied to this functionality.
 
@@ -53,10 +54,12 @@ In future versions, there may be more features tied to this functionality.
 * [properties](#properties)
 * [key](#key)
 * [init](#init)
+* [preInit](#preinit)
 * [update](#update)
 * [entity](#entity)
 * [getObject](#getobject)
 * [destroy](#destroy)
+* [Setters and Getters](#setters-and-getters)
 
 ## Creating Component Instances
 
@@ -158,6 +161,19 @@ It's ran after the `Component` has been created through any of the factory metho
 **Arguments:**
 * initialValues: `Object` values that were passed as the initial property values. Does not include the results of any `setters` or defaults.
 
+## preInit
+
+You can override the `preInit` method of your `Component`.
+It's ran before the `Component` has assigned the initial values.
+You must return an object of initial values to get assigned.
+
+**Arguments:**
+* initialValues: `Object` values that were passed as the initial property values. Does not include the results of any `setters` or defaults.
+
+**Returns** Initial values to assign.
+
+👆 This is a good place to set up any properties on the `_meta` object that you may need for your getters/setters.
+
 ## update
 
 Method to mark Component as updated, optionally update properties, optionally send [system.subscribe()](./System.md#subscribe) change event.
@@ -207,7 +223,7 @@ Destroy the component.
 
 ```js
 someComponent.destroy();
-```at 
+```
 
 Before any other actions are taken, the `preDestroy` function is run.
 
@@ -248,6 +264,7 @@ class Position extends ApeECS.Component {
 If you define a setter for a property, be sure to store it in the `_meta.values` `Object` since you won't be able to store it under the same name.
 
 `getObject` assumes that if a `_meta.values` property is set, that it's the serializable version. You may need to override `getObject` or store your value elsewhere in `_meta` if this assumption is incorrect.
+You can override [preInit](#preinit) if you want to setup a separate place in `_meta` for your values.
 
 ⭐️ Some of you may have noticed that we could have done the above example more efficiently. 
 You get a gold star, but I needed a more complete example.

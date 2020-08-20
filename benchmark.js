@@ -54,13 +54,13 @@ function benchmarks() {
         components: [
           {
             type: 'Test',
-            lookup: 'Test',
+            key: 'Test',
             a: 4,
             b: 5
           },
           {
             type: 'Test2',
-            lookup: 'Test2',
+            key: 'Test2',
             c: 6,
             d: 7
           }
