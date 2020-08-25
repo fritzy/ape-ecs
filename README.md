@@ -1,11 +1,11 @@
 # Ape-ECS
-![Ape-ECS Hero](https://raw.githubusercontent.com/fritzy/ape-ecs/lightweight/imgs/ape_ecs900wbg.png)
+![Ape-ECS Hero](https://raw.githubusercontent.com/fritzy/ape-ecs/master/imgs/ape_ecs900wbg.png)
 
 A performant [Entity-Component-System](https://en.wikipedia.org/wiki/Entity_component_system) library for JavaScript, written in ECMAScript ES2018, intended for use in games and simulations.
 
 ## Documentation
-* [Overview](https://github.com/fritzy/ape-ecs/blob/lightweight/docs/Overview.md)
-* [API Reference](https://github.com/fritzy/ape-ecs/blob/lightweight/docs/API_Reference.md)
+* [Overview](https://github.com/fritzy/ape-ecs/blob/master/docs/Overview.md)
+* [API Reference](https://github.com/fritzy/ape-ecs/blob/master/docs/API_Reference.md)
 
 ## Install
 
