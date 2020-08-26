@@ -3,11 +3,10 @@
   "version": "0.8.0",
   "description": "Ape-ECS (Apex) Entity-Component-System library for simulation and game development.",
   "main": "./src/index.js",
-  "types": "./types/index.d.ts",
+  "types": "./src/index.d.ts",
   "source": true,
   "files": [
-    "/src",
-    "/types"
+    "/src"
   ],
   "scripts": {
     "test": "nyc mocha tests/index.js",
