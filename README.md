@@ -144,3 +144,7 @@ cd ape-ecs
 npm install
 npm test
 ```
+
+## Special Thanks
+* [Ben Morse](https://twitter.com/benathon) -- For being an early adopter with lots of feedback and questions to improve the launch!
+* [Jaime Robles](https://twitter.com/DrawnByJaime) -- For the banner art!
