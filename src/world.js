@@ -158,9 +158,10 @@ module.exports = class World {
   registerComponent(klass, spinup=1) {
 
     const name = klass.name;
+    // istanbul ignore if
     if (this.tags.has(name)) {
       throw new Error (`registerComponent: Tag already defined for "${name}"`);
-    } else if (this.componentTypes.hasOwnProperty(name)) {
+    } else /* istanbul ignore if */ if (this.componentTypes.hasOwnProperty(name)) {
       throw new Error (`registerComponent: Component already defined for "${name}"`);
     }
     klass.prototype.world = this;
@@ -169,6 +170,7 @@ module.exports = class World {
     klass.primitives = {};
     klass.factories = {};
     for (const field of klass.fields) {
+      // istanbul ignore if
       if (componentReserved.has(field)) {
         throw new Error(`Error registering ${klass.name}: Reserved property name "${field}"`);
       }
@@ -254,6 +256,7 @@ module.exports = class World {
 
     if (this.componentTypes[operation.type].subbed) {
       const systems = this.subscriptions.get(operation.type);
+      // istanbul ignore if
       if(!systems) {
         return;
       }

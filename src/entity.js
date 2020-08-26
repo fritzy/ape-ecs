@@ -62,6 +62,7 @@ class Entity {
   getOne(type) {
 
     let component;
+    // istanbul ignore else
     if (this.types[type]) {
       component = [...this.types[type]][0];
     }

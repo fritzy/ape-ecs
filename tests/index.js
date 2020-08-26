@@ -693,13 +693,16 @@ describe('system queries', () => {
 
     ecs.tick();
     const ticks = ecs.currentTick;
-    const testQ = ecs.createQuery().fromAll('Comp1').persist();
+    const testQ = ecs.createQuery().fromAll('Comp1').persist(true, true);
     const results1 = testQ.execute();
+    expect(testQ.trackAdded).to.be.true;
+    expect(testQ.trackRemoved).to.be.true;
     expect(results1.has(entity1)).to.be.true;
     expect(results1.has(entity2)).to.be.true;
 
     const comp1 = entity1.c.Comp1;
     comp1.greeting = 'Gutten Tag';
+    comp1.update();
     entity2.addComponent({ type: 'Comp2' });
 
     const results2 = testQ.execute({ updatedComponents: ticks });
@@ -791,7 +794,7 @@ describe('entity & component refs', () => {
     //assign again
     beltslots.slots['a'] = potions[0];
 
-    //asign by id
+    //assign by id
     beltslots.slots.a = potionf.id;
     expect(beltslots.slots.a).to.equal(potionf);
 
@@ -896,10 +899,9 @@ describe('entity & component refs', () => {
       }
     });
 
-    const ref2 = entity2.c.Ref;
-    ref2.other = entity;
+    entity2.c.Ref.update({ other: entity });
 
-    expect(ref2.other).to.equal(entity);
+    expect(entity2.c.Ref.other).to.equal(entity);
   });
 
 });
@@ -977,7 +979,6 @@ describe('entity restore', () => {
         slot2: { type: 'EquipmentSlot', name: 'slot2', slot: potion2 }
       }
     });
-
 
     expect(entity.c.slot1.slot).to.equal(potion1);
     expect(entity.c.slot1.name).to.equal('slot1');
@@ -1298,6 +1299,8 @@ describe('exporting and restoring', () => {
     expect(old.c.Effect.name).to.equal('fire');
     expect(old.c.Liquid).to.exist;
     expect(entity2.c.Liquid).to.exist;
+
+    expect(entity.getOne('Effect')).to.equal(entity.c.Effect);
 
     entity2.c.Liquid.key = 'OtherLiquid';
     expect(entity2.c.Liquid).to.not.exist;

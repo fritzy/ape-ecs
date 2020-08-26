@@ -283,6 +283,7 @@ class Query {
     }
     this.removed.clear();
     this.executed = true;
+    // istanbul ignore next
     if (filter === undefined
       || (!filter.hasOwnProperty('updatedComponents')
         && !filter.hasOwnProperty('updatedValues')
@@ -291,6 +292,7 @@ class Query {
     }
     const output = [];
     for (const entity of this.results) {
+      // istanbul ignore next
       if (
         !(filter.updatedComponents && entity.updatedComponents < filter.updatedComponents)
         && !(filter.updatedValues && entity.updatedValues < filter.updatedValues)
