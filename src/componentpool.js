@@ -16,8 +16,8 @@ class ComponentPool {
       comp = new this.klass(entity, initial);
     } else {
       comp = this.pool.pop();
-      comp._setup(entity, initial);
     }
+    comp._setup(entity, initial);
     return comp;
   }
 
@@ -31,7 +31,7 @@ class ComponentPool {
   spinUp(count) {
 
     for(let i = 0; i < count; i++) {
-      const comp = new this.klass(this.world, {});
+      const comp = new this.klass();
       this.pool.push(comp);
     }
   }

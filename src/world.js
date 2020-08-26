@@ -311,6 +311,12 @@ module.exports = class World {
     this.entitiesByComponent[component.type].delete(component._meta.entityId);
   }
 
+  _clearIndexes(entity) {
+    for (const query of this.queries) {
+      query._removeEntity(entity);
+    }
+    this.updatedEntities.delete(entity);
+  }
 
   updateIndexes(entity) {
 

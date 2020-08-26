@@ -55,8 +55,8 @@ class Entity {
 
   has(type) {
 
-    return (!this.destroyed
-      && (this.types.hasOwnProperty(type) || this.tags.has(type)));
+    return (this.tags.has(type)
+      || this.types.hasOwnProperty(type));
   }
 
   getOne(type) {
@@ -195,6 +195,7 @@ class Entity {
     delete this.world.entityReverse[this.id];
     this.destroyed = true;
     this.world.entityPool.destroy(this);
+    this.world._clearIndexes(this);
   }
 }
 
