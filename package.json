@@ -6,7 +6,8 @@
   "types": "./types/index.d.ts",
   "source": true,
   "files": [
-    "/src"
+    "/src",
+    "/types"
   ],
   "scripts": {
     "test": "nyc mocha tests/index.js",
