@@ -1,38 +1,56 @@
-export declare class System {
-    constructor(world: World);
-    world: World;
-    // _stagedChanges: any[];
-    changes: any[];
-    queries: any[];
-    lastTick: number;
-    init(): void;
-    update(tick: number): void;
-    createQuery(init: any): any;
-    subscribe(type: any): void;
-    _preUpdate(): void;
-    _postUpdate(): void;
-    _recvChange(change: any): void;
+// component changes that are passed to Systems
+export interface IComponentChange {
+  op: string;
+  props?: string[];
+  component: string;
+  entity: string;
+  type: string;
 }
 
+// used by .fromReverse() in queries
 export interface IQueryReverse {
   entity: Entity|string;
   type: string;
 }
 
+// the object passed to world.createQuery()
 export interface IQueryConfig {
   trackAdded?: boolean;
   trackRemoved?: boolean;
   persist?: boolean;
   from?: (Entity|string)[];
-  fromAll?: string[];
-  fromAny?: string[];
-  fromReverse?: IQueryReverse;
+  all?: string[];
+  any?: string[];
+  reverse?: IQueryReverse;
   not?: string[];
 }
 
+
+
+export declare class System {
+    constructor(world: World);
+    world: World;
+    changes: IComponentChange[];
+    queries: Query[];
+    lastTick: number;
+    init(): void;
+    update(tick: number): void;
+    createQuery(init: IQueryConfig): any;
+    subscribe(type: string): void;
+}
+
+
+// passed to query.execute()
 export interface IQueryExecuteConfig {
   updatedComponents?: number;
   updatedValues?: number;
+}
+
+// returned from component.getObject()
+export interface IComponentObject {
+  type: string;
+  id?: string;
+  entity?: string;
 }
 
 export declare class Query {
@@ -75,11 +93,9 @@ export declare class Component {
     set key(arg: string);
     get key(): string;
     destroy(): void;
-    // preDestroy(): void;
-    // postDestroy(): void;
-    getObject(withIds?: boolean): {
-        type: string;
-    };
+    preDestroy(): void;
+    postDestroy(): void;
+    getObject(withIds?: boolean): IComponentObject;
     // _setup(entity: any, initial: any): void;
     entity: Entity;
     id: string;
@@ -89,29 +105,67 @@ export declare class Component {
     // _deleteRef(value: any, prop: any, sub: any): void;
 }
 
+// an object that has strings as keys and strings as values
+// has "Map" in the name because it's almost a Map(), close enough
+export interface IStringMap {
+  [name: string]: string;
+}
+
+
+// an object where the key is a string and the val is a set of Components
+export interface IEntityByType {
+  [name: string]: Set<Component>;
+}
+
+// an object where the key is a string and the val is a single Component
+export interface IEntityComponents {
+  [name: string]: Component;
+}
+
+// an object where the key is a string and the val is a single ComponentObject
+export interface IEntityComponentObjects {
+  [name: string]: IComponentObject;
+}
+
+// passed to entity.addComponent()
+export interface IComponentConfig {
+  type: string;
+  key?: string;
+}
+
+
+// returned from entity.getObject()
+export interface IEntityObject {
+  id: string;
+  tags: string[];
+  components: IComponentObject[];
+  c: IEntityComponentObjects;
+}
+
+
+// an object where the key is a string and the val is a single System
+// export interface IWorldSubscriptions {
+//   [name: string]: System;
+// }
+
 
 export declare class Entity {
-    types: {};
-    c: {};
+    types: IEntityByType;
+    c: IEntityComponents;
     id: string;
     tags: Set<string>;
     updatedComponents: number;
     updatedValues: number;
     destroyed: boolean;
     // _setup(definition: any): void;
-    has(type: any): boolean;
-    getOne(type: any): any;
-    getComponents(type: any): any;
+    has(type: string): boolean;
+    getOne(type: string): Component | undefined;
+    getComponents(type: any): Set<Component>;
     addTag(tag: string, skipUpdate?: boolean): void;
     removeTag(tag: string): void;
-    addComponent(properties: any): any;
+    addComponent(properties: IComponentConfig): any;
     removeComponent(component: Component|string): boolean;
-    getObject(componentIds?: boolean): {
-        id: string;
-        tags: any[];
-        components: any[];
-        c: {};
-    };
+    getObject(componentIds?: boolean): IEntityObject;
     destroy(): void;
 }
 
@@ -120,48 +174,32 @@ export interface IWorldConfig {
   entityPool?: number;
 }
 
+// passed to world.createEntity()
+export interface IEntityConfig {
+  id?: string;
+  components?: IComponentConfig[];
+}
+
+
 
 export declare class World {
     constructor(config: IWorldConfig);
     // config: any;
     currentTick: number;
-    entities: Map<any, any>;
-    types: {};
+    entities: Map<string, Entity>;
     tags: Set<string>;
-    entitiesByComponent: {};
+    entitiesByComponent: IEntityByType;
     componentsById: Map<string, Component>;
-    entityReverse: {};
     updatedEntities: Set<Entity>;
-    componentTypes: {};
-    components: Map<any, any>;
-    queries: any[];
-    subscriptions: Map<any, any>;
-    systems: Map<any, any>;
-    refs: {};
-    componentPool: Map<any, any>;
-    entityPool: any;
-    /**
-     * Called in order to increment ecs.currentTick, update indexed queries, and update key.
-     * @method module:ECS#tick
-     */
+    componentTypes: IEntityComponents;
+    queries: Query[];
+    subscriptions: Map<string, System>;
+    systems: Map<string, System>;
     tick(): number;
-    _addRef(target: any, entity: any, component: any, prop: any, sub: any, key: any, type: any): void;
-    _deleteRef(target: any, entity: any, component: any, prop: any, sub: any, key: any, type: any): void;
-    /**
-     * @typedef {Object} definition
-     * @property {Object} properites
-     * @property {function} init
-     */
-    /**
-     * If you're going to use tags, you needs to let the ECS instance know.
-     * @method module:ECS#registerTags
-     * @param {string[]|string} tags - Array of tags to register, or a single tag.
-     * @example
-     * ecs.registerTags['Item', 'Blocked']);
-     */
-    registerTags(...tags: string[] | string): void;
-    registerComponent(klass: any, spinup?: number): void;
-    createEntity(definition: any): any;
+    registerTags(...tags: string[]): void;
+    registerComponent<T extends typeof Component>(klass: T, spinup?: number): void;
+    // registerComponent(klass: typeof Component, spinup?: number): void;
+    createEntity(definition: IEntityConfig): any;
     getObject(): any[];
     createEntities(definition: any): void;
     copyTypes(world: any, types: any): void;
@@ -169,7 +207,7 @@ export declare class World {
     getEntity(entityId: any): any;
     getEntities(type: any): Set<any>;
     getComponent(id: any): any;
-    createQuery(init: any): any;
+    createQuery(init: IQueryConfig): any;
     _sendChange(operation: any): void;
     registerSystem(group: any, system: any): any;
     runSystems(group: any): void;
