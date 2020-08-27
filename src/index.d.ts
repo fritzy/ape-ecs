@@ -14,43 +14,45 @@ export declare class System {
     _recvChange(change: any): void;
 }
 
+export interface IQueryReverse {
+  entity: Entity|string;
+  type: string;
+}
+
 export interface IQueryConfig {
   trackAdded?: boolean;
   trackRemoved?: boolean;
-  from?: (string|Entity)[];
+  persist?: boolean;
+  from?: (Entity|string)[];
+  fromAll?: string[];
+  fromAny?: string[];
+  fromReverse?: IQueryReverse;
+  not?: string[];
+}
 
+export interface IQueryExecuteConfig {
+  updatedComponents?: number;
+  updatedValues?: number;
 }
 
 export declare class Query {
     constructor(world: World, system: System, init: IQueryConfig);
-    system: any;
-    world: any;
-    query: {
-        froms: any[];
-        filters: any[];
-    };
-    hasStatic: boolean;
     persisted: boolean;
-    results: Set<any>;
+    results: Set<Entity>;
     executed: boolean;
-    added: Set<any>;
-    removed: Set<any>;
-    trackAdded: any;
-    trackRemoved: any;
-    from(...entities: any[]): Query;
-    fromReverse(entity: any, componentName: any): Query;
-    fromAll(...types: any[]): Query;
-    fromAny(...types: any[]): Query;
-    not(...types: any[]): Query;
-    update(entity: any): void;
-    _removeEntity(entity: any): void;
-    persist(trackAdded: any, trackRemoved: any): Query;
-    clearChanges(): void;
-    refresh(): Query;
-    _filter(entity: any): void;
-    execute(filter: any): Set<any>;
+    added: Set<Entity>;
+    removed: Set<Entity>;
+    trackAdded: boolean;
+    trackRemoved: boolean;
+    from(...entities: (Entity|string)[]): Query;
+    fromReverse(entity: Entity, componentName: string): Query;
+    fromAll(...types: string[]): Query;
+    fromAny(...types: string[]): Query;
+    not(...types: string[]): Query;
+    persist(trackAdded: boolean, trackRemoved: boolean): Query;
+    execute(filter?: IQueryExecuteConfig): Set<Entity>;
 }
- 
+
 
 
 export declare class Component {
