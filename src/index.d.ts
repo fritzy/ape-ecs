@@ -35,7 +35,7 @@ export declare class System {
     lastTick: number;
     init(): void;
     update(tick: number): void;
-    createQuery(init: IQueryConfig): any;
+    createQuery(init: IQueryConfig): Query;
     subscribe(type: string): void;
 }
 
@@ -51,6 +51,7 @@ export interface IComponentObject {
   type: string;
   id?: string;
   entity?: string;
+  [others: string]: any;
 }
 
 export declare class Query {
@@ -72,22 +73,14 @@ export declare class Query {
 }
 
 
+export interface IComponentUpdate {
+  type?: never;
+  [others: string]: any;
+}
+
 
 export declare class Component {
-    // static properties: {};
-    // static serialize: boolean;
-    // static serializeFields: any;
-    // static subbed: boolean;
-    // constructor(entity: any, initial: any);
-    // _meta: {
-    //     key: string;
-    //     updated: number;
-    //     entityId: string;
-    //     refs: Set<any>;
-    //     ready: boolean;
-    //     values: {};
-    // };
-    // preInit(initial: any): any;
+    preInit(initial: any): any;
     init(initial: any): void;
     get type(): string;
     set key(arg: string);
@@ -96,13 +89,9 @@ export declare class Component {
     preDestroy(): void;
     postDestroy(): void;
     getObject(withIds?: boolean): IComponentObject;
-    // _setup(entity: any, initial: any): void;
     entity: Entity;
     id: string;
-    // _reset(): void;
-    update(values: any): void;
-    // _addRef(value: any, prop: any, sub: any): void;
-    // _deleteRef(value: any, prop: any, sub: any): void;
+    update(values: IComponentUpdate): void;
 }
 
 // an object that has strings as keys and strings as values
@@ -127,10 +116,31 @@ export interface IEntityComponentObjects {
   [name: string]: IComponentObject;
 }
 
+// Illegal properties without key or type or constructor
+export interface MostIllegalProperties {
+  // constructor?: never;
+  init?: never;
+  // type?: never;
+  // key?: never;
+  destroy?: never;
+  preDestroy?: never;
+  postDestroy?: never;
+  getObject?: never;
+  _setup?: never;
+  _reset?: never;
+  update?: never;
+  clone?: never;
+  _meta?: never;
+  _addRef?: never;
+  _deleteRef?: never;
+  prototyp?: never;
+}
+
 // passed to entity.addComponent()
-export interface IComponentConfig {
+export interface IComponentConfig extends MostIllegalProperties {
   type: string;
   key?: string;
+  [others: string]: any;
 }
 
 
@@ -160,10 +170,10 @@ export declare class Entity {
     // _setup(definition: any): void;
     has(type: string): boolean;
     getOne(type: string): Component | undefined;
-    getComponents(type: any): Set<Component>;
+    getComponents(type: string): Set<Component>;
     addTag(tag: string, skipUpdate?: boolean): void;
     removeTag(tag: string): void;
-    addComponent(properties: IComponentConfig): any;
+    addComponent(properties: IComponentConfig): Component;
     removeComponent(component: Component|string): boolean;
     getObject(componentIds?: boolean): IEntityObject;
     destroy(): void;
@@ -177,14 +187,13 @@ export interface IWorldConfig {
 // passed to world.createEntity()
 export interface IEntityConfig {
   id?: string;
-  components?: IComponentConfig[];
+  components?: (IComponentConfig)[];
 }
 
 
 
 export declare class World {
     constructor(config: IWorldConfig);
-    // config: any;
     currentTick: number;
     entities: Map<string, Entity>;
     tags: Set<string>;
@@ -197,24 +206,25 @@ export declare class World {
     systems: Map<string, System>;
     tick(): number;
     registerTags(...tags: string[]): void;
+
+    // Both options allow the passing of a class that extends Component 
     registerComponent<T extends typeof Component>(klass: T, spinup?: number): void;
     // registerComponent(klass: typeof Component, spinup?: number): void;
-    createEntity(definition: IEntityConfig): any;
-    getObject(): any[];
-    createEntities(definition: any): void;
-    copyTypes(world: any, types: any): void;
-    removeEntity(id: any): void;
-    getEntity(entityId: any): any;
-    getEntities(type: any): Set<any>;
-    getComponent(id: any): any;
-    createQuery(init: IQueryConfig): any;
-    _sendChange(operation: any): void;
-    registerSystem(group: any, system: any): any;
-    runSystems(group: any): void;
-    _entityUpdated(entity: any): void;
-    _addEntityComponent(name: any, entity: any): void;
-    _deleteEntityComponent(component: any): void;
-    updateIndexes(entity: any): void;
-    _updateIndexesEntity(entity: any): void;
+
+    createEntity(definition: IEntityConfig): Entity;
+    getObject(): IEntityObject[];
+    createEntities(definition: IEntityConfig[]): void;
+    copyTypes(world: World, types: string[]): void;
+    removeEntity(id: Entity|string): void;
+    getEntity(entityId: string): any;
+    getEntities(type: string): Set<Entity>;
+    getComponent(id: string): Component;
+    createQuery(init: IQueryConfig): Query;
+
+    // Allows passing of a class that extends System, or an instance of such a class
+    registerSystem<T extends typeof System>(group: string, system: T|System): any;
+
+    runSystems(group: string): void;
+    updateIndexes(entity?: Entity): void;
 }
  
