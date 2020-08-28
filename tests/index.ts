@@ -5,9 +5,11 @@ import {
   System,
   World,
   Component,
+  Entity,
   EntityRef,
   EntitySet,
   EntityObject,
+  Query,
 } from '../src';
 
 const ECS = {
@@ -407,346 +409,349 @@ describe('express components', () => {
   });
 });
 
-// describe('system queries', () => {
+describe('system queries', () => {
 
-//   const ecs = new ECS.World();
+  const ecs = new ECS.World();
 
-//   it('add and remove forbidden component', () => {
+  it('add and remove forbidden component', () => {
 
-//     class Tile extends ECS.Component {
-//       static properties = {
-//         x: 0,
-//         y: 0,
-//         level: 0
-//       };
-//     }
+    class Tile extends ECS.Component {
+      static properties = {
+        x: 0,
+        y: 0,
+        level: 0
+      };
+    }
 
-//     class Hidden extends ECS.Component {}
+    class Hidden extends ECS.Component {}
 
-//     ecs.registerComponent(Tile);
-//     ecs.registerComponent(Hidden);
+    ecs.registerComponent(Tile);
+    ecs.registerComponent(Hidden);
 
-//     class TileSystem extends ECS.System {
+    class TileSystem extends ECS.System {
 
-//       init() {
+      lastResults: Set<Entity>;
+      query: Query;
 
-//         this.lastResults = [];
-//         this.query = this.world.createQuery({
-//           all: ['Tile'],
-//           not: ['Hidden'],
-//           persist: true });
-//       }
+      init() {
 
-//       update(tick) {
+        this.lastResults = new Set();
+        this.query = this.world.createQuery({
+          all: ['Tile'],
+          not: ['Hidden'],
+          persist: true });
+      }
 
-//         this.lastResults = this.query.execute();
-//       }
-//     }
+      update(tick) {
 
-//     const tileSystem = new TileSystem(ecs);
-//     ecs.registerSystem('map', tileSystem);
-
-//     ecs.runSystems('map');
+        this.lastResults = this.query.execute();
+      }
+    }
 
-//     expect(tileSystem.lastResults.size).to.equal(0);
+    const tileSystem = new TileSystem(ecs);
+    ecs.registerSystem('map', tileSystem);
+
+    ecs.runSystems('map');
 
-//     const tile1 = ecs.createEntity({
-//       c: {
-//         Tile: {
-//           x: 10,
-//           y: 0,
-//           level: 0
-//         }
-//       }
-//     });
+    expect(tileSystem.lastResults.size).to.equal(0);
 
-//     const tile2 = ecs.createEntity({
-//       c: {
-//         Tile: {
-//           x: 11,
-//           y: 0,
-//           level: 0
-//         },
-//         Hidden: {}
-//       }
-//     });
+    const tile1 = ecs.createEntity({
+      c: {
+        Tile: {
+          x: 10,
+          y: 0,
+          level: 0
+        }
+      }
+    });
 
-//     ecs.tick()
-
-//     ecs.runSystems('map');
+    const tile2 = ecs.createEntity({
+      c: {
+        Tile: {
+          x: 11,
+          y: 0,
+          level: 0
+        },
+        Hidden: {}
+      }
+    });
 
-//     expect(tileSystem.lastResults.size).to.equal(1);
-//     expect(tileSystem.lastResults.has(tile1)).to.be.true;
-
-//     tile2.removeComponent(tile2.c.Hidden);
-//     ecs.tick();
-
-//     ecs.runSystems('map');
-
-//     expect(tileSystem.lastResults.size).to.equal(2);
-//     expect(tileSystem.lastResults.has(tile1)).to.be.true;
-//     expect(tileSystem.lastResults.has(tile1)).to.be.true;
-
-//     tile1.addComponent({ type: 'Hidden' });
-//     ecs.updateIndexes(tile1);
-
-//     ecs.runSystems('map');
-
-//     expect(tileSystem.lastResults.size).to.equal(1);
-//     expect(tileSystem.lastResults.has(tile2)).to.be.true;
-
-
-//   });
-
-//   it('multiple has and hasnt', () => {
-
-//     class Billboard extends ECS.Component {};
-//     class Sprite extends ECS.Component {};
-//     ecs.registerComponent(Billboard);
-//     ecs.registerComponent(Sprite);
-
-//     const tile1 = ecs.createEntity({
-//       c: {
-//         Tile: {},
-//         Billboard: {},
-//         Sprite: {},
-//         Hidden: {}
-//       }
-//     });
-
-//     const tile2 = ecs.createEntity({
-//       c: {
-//         Tile: {},
-//         Billboard: {},
-//       }
-//     });
-
-//     const tile3 = ecs.createEntity({
-//       c: {
-//         Tile: {},
-//         Billboard: {},
-//         Sprite: {}
-//       }
-//     });
-
-//     const tile4 = ecs.createEntity({
-//       c: {
-//         Tile: {},
-//       }
-//     });
-
-//     const tile5 = ecs.createEntity({
-//       c: {
-//         Billboard: {},
-//       }
-//     });
-
-//     const result = ecs.createQuery()
-//       .fromAll('Tile', 'Billboard')
-//       .not('Sprite', 'Hidden')
-//       .execute();
-
-//     const resultSet = new Set([...result]);
-
-//     expect(resultSet.has(tile1)).to.be.false;
-//     expect(resultSet.has(tile2)).to.be.true;
-//     expect(resultSet.has(tile3)).to.be.false;
-//     expect(resultSet.has(tile4)).to.be.false;
-//     expect(resultSet.has(tile5)).to.be.false;
-
-//   });
-
-//   it('tags', () => {
-
-//     const ecs = new ECS.World();
-//     class Tile extends ECS.Component {};
-//     class Sprite extends ECS.Component {};
-
-//     ecs.registerComponent(Tile);
-//     ecs.registerComponent(Sprite);
-//     ecs.registerTags('Billboard', 'Hidden');
-
-//     const tile1 = ecs.createEntity({
-//       tags: ['Billboard', 'Hidden'],
-//       c: {
-//         Tile: {}
-//       }
-//     });
-
-//     const tile2 = ecs.createEntity({
-//       tags: ['Billboard'],
-//       c: {
-//         Tile: {}
-//       }
-//     });
-
-//     const tile3 = ecs.createEntity({
-//       tags: ['Billboard'],
-//       c: {
-//         Sprite: {}
-//       }
-//     });
-
-//     const tile4 = ecs.createEntity({
-//       c: {
-//         Tile: {},
-//       }
-//     });
-
-//     const tile5 = ecs.createEntity({
-//       tags: ['Billboard']
-//     });
-
-//     const q1 = ecs.createQuery({
-//       all: ['Tile', 'Billboard'],
-//       not: ['Sprite', 'Hidden'],
-//     }).persist();
-//     const result = q1.execute();
-
-//     const resultSet = new Set([...result]);
-
-//     expect(resultSet.has(tile1)).to.be.false;
-//     expect(resultSet.has(tile2)).to.be.true;
-//     expect(tile2.has('Sprite')).to.be.false;
-//     expect(resultSet.has(tile3)).to.be.false;
-//     expect(resultSet.has(tile4)).to.be.false;
-//     expect(resultSet.has(tile5)).to.be.false;
-
-//     const result3 = ecs.getEntities('Hidden');
-
-//     expect(result3.has(tile1)).to.be.true;
-//     expect(result3.has(tile2)).to.be.false;
-//     expect(result3.has(tile3)).to.be.false;
-//     expect(result3.has(tile4)).to.be.false;
-//     expect(result3.has(tile5)).to.be.false;
-
-//     tile4.addTag('Billboard');
-//     tile2.removeTag('Hidden');
-//     tile1.removeTag('Hidden');
-//     tile3.addComponent({ type: 'Tile' });
-//     tile3.addTag('Hidden');
-//     tile1.removeTag('Billboard');
-//     tile4.addTag('Hidden');
-
-//     const result2 = q1.results;
-
-//     expect(tile4.has('Billboard')).to.be.true;
-//     expect(tile3.has('Tile')).to.be.true;
-//     expect(result2.has(tile1)).to.be.false;
-//     expect(result2.has(tile2)).to.be.true;
-//     expect(result2.has(tile3)).to.be.false;
-//     expect(result2.has(tile4)).to.be.false;
-//     expect(result2.has(tile5)).to.be.false;
-
-//   });
-
-//   it('filter by updatedValues', () => {
-
-//     const ecs = new ECS.World();
-//     class Comp1 extends ECS.Component {
-//       static properties = {
-//         greeting: 'hi'
-//       };
-//     }
-//     ecs.registerComponent(Comp1);
-
-//     ecs.tick();
-
-//     const entity1 = ecs.createEntity({
-//       c: {
-//         Comp1: {}
-//       }
-//     });
-
-//     const entity2 = ecs.createEntity({
-//       c: {
-//         Comp1: {
-//           greeting: 'hullo'
-//         }
-//       }
-//     });
-
-//     ecs.tick();
-//     const ticks = ecs.currentTick;
-//     const testQ = ecs.createQuery().fromAll('Comp1').persist();
-//     const results1 = testQ.execute();
-//     expect(results1.has(entity1)).to.be.true;
-//     expect(results1.has(entity2)).to.be.true;
-//   });
-
-//   it('filter by updatedComponents', () => {
-
-//     const ecs = new ECS.World();
-//     class Comp1 extends ECS.Component {
-//       static properties = {
-//         greeting: 'hi'
-//       };
-//     }
-//     class Comp2 extends ECS.Component {}
-//     ecs.registerComponent(Comp1);
-//     ecs.registerComponent(Comp2);
-
-//     ecs.tick();
-
-//     const entity1 = ecs.createEntity({
-//       c: {
-//         Comp1: {}
-//       }
-//     });
-
-//     const entity2 = ecs.createEntity({
-//       c: {
-//         Comp1: {
-//           greeting: 'hullo'
-//         }
-//       }
-//     });
-
-//     ecs.tick();
-//     const ticks = ecs.currentTick;
-//     const testQ = ecs.createQuery().fromAll('Comp1').persist(true, true);
-//     const results1 = testQ.execute();
-//     expect(testQ.trackAdded).to.be.true;
-//     expect(testQ.trackRemoved).to.be.true;
-//     expect(results1.has(entity1)).to.be.true;
-//     expect(results1.has(entity2)).to.be.true;
-
-//     const comp1 = entity1.c.Comp1;
-//     comp1.greeting = 'Gutten Tag';
-//     comp1.update();
-//     entity2.addComponent({ type: 'Comp2' });
-
-//     const results2 = testQ.execute({ updatedComponents: ticks });
-//     expect(results2.has(entity1)).to.be.false;
-//     expect(results2.has(entity2)).to.be.true;
-
-//   });
-
-//   it('destroyed entity should be cleared', () => {
-
-//     const ecs = new ECS.World();
-//     class Comp1 extends ECS.Component {}
-//     ecs.registerComponent(Comp1);
-
-//     const entity1 = ecs.createEntity({
-//       c: {
-//         Comp1: {}
-//       }
-//     });
-
-//     const query = ecs.createQuery().fromAll('Comp1').persist();
-//     const results1 = query.execute();
-//     expect(results1.has(entity1)).to.be.true;
-
-//     entity1.destroy();
-
-//     ecs.tick();
-
-//     const results2 = query.execute();
-//     expect(results2.has(entity1)).to.be.false;
-
-//   });
-// });
+    ecs.tick()
+
+    ecs.runSystems('map');
+
+    expect(tileSystem.lastResults.size).to.equal(1);
+    expect(tileSystem.lastResults.has(tile1)).to.be.true;
+
+    tile2.removeComponent(tile2.c.Hidden);
+    ecs.tick();
+
+    ecs.runSystems('map');
+
+    expect(tileSystem.lastResults.size).to.equal(2);
+    expect(tileSystem.lastResults.has(tile1)).to.be.true;
+    expect(tileSystem.lastResults.has(tile1)).to.be.true;
+
+    tile1.addComponent({ type: 'Hidden' });
+    ecs.updateIndexes(tile1);
+
+    ecs.runSystems('map');
+
+    expect(tileSystem.lastResults.size).to.equal(1);
+    expect(tileSystem.lastResults.has(tile2)).to.be.true;
+
+
+  });
+
+  it('multiple has and hasnt', () => {
+
+    class Billboard extends ECS.Component {};
+    class Sprite extends ECS.Component {};
+    ecs.registerComponent(Billboard);
+    ecs.registerComponent(Sprite);
+
+    const tile1 = ecs.createEntity({
+      c: {
+        Tile: {},
+        Billboard: {},
+        Sprite: {},
+        Hidden: {}
+      }
+    });
+
+    const tile2 = ecs.createEntity({
+      c: {
+        Tile: {},
+        Billboard: {},
+      }
+    });
+
+    const tile3 = ecs.createEntity({
+      c: {
+        Tile: {},
+        Billboard: {},
+        Sprite: {}
+      }
+    });
+
+    const tile4 = ecs.createEntity({
+      c: {
+        Tile: {},
+      }
+    });
+
+    const tile5 = ecs.createEntity({
+      c: {
+        Billboard: {},
+      }
+    });
+
+    const result = ecs.createQuery()
+      .fromAll('Tile', 'Billboard')
+      .not('Sprite', 'Hidden')
+      .execute();
+
+    const resultSet = new Set([...result]);
+
+    expect(resultSet.has(tile1)).to.be.false;
+    expect(resultSet.has(tile2)).to.be.true;
+    expect(resultSet.has(tile3)).to.be.false;
+    expect(resultSet.has(tile4)).to.be.false;
+    expect(resultSet.has(tile5)).to.be.false;
+
+  });
+
+  it('tags', () => {
+
+    const ecs = new ECS.World();
+    class Tile extends ECS.Component {};
+    class Sprite extends ECS.Component {};
+
+    ecs.registerComponent(Tile);
+    ecs.registerComponent(Sprite);
+    ecs.registerTags('Billboard', 'Hidden');
+
+    const tile1 = ecs.createEntity({
+      tags: ['Billboard', 'Hidden'],
+      c: {
+        Tile: {}
+      }
+    });
+
+    const tile2 = ecs.createEntity({
+      tags: ['Billboard'],
+      c: {
+        Tile: {}
+      }
+    });
+
+    const tile3 = ecs.createEntity({
+      tags: ['Billboard'],
+      c: {
+        Sprite: {}
+      }
+    });
+
+    const tile4 = ecs.createEntity({
+      c: {
+        Tile: {},
+      }
+    });
+
+    const tile5 = ecs.createEntity({
+      tags: ['Billboard']
+    });
+
+    const q1 = ecs.createQuery({
+      all: ['Tile', 'Billboard'],
+      not: ['Sprite', 'Hidden'],
+    }).persist();
+    const result = q1.execute();
+
+    const resultSet = new Set([...result]);
+
+    expect(resultSet.has(tile1)).to.be.false;
+    expect(resultSet.has(tile2)).to.be.true;
+    expect(tile2.has('Sprite')).to.be.false;
+    expect(resultSet.has(tile3)).to.be.false;
+    expect(resultSet.has(tile4)).to.be.false;
+    expect(resultSet.has(tile5)).to.be.false;
+
+    const result3 = ecs.getEntities('Hidden');
+
+    expect(result3.has(tile1)).to.be.true;
+    expect(result3.has(tile2)).to.be.false;
+    expect(result3.has(tile3)).to.be.false;
+    expect(result3.has(tile4)).to.be.false;
+    expect(result3.has(tile5)).to.be.false;
+
+    tile4.addTag('Billboard');
+    tile2.removeTag('Hidden');
+    tile1.removeTag('Hidden');
+    tile3.addComponent({ type: 'Tile' });
+    tile3.addTag('Hidden');
+    tile1.removeTag('Billboard');
+    tile4.addTag('Hidden');
+
+    const result2 = q1.results;
+
+    expect(tile4.has('Billboard')).to.be.true;
+    expect(tile3.has('Tile')).to.be.true;
+    expect(result2.has(tile1)).to.be.false;
+    expect(result2.has(tile2)).to.be.true;
+    expect(result2.has(tile3)).to.be.false;
+    expect(result2.has(tile4)).to.be.false;
+    expect(result2.has(tile5)).to.be.false;
+
+  });
+
+  it('filter by updatedValues', () => {
+
+    const ecs = new ECS.World();
+    class Comp1 extends ECS.Component {
+      static properties = {
+        greeting: 'hi'
+      };
+    }
+    ecs.registerComponent(Comp1);
+
+    ecs.tick();
+
+    const entity1 = ecs.createEntity({
+      c: {
+        Comp1: {}
+      }
+    });
+
+    const entity2 = ecs.createEntity({
+      c: {
+        Comp1: {
+          greeting: 'hullo'
+        }
+      }
+    });
+
+    ecs.tick();
+    const ticks = ecs.currentTick;
+    const testQ = ecs.createQuery().fromAll('Comp1').persist();
+    const results1 = testQ.execute();
+    expect(results1.has(entity1)).to.be.true;
+    expect(results1.has(entity2)).to.be.true;
+  });
+
+  it('filter by updatedComponents', () => {
+
+    const ecs = new ECS.World();
+    class Comp1 extends ECS.Component {
+      static properties = {
+        greeting: 'hi'
+      };
+    }
+    class Comp2 extends ECS.Component {}
+    ecs.registerComponent(Comp1);
+    ecs.registerComponent(Comp2);
+
+    ecs.tick();
+
+    const entity1 = ecs.createEntity({
+      c: {
+        Comp1: {}
+      }
+    });
+
+    const entity2 = ecs.createEntity({
+      c: {
+        Comp1: {
+          greeting: 'hullo'
+        }
+      }
+    });
+
+    ecs.tick();
+    const ticks = ecs.currentTick;
+    const testQ = ecs.createQuery().fromAll('Comp1').persist(true, true);
+    const results1 = testQ.execute();
+    expect(testQ.trackAdded).to.be.true;
+    expect(testQ.trackRemoved).to.be.true;
+    expect(results1.has(entity1)).to.be.true;
+    expect(results1.has(entity2)).to.be.true;
+
+    const comp1 = entity1.c.Comp1;
+    comp1.greeting = 'Gutten Tag';
+    comp1.update();
+    entity2.addComponent({ type: 'Comp2' });
+
+    const results2 = testQ.execute({ updatedComponents: ticks });
+    expect(results2.has(entity1)).to.be.false;
+    expect(results2.has(entity2)).to.be.true;
+
+  });
+
+  it('destroyed entity should be cleared', () => {
+
+    const ecs = new ECS.World();
+    class Comp1 extends ECS.Component {}
+    ecs.registerComponent(Comp1);
+
+    const entity1 = ecs.createEntity({
+      c: {
+        Comp1: {}
+      }
+    });
+
+    const query = ecs.createQuery().fromAll('Comp1').persist();
+    const results1 = query.execute();
+    expect(results1.has(entity1)).to.be.true;
+
+    entity1.destroy();
+
+    ecs.tick();
+
+    const results2 = query.execute();
+    expect(results2.has(entity1)).to.be.false;
+
+  });
+});
 
 
 // describe('entity & component refs', () => {

@@ -77,7 +77,7 @@ export declare class Query {
   fromAll(...types: string[]): Query;
   fromAny(...types: string[]): Query;
   not(...types: string[]): Query;
-  persist(trackAdded: boolean, trackRemoved: boolean): Query;
+  persist(trackAdded?: boolean, trackRemoved?: boolean): Query;
   execute(filter?: IQueryExecuteConfig): Set<Entity>;
 }
 
@@ -100,7 +100,7 @@ export declare class Component {
   getObject(withIds?: boolean): IComponentObject;
   entity: Entity;
   id: string;
-  update(values: IComponentUpdate): void;
+  update(values?: IComponentUpdate): void;
   [name: string]: any;
 }
 
