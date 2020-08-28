@@ -243,7 +243,7 @@ export declare class World {
 
   createEntity(definition: IEntityConfig|IEntityObject): Entity;
   getObject(): IEntityObject[];
-  createEntities(definition: IEntityConfig[]): void;
+  createEntities(definition: IEntityConfig[]|IEntityObject[]): void;
   copyTypes(world: World, types: string[]): void;
   removeEntity(id: Entity|string): void;
   getEntity(entityId: string): any;

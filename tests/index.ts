@@ -1555,71 +1555,71 @@ describe('advanced queries', () => {
   });
 });
 
-// describe('serialize and deserialize', () => {
+describe('serialize and deserialize', () => {
 
-//   it('maintain refs across worlds', () => {
+  it('maintain refs across worlds', () => {
 
-//     const worldA = new ECS.World();
+    const worldA = new ECS.World();
 
-//     class Inventory extends ECS.Component {
-//       static properties = {
-//         main: EntitySet
-//       };
-//     }
-//     worldA.registerComponent(Inventory);
+    class Inventory extends ECS.Component {
+      static properties = {
+        main: EntitySet
+      };
+    }
+    worldA.registerComponent(Inventory);
 
-//     worldA.registerTags('Bottle', 'Item', 'NPC');
+    worldA.registerTags('Bottle', 'Item', 'NPC');
 
-//     const npc = worldA.createEntity({
-//       id: 'npc1',
-//       tags: ['NPC'],
-//       c: {
-//         Inventory: {}
-//       }
-//     });
+    const npc = worldA.createEntity({
+      id: 'npc1',
+      tags: ['NPC'],
+      c: {
+        Inventory: {}
+      }
+    });
 
-//     const bottle = worldA.createEntity({
-//       tags: ['Item', 'Bottle']
-//     });
+    const bottle = worldA.createEntity({
+      tags: ['Item', 'Bottle']
+    });
 
-//     npc.c.Inventory.main.add(bottle);
+    npc.c.Inventory.main.add(bottle);
 
-//     const entities1 = worldA.getObject();
+    const entities1 = worldA.getObject();
 
-//     const worldB = new ECS.World();
+    const worldB = new ECS.World();
 
-//     class Inventory2 extends ECS.Component {
-//       static properties = {
-//         main: EntitySet
-//       };
-//     }
-//     Object.defineProperty(Inventory2, 'name', { value: 'Inventory' });
-//     worldB.registerComponent(Inventory2);
+    class Inventory2 extends ECS.Component {
+      static properties = {
+        main: EntitySet
+      };
+    }
+    Object.defineProperty(Inventory2, 'name', { value: 'Inventory' });
+    worldB.registerComponent(Inventory2);
 
-//     worldB.registerTags('Bottle', 'Item', 'NPC');
+    worldB.registerTags('Bottle', 'Item', 'NPC');
 
-//     worldB.createEntities(entities1);
+    worldB.createEntities(entities1);
 
-//     const q1 = worldB.createQuery().fromAll('NPC');
-//     const r1 = [...q1.execute()];
-//     const npc2 = r1[0]
-//     const bottle2 = [...npc2.c.Inventory.main][0];
+    const q1 = worldB.createQuery().fromAll('NPC');
+    const r1 = [...q1.execute()];
+    const npc2 = r1[0]
+    const bottle2 = [...npc2.c.Inventory.main][0];
 
-//     expect(npc.id).to.equal(npc2.id);
-//     expect(bottle.id).to.equal(bottle2.id);
-//     expect(bottle2.tags.size).to.equal(2);
+    expect(npc.id).to.equal(npc2.id);
+    expect(bottle.id).to.equal(bottle2.id);
+    expect(bottle2.tags.size).to.equal(2);
 
-//     const worldC = new ECS.World();
+    const worldC = new ECS.World();
 
-//     worldC.copyTypes(worldA, ['Inventory', 'Bottle', 'Item', 'NPC']);
+    worldC.copyTypes(worldA, ['Inventory', 'Bottle', 'Item', 'NPC']);
 
-//     worldC.createEntities(entities1.reverse());
+    worldC.createEntities(entities1.reverse());
 
-//     const npc3 = worldC.entities.get('npc1');
-//     const bottle3 = [...npc3.c.Inventory.main][0];
+    const npc3 = worldC.entities.get('npc1');
+    const bottle3 = [...npc3.c.Inventory.main][0];
 
-//     expect(npc.id).to.equal(npc3.id);
-//     expect(bottle.id).to.equal(bottle3.id);
-//     expect(bottle3.tags.size).to.equal(2);
-//   });
-// });
+    expect(npc.id).to.equal(npc3.id);
+    expect(bottle.id).to.equal(bottle3.id);
+    expect(bottle3.tags.size).to.equal(2);
+  });
+});
