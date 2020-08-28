@@ -227,3 +227,12 @@ export declare class World {
   runSystems(group: string): void;
   updateIndexes(entity?: Entity): void;
 }
+
+declare class EntitySet extends Set<any> {
+  constructor(component: Component, object: any, field: string);
+  component: Component;
+  field: string;
+  sub: string;
+  dvalue: any;
+  getValue(): string[];
+}
