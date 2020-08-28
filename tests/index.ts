@@ -754,173 +754,176 @@ describe('system queries', () => {
 });
 
 
-// describe('entity & component refs', () => {
+describe('entity & component refs', () => {
 
-//   const ecs = new ECS.World();
+  const ecs = new ECS.World();
 
-//   class BeltSlots extends ECS.Component {
-//     static properties = {
-//       slots: EntityObject,
-//     };
-//   }
-//   class Potion extends ECS.Component {}
+  class BeltSlots extends ECS.Component {
+    static properties = {
+      slots: EntityObject,
+    };
+  }
+  class Potion extends ECS.Component {}
 
-//   ecs.registerComponent(BeltSlots);
-//   ecs.registerComponent(Potion);
+  ecs.registerComponent(BeltSlots);
+  ecs.registerComponent(Potion);
 
-//   it('Entity Object', () => {
+  it('Entity Object', () => {
 
-//     const belt = ecs.createEntity({
-//       c: {
-//         BeltSlots: {}
-//       }
-//     });
+    const belt = ecs.createEntity({
+      c: {
+        BeltSlots: {}
+      }
+    });
 
-//     const slots = ['a', 'b', 'c'];
-//     const potions = [];
-//     const beltslots = belt.c.BeltSlots;
-//     for (const slot of slots) {
-//       const potion = ecs.createEntity({
-//         c: {
-//           Potion: {}
-//         }
-//       });
-//       beltslots.slots[slot] =  potion;
-//       potions.push(potion);
-//     }
+    const slots = ['a', 'b', 'c'];
+    const potions = [];
+    const beltslots = belt.c.BeltSlots;
+    for (const slot of slots) {
+      const potion = ecs.createEntity({
+        c: {
+          Potion: {}
+        }
+      });
+      beltslots.slots[slot] =  potion;
+      potions.push(potion);
+    }
 
-//     const potionf = ecs.createEntity({
-//       c: {
-//         Potion: {}
-//       }
-//     });
+    const potionf = ecs.createEntity({
+      c: {
+        Potion: {}
+      }
+    });
 
-//     //expect(beltslots.slots[Symbol.iterator]).to.not.exist;
+    //expect(beltslots.slots[Symbol.iterator]).to.not.exist;
 
-//     expect(beltslots.slots.a).to.equal(potions[0]);
-//     expect(beltslots.slots.b).to.equal(potions[1]);
-//     expect(beltslots.slots.c).to.equal(potions[2]);
+    expect(beltslots.slots.a).to.equal(potions[0]);
+    expect(beltslots.slots.b).to.equal(potions[1]);
+    expect(beltslots.slots.c).to.equal(potions[2]);
 
-//     potions[1].destroy();
-//     expect(beltslots.slots.b).to.not.exist;
+    potions[1].destroy();
+    expect(beltslots.slots.b).to.not.exist;
 
-//     delete beltslots.slots.c;
-//     expect(beltslots.slots.c).to.not.exist;
+    delete beltslots.slots.c;
+    expect(beltslots.slots.c).to.not.exist;
 
-//     //assign again
-//     beltslots.slots['a'] = potions[0];
+    //assign again
+    beltslots.slots['a'] = potions[0];
 
-//     //assign by id
-//     beltslots.slots.a = potionf.id;
-//     expect(beltslots.slots.a).to.equal(potionf);
+    //assign by id
+    beltslots.slots.a = potionf.id;
+    expect(beltslots.slots.a).to.equal(potionf);
 
-//     delete beltslots.slots.d;
-//   });
+    // Calling delete on a EntityObject component that does
+    // not exist should return false
+    // when in strict mode, this will throw an exception
+    expect(()=>{delete beltslots.slots.d}).to.throw(TypeError);
+  });
 
-//   it('Entity Set', () => {
+  it('Entity Set', () => {
 
-//     class BeltSlots2 extends ECS.Component {
-//       static properties = {
-//         slots: EntitySet,
-//       };
-//     }
-//     ecs.registerComponent(BeltSlots2);
+    class BeltSlots2 extends ECS.Component {
+      static properties = {
+        slots: EntitySet,
+      };
+    }
+    ecs.registerComponent(BeltSlots2);
 
-//     const belt = ecs.createEntity({
-//       c: {
-//         BeltSlots2: {}
-//       }
-//     });
+    const belt = ecs.createEntity({
+      c: {
+        BeltSlots2: {}
+      }
+    });
 
-//     const slots = ['a', 'b', 'c'];
-//     const potions = [];
-//     const beltSlots2 = belt.c.BeltSlots2;
-//     for (const slot of slots) {
-//       const potion = ecs.createEntity({
-//         c: {
-//           Potion: {}
-//         }
-//       });
-//       beltSlots2.slots.add(potion);
-//       potions.push(potion);
-//     }
+    const slots = ['a', 'b', 'c'];
+    const potions = [];
+    const beltSlots2 = belt.c.BeltSlots2;
+    for (const slot of slots) {
+      const potion = ecs.createEntity({
+        c: {
+          Potion: {}
+        }
+      });
+      beltSlots2.slots.add(potion);
+      potions.push(potion);
+    }
 
-//     expect(beltSlots2.slots[Symbol.iterator]).to.exist;
+    expect(beltSlots2.slots[Symbol.iterator]).to.exist;
 
-//     expect(beltSlots2.slots).instanceof(Set);
-//     expect(beltSlots2.slots.has(potions[0])).to.be.true;
-//     expect(beltSlots2.slots.has(potions[1])).to.be.true;
-//     expect(beltSlots2.slots.has(potions[2])).to.be.true;
+    expect(beltSlots2.slots).instanceof(Set);
+    expect(beltSlots2.slots.has(potions[0])).to.be.true;
+    expect(beltSlots2.slots.has(potions[1])).to.be.true;
+    expect(beltSlots2.slots.has(potions[2])).to.be.true;
 
-//     const withValues = ecs.createEntity({
-//       c: {
-//         BeltSlots: { slots: { a: potions[0].id, b: potions[2], d: null }}
-//       }
-//     });
+    const withValues = ecs.createEntity({
+      c: {
+        BeltSlots: { slots: { a: potions[0].id, b: potions[2], d: null }}
+      }
+    });
 
-//     expect(withValues.c.BeltSlots.slots.a).to.equal(potions[0]);
-//     expect(withValues.c.BeltSlots.slots.b).to.equal(potions[2]);
+    expect(withValues.c.BeltSlots.slots.a).to.equal(potions[0]);
+    expect(withValues.c.BeltSlots.slots.b).to.equal(potions[2]);
 
-//     withValues.c.BeltSlots.slots.c = potions[1].id;
-//     expect(withValues.c.BeltSlots.slots.c).to.equal(potions[1]);
+    withValues.c.BeltSlots.slots.c = potions[1].id;
+    expect(withValues.c.BeltSlots.slots.c).to.equal(potions[1]);
 
-//     withValues.c.BeltSlots.slots.c = null;
-//     expect(withValues.c.BeltSlots.slots.c).to.equal(undefined);
-//     withValues.c.BeltSlots.slots.c = potions[1];
-//     expect(withValues.c.BeltSlots.slots.c).to.equal(potions[1]);
+    withValues.c.BeltSlots.slots.c = null;
+    expect(withValues.c.BeltSlots.slots.c).to.equal(undefined);
+    withValues.c.BeltSlots.slots.c = potions[1];
+    expect(withValues.c.BeltSlots.slots.c).to.equal(potions[1]);
 
 
-//   });
+  });
 
-//   class Crying extends ECS.Component {}
-//   class Angry extends ECS.Component {}
-//   ecs.registerComponent(Crying);
-//   ecs.registerComponent(Angry);
+  class Crying extends ECS.Component {}
+  class Angry extends ECS.Component {}
+  ecs.registerComponent(Crying);
+  ecs.registerComponent(Angry);
 
-//   it('Assign entity ref by id', () => {
+  it('Assign entity ref by id', () => {
 
-//     class Ref extends ECS.Component {
-//       static properties = {
-//         other: EntityRef
-//       };
-//     }
-//     ecs.registerComponent(Ref);
+    class Ref extends ECS.Component {
+      static properties = {
+        other: EntityRef
+      };
+    }
+    ecs.registerComponent(Ref);
 
-//     const entity = ecs.createEntity({
-//       c: {
-//         Crying: {}
-//       }
-//     });
+    const entity = ecs.createEntity({
+      c: {
+        Crying: {}
+      }
+    });
 
-//     const entity2 = ecs.createEntity({
-//       c: {
-//         Ref: { other: entity.id }
-//       }
-//     });
+    const entity2 = ecs.createEntity({
+      c: {
+        Ref: { other: entity.id }
+      }
+    });
 
-//     expect(entity2.c.Ref.other).to.equal(entity);
-//   });
+    expect(entity2.c.Ref.other).to.equal(entity);
+  });
 
-//   it('Reassign same entity ref', () => {
+  it('Reassign same entity ref', () => {
 
-//     const entity = ecs.createEntity({
-//       c: {
-//         Crying: {}
-//       }
-//     });
+    const entity = ecs.createEntity({
+      c: {
+        Crying: {}
+      }
+    });
 
-//     const entity2 = ecs.createEntity({
-//       c: {
-//         Ref: { other: entity.id }
-//       }
-//     });
+    const entity2 = ecs.createEntity({
+      c: {
+        Ref: { other: entity.id }
+      }
+    });
 
-//     entity2.c.Ref.update({ other: entity });
+    entity2.c.Ref.update({ other: entity });
 
-//     expect(entity2.c.Ref.other).to.equal(entity);
-//   });
+    expect(entity2.c.Ref.other).to.equal(entity);
+  });
 
-// });
+});
 
 // describe('entity restore', () => {
 
