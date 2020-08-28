@@ -48,7 +48,14 @@ export interface IQueryExecuteConfig {
 
 // returned from component.getObject()
 export interface IComponentObject {
-  type: string;
+  id?: string;
+  entity?: string;
+  [others: string]: any;
+}
+
+// used when creating an entity with the .c option
+export interface IComponentConfigVal {
+  // type: string;
   id?: string;
   entity?: string;
   [others: string]: any;
@@ -92,6 +99,7 @@ export declare class Component {
   entity: Entity;
   id: string;
   update(values: IComponentUpdate): void;
+  [name: string]: any;
 }
 
 // an object that has strings as keys and strings as values
@@ -148,6 +156,12 @@ export interface IComponentConfig extends MostIllegalProperties {
   [others: string]: any;
 }
 
+// an object where keys are strings and val is a IComponentConfigVal
+export interface IComponentConfigValObject {
+  [name: string]: IComponentConfigVal;
+}
+
+
 
 // returned from entity.getObject()
 export interface IEntityObject {
@@ -192,13 +206,22 @@ export interface IWorldConfig {
 // passed to world.createEntity()
 export interface IEntityConfig {
   id?: string;
+  tags?: string[];
   components?: (IComponentConfig)[];
+  c?: IComponentConfigValObject;
 }
+
+// // alternate version (used heavily by tests)
+// export interface IEntityConfigAlt {
+//   id?: string;
+//   tags?: string[];
+// }
+
 
 
 
 export declare class World {
-  constructor(config: IWorldConfig);
+  constructor(config?: IWorldConfig);
   currentTick: number;
   entities: Map<string, Entity>;
   tags: Set<string>;
@@ -224,7 +247,7 @@ export declare class World {
   getEntity(entityId: string): any;
   getEntities(type: string): Set<Entity>;
   getComponent(id: string): Component;
-  createQuery(init: IQueryConfig): Query;
+  createQuery(init?: IQueryConfig): Query;
 
   // Allows passing of a class that extends System, or an instance of such a class
   registerSystem<T extends typeof System>(group: string, system: T|System): any;
