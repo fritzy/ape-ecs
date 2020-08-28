@@ -1,7 +1,5 @@
 const Util = require('./util');
-
 const idGen = new Util.IdGenerator();
-let tick = 0;
 
 class Component {
 
@@ -10,7 +8,7 @@ class Component {
   static serializeFields = null;
   static subbed = false;
 
-  constructor(entity, initial) {
+  constructor() {
 
     this._meta = {
       key: '',
@@ -20,8 +18,6 @@ class Component {
       ready: false,
       values: {}
     };
-    this._setup(entity, initial)
-    Object.freeze();
   }
 
   preInit(initial) {
@@ -91,7 +87,7 @@ class Component {
     }
     const fields = this.constructor.serializeFields || this.constructor.fields;
     for (const field of fields) {
-      if (this[field] !== undefined && typeof this[field].getValue === 'function') {
+      if (this[field] !== undefined && this[field] !== null && typeof this[field].getValue === 'function') {
         obj[field] = this[field].getValue();
       } else if (this._meta.values.hasOwnProperty(field)) {
         obj[field] = this._meta.values[field];
@@ -135,6 +131,7 @@ class Component {
       }
     }
     this._meta.ready = true;
+    Object.freeze();
     this.init(initial);
     this.world._sendChange({
       op: 'add',

@@ -102,10 +102,6 @@ class Query {
 
   update(entity) {
 
-    if (entity.destroyed) {
-      this._removeEntity(entity);
-      return;
-    }
     let inFrom = false;
     for (const source of this.query.froms) {
       if (source.from === 'all') {
@@ -157,6 +153,7 @@ class Query {
   }
 
   _removeEntity(entity) {
+
     if (this.results.has(entity) && this.trackRemoved) {
       this.removed.add(entity);
     }
