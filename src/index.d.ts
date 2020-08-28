@@ -193,37 +193,37 @@ export interface IEntityConfig {
 
 
 export declare class World {
-    constructor(config: IWorldConfig);
-    currentTick: number;
-    entities: Map<string, Entity>;
-    tags: Set<string>;
-    entitiesByComponent: IEntityByType;
-    componentsById: Map<string, Component>;
-    updatedEntities: Set<Entity>;
-    componentTypes: IEntityComponents;
-    queries: Query[];
-    subscriptions: Map<string, System>;
-    systems: Map<string, System>;
-    tick(): number;
-    registerTags(...tags: string[]): void;
+  constructor(config: IWorldConfig);
+  currentTick: number;
+  entities: Map<string, Entity>;
+  tags: Set<string>;
+  entitiesByComponent: IEntityByType;
+  componentsById: Map<string, Component>;
+  updatedEntities: Set<Entity>;
+  componentTypes: IEntityComponents;
+  queries: Query[];
+  subscriptions: Map<string, System>;
+  systems: Map<string, System>;
+  tick(): number;
+  registerTags(...tags: string[]): void;
 
-    // Both options allow the passing of a class that extends Component 
-    registerComponent<T extends typeof Component>(klass: T, spinup?: number): void;
-    // registerComponent(klass: typeof Component, spinup?: number): void;
+  // Both options allow the passing of a class that extends Component 
+  registerComponent<T extends typeof Component>(klass: T, spinup?: number): void;
+  // registerComponent(klass: typeof Component, spinup?: number): void;
 
-    createEntity(definition: IEntityConfig): Entity;
-    getObject(): IEntityObject[];
-    createEntities(definition: IEntityConfig[]): void;
-    copyTypes(world: World, types: string[]): void;
-    removeEntity(id: Entity|string): void;
-    getEntity(entityId: string): any;
-    getEntities(type: string): Set<Entity>;
-    getComponent(id: string): Component;
-    createQuery(init: IQueryConfig): Query;
+  createEntity(definition: IEntityConfig): Entity;
+  getObject(): IEntityObject[];
+  createEntities(definition: IEntityConfig[]): void;
+  copyTypes(world: World, types: string[]): void;
+  removeEntity(id: Entity|string): void;
+  getEntity(entityId: string): any;
+  getEntities(type: string): Set<Entity>;
+  getComponent(id: string): Component;
+  createQuery(init: IQueryConfig): Query;
 
-    // Allows passing of a class that extends System, or an instance of such a class
-    registerSystem<T extends typeof System>(group: string, system: T|System): any;
+  // Allows passing of a class that extends System, or an instance of such a class
+  registerSystem<T extends typeof System>(group: string, system: T|System): any;
 
-    runSystems(group: string): void;
-    updateIndexes(entity?: Entity): void;
+  runSystems(group: string): void;
+  updateIndexes(entity?: Entity): void;
 }
