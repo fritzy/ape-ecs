@@ -52,7 +52,7 @@ Each value is a `Set` of `Component` instances.
 
 ```js
 for (const ctype of Object.keys(entity.types)) { 
-  for (const component of entities.types[ctype]) {
+  for (const component of entity.types[ctype]) {
     console.log(`Type <${ctype}> Id: ${component.id}`);
   }
 }
