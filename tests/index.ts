@@ -12,7 +12,7 @@ import {
 
 const ECS = {
   World,
-  System,
+  System: System,
   Component,
 };
 
@@ -182,229 +182,229 @@ describe('express components', () => {
 
   });
 
-  // it('system subscriptions', () => {
+  it('system subscriptions', () => {
 
-  //   let changes = [];
-  //   let changes2 = [];
-  //   let effectExt = null;
-  //   /* $lab:coverage:off$ */
-  //   class System extends ECS.System {
+    let changes = [];
+    let changes2 = [];
+    let effectExt = null;
+    /* $lab:coverage:off$ */
+    class System extends ECS.System {
 
-  //     init() {
+      init() {
 
-  //       this.subscribe('EquipmentSlot');
-  //     }
+        this.subscribe('EquipmentSlot');
+      }
 
-  //     update(tick) {
+      update(tick) {
 
-  //       changes = this.changes;
-  //       for (const change of this.changes) {
-  //         const parent = this.world.getEntity(change.entity);
-  //         if (change.op === 'addRef') {
-  //           const value = this.world.getEntity(change.target);
-  //           if (value.has('Wearable')) {
-  //             const components = [];
-  //             for (const effectDef of value.c.Wearable.effects) {
-  //               const component = parent.addComponent(effectDef);
-  //               components.push(component);
-  //             }
-  //             if (components.length > 0) {
-  //               const effect = parent.addComponent({
-  //                 type: 'EquipmentEffect',
-  //                 equipment: value.id
-  //               });
-  //               for (const c of components) {
-  //                 effect.effects.push(c.id);
-  //                 effectExt = c;
-  //               }
-  //             }
-  //           }
-  //         } else if (change.op === 'deleteRef') {
-  //           for (const effect of parent.getComponents('EquipmentEffect')) {
-  //             if (effect.equipment === change.target) {
-  //               for (const compid of effect.effects) {
-  //                 const comp = this.world.getComponent(compid);
-  //                 parent.removeComponent(comp);
-  //               }
-  //               parent.removeComponent(effect);
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
+        changes = this.changes;
+        for (const change of this.changes) {
+          const parent = this.world.getEntity(change.entity);
+          if (change.op === 'addRef') {
+            const value = this.world.getEntity(change.target);
+            if (value.has('Wearable')) {
+              const components = [];
+              for (const effectDef of value.c.Wearable.effects) {
+                const component = parent.addComponent(effectDef);
+                components.push(component);
+              }
+              if (components.length > 0) {
+                const effect = parent.addComponent({
+                  type: 'EquipmentEffect',
+                  equipment: value.id
+                });
+                for (const c of components) {
+                  effect.effects.push(c.id);
+                  effectExt = c;
+                }
+              }
+            }
+          } else if (change.op === 'deleteRef') {
+            for (const effect of parent.getComponents('EquipmentEffect')) {
+              if (effect.equipment === change.target) {
+                for (const compid of effect.effects) {
+                  const comp = this.world.getComponent(compid);
+                  parent.removeComponent(comp);
+                }
+                parent.removeComponent(effect);
+              }
+            }
+          }
+        }
+      }
+    }
 
-  //   class System2 extends ECS.System {
+    class System2 extends ECS.System {
 
-  //     update(tick) {
+      update(tick) {
 
-  //       changes2 = this.changes;
-  //     }
-  //   }
-  //   System2.subscriptions = ['EquipmentSlot'];
-  //   /* $lab:coverage:on */
+        changes2 = this.changes;
+      }
+    }
+    System2.subscriptions = ['EquipmentSlot'];
+    /* $lab:coverage:on */
 
-  //   class EquipmentEffect extends ECS.Component {
-  //     static properties = {
-  //       equipment: '',
-  //       effects: []
-  //     };
-  //   }
+    class EquipmentEffect extends ECS.Component {
+      static properties = {
+        equipment: '',
+        effects: []
+      };
+    }
 
-  //   class Wearable extends ECS.Component {
-  //     static properties = {
-  //       name: 'ring',
-  //       effects: [
-  //         { type: 'Burning' }
-  //       ]
-  //     };
-  //   }
+    class Wearable extends ECS.Component {
+      static properties = {
+        name: 'ring',
+        effects: [
+          { type: 'Burning' }
+        ]
+      };
+    }
 
-  //   class Burning extends ECS.Component {};
+    class Burning extends ECS.Component {};
 
-  //   ecs.registerComponent(EquipmentEffect);
-  //   ecs.registerComponent(Wearable);
-  //   ecs.registerComponent(Burning);
+    ecs.registerComponent(EquipmentEffect);
+    ecs.registerComponent(Wearable);
+    ecs.registerComponent(Burning);
 
-  //   const system = new System(ecs);
-  //   //const system2 = new System2(ecs);
+    const system = new System(ecs);
+    //const system2 = new System2(ecs);
 
-  //   ecs.registerSystem('equipment', system);
-  //   ecs.registerSystem('equipment', System2);
+    ecs.registerSystem('equipment', system);
+    ecs.registerSystem('equipment', System2);
 
-  //   ecs.runSystems('equipment');
+    ecs.runSystems('equipment');
 
-  //   const entity = ecs.createEntity({
-  //     c: {
-  //       pockets: { type: 'Storage', size: 4 },
-  //       backpack: { type: 'Storage', size: 25 },
-  //       pants: { type: 'EquipmentSlot' },
-  //       shirt: { type: 'EquipmentSlot' },
-  //       Health: {
-  //         hp: 10,
-  //         max: 10
-  //       }
-  //     }
-  //   });
+    const entity = ecs.createEntity({
+      c: {
+        pockets: { type: 'Storage', size: 4 },
+        backpack: { type: 'Storage', size: 25 },
+        pants: { type: 'EquipmentSlot' },
+        shirt: { type: 'EquipmentSlot' },
+        Health: {
+          hp: 10,
+          max: 10
+        }
+      }
+    });
 
-  //   const pants = ecs.createEntity({
-  //     c: {
-  //       Wearable: { name: 'Nice Pants',
-  //         effects: [
-  //           { type: 'Burning' }
-  //         ]
-  //       }
-  //     }
-  //   });
+    const pants = ecs.createEntity({
+      c: {
+        Wearable: { name: 'Nice Pants',
+          effects: [
+            { type: 'Burning' }
+          ]
+        }
+      }
+    });
 
-  //   ecs.runSystems('equipment');
-  //   expect(changes.length).to.equal(2);
+    ecs.runSystems('equipment');
+    expect(changes.length).to.equal(2);
 
-  //   entity.c.pants.slot = pants;
+    entity.c.pants.slot = pants;
 
-  //   ecs.runSystems('equipment');
+    ecs.runSystems('equipment');
 
-  //   expect(entity.getComponents('EquipmentEffect')).to.not.be.empty;
-  //   const eEffects = new Set([...entity.getComponents('EquipmentEffect')][0].effects);
+    expect(entity.getComponents('EquipmentEffect')).to.not.be.empty;
+    const eEffects = new Set([...entity.getComponents('EquipmentEffect')][0].effects);
 
-  //   expect(eEffects.has(effectExt.id)).to.be.true;
-  //   expect(entity.getComponents('Burning')).to.not.be.empty;
-  //   expect(changes.length).to.equal(1);
-  //   expect(changes[0].op).to.equal('addRef');
-  //   expect(changes[0].target).to.equal(pants.id);
+    expect(eEffects.has(effectExt.id)).to.be.true;
+    expect(entity.getComponents('Burning')).to.not.be.empty;
+    expect(changes.length).to.equal(1);
+    expect(changes[0].op).to.equal('addRef');
+    expect(changes[0].target).to.equal(pants.id);
 
-  //   //entity.EquipmentSlot.pants.slot = null;
-  //   pants.destroy();
-  //   ecs.runSystems('equipment');
+    //entity.EquipmentSlot.pants.slot = null;
+    pants.destroy();
+    ecs.runSystems('equipment');
 
-  //   ecs.runSystems('asdf'); //code path for non-existant system
-  //   expect(changes2.length).to.be.greaterThan(0);
-  //   expect(changes.length).to.be.greaterThan(0);
-  //   expect(changes[0].target).to.equal(pants.id);
-  //   expect(entity.getComponents('EquipmentEffect')).to.be.empty;
-  //   expect(entity.getComponents('Burning')).to.be.empty;
+    ecs.runSystems('asdf'); //code path for non-existant system
+    expect(changes2.length).to.be.greaterThan(0);
+    expect(changes.length).to.be.greaterThan(0);
+    expect(changes[0].target).to.equal(pants.id);
+    expect(entity.getComponents('EquipmentEffect')).to.be.empty;
+    expect(entity.getComponents('Burning')).to.be.empty;
 
-  // });
+  });
 
 
 
-  // it('system subscriptions with updated components', () => {
+  it('system subscriptions with updated components', () => {
 
-  //   let changes = [];
+    let changes = [];
 
-  //   class System extends ECS.System {
+    class System extends ECS.System {
 
-  //     init() {
+      init() {
 
-  //       this.subscribe('Food2');
-  //     }
+        this.subscribe('Food2');
+      }
 
-  //     update(tick) {
+      update(tick) {
 
-  //       for (const cng of this.changes) {
-  //         changes.push(cng);
-  //       }
-  //     }
-  //   }
+        for (const cng of this.changes) {
+          changes.push(cng);
+        }
+      }
+    }
 
-  //   class Food2 extends ECS.Component {
-  //     static properties = {
-  //       rot: 300,
-  //       restore: 2
-  //     };
-  //     static changeEvents = true;
-  //   }
+    class Food2 extends ECS.Component {
+      static properties = {
+        rot: 300,
+        restore: 2
+      };
+      static changeEvents = true;
+    }
 
-  //   ecs.registerComponent(Food2);
-  //   const system = new System(ecs);
-  //   ecs.registerSystem('equipment', system);
-  //   ecs.runSystems('equipment');
+    ecs.registerComponent(Food2);
+    const system = new System(ecs);
+    ecs.registerSystem('equipment', system);
+    ecs.runSystems('equipment');
 
-  //   const e0 = ecs.createEntity({
-  //     c: {
-  //       food: { type: 'Food2', rot: 4 },
-  //     }
-  //   });
+    const e0 = ecs.createEntity({
+      c: {
+        food: { type: 'Food2', rot: 4 },
+      }
+    });
 
-  //   ecs.runSystems('equipment');
-  //   e0.removeComponent(e0.c.food);
-  //   ecs.runSystems('equipment');
+    ecs.runSystems('equipment');
+    e0.removeComponent(e0.c.food);
+    ecs.runSystems('equipment');
 
-  //   const e1 = ecs.createEntity({
-  //     c: {
-  //       food: { type: 'Food2', rot: 5 },
-  //     }
-  //   });
+    const e1 = ecs.createEntity({
+      c: {
+        food: { type: 'Food2', rot: 5 },
+      }
+    });
 
-  //   ecs.runSystems('equipment');
+    ecs.runSystems('equipment');
 
-  //   expect(e1.c.food.rot).to.equal(5);
-  //   expect(e1.c.food.restore).to.equal(2);
+    expect(e1.c.food.rot).to.equal(5);
+    expect(e1.c.food.restore).to.equal(2);
 
-  //   e1.c.food.update({rot:6});
+    e1.c.food.update({rot:6});
 
-  //   expect(e1.c.food.rot).to.equal(6);
-  //   expect(e1.c.food.restore).to.equal(2);
+    expect(e1.c.food.rot).to.equal(6);
+    expect(e1.c.food.restore).to.equal(2);
 
-  //   ecs.runSystems('equipment');
+    ecs.runSystems('equipment');
 
-  //   e1.c.food.update({rot:0,restore:0});
+    e1.c.food.update({rot:0,restore:0});
 
-  //   expect(e1.c.food.rot).to.equal(0);
-  //   expect(e1.c.food.restore).to.equal(0);
+    expect(e1.c.food.rot).to.equal(0);
+    expect(e1.c.food.restore).to.equal(0);
 
-  //   ecs.runSystems('equipment');
+    ecs.runSystems('equipment');
 
-  //   expect(e1.c.food.rot).to.equal(0);
-  //   expect(e1.c.food.restore).to.equal(0);
+    expect(e1.c.food.rot).to.equal(0);
+    expect(e1.c.food.restore).to.equal(0);
 
-  //   expect(changes[0].op).to.equal('add');
-  //   expect(changes[1].op).to.equal('destroy');
-  //   expect(changes[2].op).to.equal('add');
-  //   expect(changes[3].op).to.equal('change');
-  //   expect(changes[3].props).to.be.eql(['rot']);
-  //   expect(changes[4].props).to.be.eql(['rot', 'restore']);
-  // });
+    expect(changes[0].op).to.equal('add');
+    expect(changes[1].op).to.equal('destroy');
+    expect(changes[2].op).to.equal('add');
+    expect(changes[3].op).to.equal('change');
+    expect(changes[3].props).to.be.eql(['rot']);
+    expect(changes[4].props).to.be.eql(['rot', 'restore']);
+  });
 });
 
 // describe('system queries', () => {

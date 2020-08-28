@@ -5,6 +5,7 @@ export interface IComponentChange {
   component: string;
   entity: string;
   type: string;
+  target?: string;
 }
 
 // used by .fromReverse() in queries
@@ -33,6 +34,7 @@ export declare class System {
   changes: IComponentChange[];
   queries: Query[];
   lastTick: number;
+  static subscriptions: string[];
   init(): void;
   update(tick: number): void;
   createQuery(init: IQueryConfig): Query;
