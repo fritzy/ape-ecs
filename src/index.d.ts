@@ -100,6 +100,11 @@ export interface IStringMap {
   [name: string]: string;
 }
 
+// an object that has strings as keys and strings or null as values
+export interface IStringNullMap {
+  [name: string]: string | null;
+}
+
 
 // an object where the key is a string and the val is a set of Components
 export interface IEntityByType {
@@ -228,7 +233,7 @@ export declare class World {
   updateIndexes(entity?: Entity): void;
 }
 
-declare class EntitySet extends Set<any> {
+declare class EntitySetC extends Set<any> {
   constructor(component: Component, object: any, field: string);
   component: Component;
   field: string;
@@ -236,3 +241,23 @@ declare class EntitySet extends Set<any> {
   dvalue: any;
   getValue(): string[];
 }
+
+// This is a proxy
+export interface IEntityRef {
+  get(): Entity;
+  set(value: Entity|string): void;
+}
+
+// This is a proxy
+export interface IEntityObject {
+  get(obj: IStringNullMap, prop: string): Entity;
+  set(obj: IStringNullMap, prop: string, value: string): boolean;
+  deleteProperty(obj: IStringNullMap, prop: string): boolean;
+}
+
+
+
+
+export function EntityRef(comp: Component, dvalue: any, field: string): IEntityRef;
+export function EntityObject(comp: Component, object: any, field: string): IEntityObject;
+export function EntitySet(component: Component, object: any[], field: string): EntitySetC;
