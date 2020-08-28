@@ -11,7 +11,7 @@ export interface IComponentChange {
 // used by .fromReverse() in queries
 export interface IQueryReverse {
   entity: Entity|string;
-  type: string;
+  type: string|ComponentClass;
 }
 
 // the object passed to world.createQuery()
@@ -20,13 +20,12 @@ export interface IQueryConfig {
   trackRemoved?: boolean;
   persist?: boolean;
   from?: (Entity|string)[];
-  all?: string[];
-  any?: string[];
+  all?: (string|ComponentClass)[];
+  any?: (string|ComponentClass)[];
   reverse?: IQueryReverse;
-  not?: string[];
+  not?: (string|ComponentClass)[];
+  only?: (string|ComponentClass)[];
 }
-
-
 
 export declare class System {
   constructor(world: World);
@@ -73,10 +72,11 @@ export declare class Query {
   trackAdded: boolean;
   trackRemoved: boolean;
   from(...entities: (Entity|string)[]): Query;
-  fromReverse(entity: Entity, componentName: string): Query;
-  fromAll(...types: string[]): Query;
-  fromAny(...types: string[]): Query;
-  not(...types: string[]): Query;
+  fromReverse<T extends typeof Component>(entity: (Entity|string), componentName: string|T): Query;
+  fromAll<T extends typeof Component>(...types: (string|T)[]): Query;
+  fromAny<T extends typeof Component>(...types: (string|T)[]): Query;
+  not<T extends typeof Component>(...types: (string|T)[]): Query;
+  only<T extends typeof Component>(...types: (string|T)[]): Query;
   persist(trackAdded?: boolean, trackRemoved?: boolean): Query;
   execute(filter?: IQueryExecuteConfig): Set<Entity>;
 }
@@ -87,6 +87,10 @@ export interface IComponentUpdate {
   [others: string]: any;
 }
 
+// in order to reference the class rather than the instance
+interface ComponentClass {
+  new(): Component;
+}
 
 export declare class Component {
   preInit(initial: any): any;
@@ -189,9 +193,9 @@ export declare class Entity {
   updatedValues: number;
   destroyed: boolean;
   // _setup(definition: any): void;
-  has(type: string): boolean;
-  getOne(type: string): Component | undefined;
-  getComponents(type: string): Set<Component>;
+  has(type: string|ComponentClass): boolean;
+  getOne(type: string|ComponentClass): Component | undefined;
+  getComponents(type: string|ComponentClass): Set<Component>;
   addTag(tag: string, skipUpdate?: boolean): void;
   removeTag(tag: string): void;
   addComponent(properties: IComponentConfig): Component;
@@ -247,7 +251,7 @@ export declare class World {
   copyTypes(world: World, types: string[]): void;
   removeEntity(id: Entity|string): void;
   getEntity(entityId: string): any;
-  getEntities(type: string): Set<Entity>;
+  getEntities(type: string|ComponentClass): Set<Entity>;
   getComponent(id: string): Component;
   createQuery(init?: IQueryConfig): Query;
 

@@ -55,12 +55,18 @@ class Entity {
 
   has(type) {
 
+    if (typeof type !== 'string') {
+      type = type.name;
+    }
     return (this.tags.has(type)
       || this.types.hasOwnProperty(type));
   }
 
   getOne(type) {
 
+    if (typeof type !== 'string') {
+      type = type.name;
+    }
     let component;
     // istanbul ignore else
     if (this.types[type]) {
@@ -71,6 +77,9 @@ class Entity {
 
   getComponents(type) {
 
+    if (typeof type !== 'string') {
+      type = type.name;
+    }
     return this.types[type] || new Set();
   }
 

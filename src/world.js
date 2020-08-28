@@ -238,6 +238,9 @@ module.exports = class World {
 
   getEntities(type) {
 
+    if (typeof type !== 'string') {
+      type = type.name;
+    }
     const results = [...this.entitiesByComponent[type]];
     return new Set(results.map((id) => this.getEntity(id)));
   }
