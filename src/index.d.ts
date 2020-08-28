@@ -28,15 +28,15 @@ export interface IQueryConfig {
 
 
 export declare class System {
-    constructor(world: World);
-    world: World;
-    changes: IComponentChange[];
-    queries: Query[];
-    lastTick: number;
-    init(): void;
-    update(tick: number): void;
-    createQuery(init: IQueryConfig): Query;
-    subscribe(type: string): void;
+  constructor(world: World);
+  world: World;
+  changes: IComponentChange[];
+  queries: Query[];
+  lastTick: number;
+  init(): void;
+  update(tick: number): void;
+  createQuery(init: IQueryConfig): Query;
+  subscribe(type: string): void;
 }
 
 
@@ -55,21 +55,21 @@ export interface IComponentObject {
 }
 
 export declare class Query {
-    constructor(world: World, system: System, init: IQueryConfig);
-    persisted: boolean;
-    results: Set<Entity>;
-    executed: boolean;
-    added: Set<Entity>;
-    removed: Set<Entity>;
-    trackAdded: boolean;
-    trackRemoved: boolean;
-    from(...entities: (Entity|string)[]): Query;
-    fromReverse(entity: Entity, componentName: string): Query;
-    fromAll(...types: string[]): Query;
-    fromAny(...types: string[]): Query;
-    not(...types: string[]): Query;
-    persist(trackAdded: boolean, trackRemoved: boolean): Query;
-    execute(filter?: IQueryExecuteConfig): Set<Entity>;
+  constructor(world: World, system: System, init: IQueryConfig);
+  persisted: boolean;
+  results: Set<Entity>;
+  executed: boolean;
+  added: Set<Entity>;
+  removed: Set<Entity>;
+  trackAdded: boolean;
+  trackRemoved: boolean;
+  from(...entities: (Entity|string)[]): Query;
+  fromReverse(entity: Entity, componentName: string): Query;
+  fromAll(...types: string[]): Query;
+  fromAny(...types: string[]): Query;
+  not(...types: string[]): Query;
+  persist(trackAdded: boolean, trackRemoved: boolean): Query;
+  execute(filter?: IQueryExecuteConfig): Set<Entity>;
 }
 
 
@@ -80,18 +80,18 @@ export interface IComponentUpdate {
 
 
 export declare class Component {
-    preInit(initial: any): any;
-    init(initial: any): void;
-    get type(): string;
-    set key(arg: string);
-    get key(): string;
-    destroy(): void;
-    preDestroy(): void;
-    postDestroy(): void;
-    getObject(withIds?: boolean): IComponentObject;
-    entity: Entity;
-    id: string;
-    update(values: IComponentUpdate): void;
+  preInit(initial: any): any;
+  init(initial: any): void;
+  get type(): string;
+  set key(arg: string);
+  get key(): string;
+  destroy(): void;
+  preDestroy(): void;
+  postDestroy(): void;
+  getObject(withIds?: boolean): IComponentObject;
+  entity: Entity;
+  id: string;
+  update(values: IComponentUpdate): void;
 }
 
 // an object that has strings as keys and strings as values
@@ -160,23 +160,23 @@ export interface IEntityObject {
 
 
 export declare class Entity {
-    types: IEntityByType;
-    c: IEntityComponents;
-    id: string;
-    tags: Set<string>;
-    updatedComponents: number;
-    updatedValues: number;
-    destroyed: boolean;
-    // _setup(definition: any): void;
-    has(type: string): boolean;
-    getOne(type: string): Component | undefined;
-    getComponents(type: string): Set<Component>;
-    addTag(tag: string, skipUpdate?: boolean): void;
-    removeTag(tag: string): void;
-    addComponent(properties: IComponentConfig): Component;
-    removeComponent(component: Component|string): boolean;
-    getObject(componentIds?: boolean): IEntityObject;
-    destroy(): void;
+  types: IEntityByType;
+  c: IEntityComponents;
+  id: string;
+  tags: Set<string>;
+  updatedComponents: number;
+  updatedValues: number;
+  destroyed: boolean;
+  // _setup(definition: any): void;
+  has(type: string): boolean;
+  getOne(type: string): Component | undefined;
+  getComponents(type: string): Set<Component>;
+  addTag(tag: string, skipUpdate?: boolean): void;
+  removeTag(tag: string): void;
+  addComponent(properties: IComponentConfig): Component;
+  removeComponent(component: Component|string): boolean;
+  getObject(componentIds?: boolean): IEntityObject;
+  destroy(): void;
 }
 
 export interface IWorldConfig {
@@ -227,4 +227,3 @@ export declare class World {
     runSystems(group: string): void;
     updateIndexes(entity?: Entity): void;
 }
- 
