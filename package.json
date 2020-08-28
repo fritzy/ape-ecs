@@ -3,12 +3,14 @@
   "version": "0.8.1",
   "description": "Ape-ECS (Apex) Entity-Component-System library for simulation and game development.",
   "main": "./src/index.js",
+  "types": "./src/index.d.ts",
   "source": true,
   "files": [
     "/src"
   ],
   "scripts": {
-    "test": "nyc mocha tests/index.js",
+    "test": "nyc npm run test_only",
+    "test_only": "cross-env TS_NODE_FILES=true mocha --exit --require ts-node/register --colors tests/*.ts",
     "testp": "mocha tests/index.js",
     "gendocs": "rm -rf out && jsdoc src/",
     "md": "jsdoc2md src/ecs.js",
@@ -27,9 +29,15 @@
   "dependencies": {},
   "devDependencies": {
     "@hapi/eslint-plugin-hapi": "^4.3.5",
+    "@types/chai": "^4.2.12",
+    "@types/mocha": "^8.0.3",
+    "@types/node": "^14.6.1",
     "chai": "^4.2.0",
-    "mocha": "^8.1.1",
+    "cross-env": "^7.0.2",
+    "mocha": "^8.1.2",
     "nyc": "^15.1.0",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.2",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.11.0"

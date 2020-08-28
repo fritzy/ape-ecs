@@ -1,10 +1,23 @@
-const expect = require('chai').expect;
-const ECS = require('../src/index');
-const {
+
+import { expect } from 'chai';
+
+import {
+  System,
+  World,
+  Component,
+  Entity,
   EntityRef,
   EntitySet,
   EntityObject,
-} = ECS;
+  Query,
+} from '../src';
+
+const ECS = {
+  World,
+  System: System,
+  Component,
+};
+
 
 class Health extends ECS.Component {
   static properties = {
@@ -417,9 +430,12 @@ describe('system queries', () => {
 
     class TileSystem extends ECS.System {
 
+      lastResults: Set<Entity>;
+      query: Query;
+
       init() {
 
-        this.lastResults = [];
+        this.lastResults = new Set();
         this.query = this.world.createQuery({
           all: ['Tile'],
           not: ['Hidden'],
@@ -798,7 +814,10 @@ describe('entity & component refs', () => {
     beltslots.slots.a = potionf.id;
     expect(beltslots.slots.a).to.equal(potionf);
 
-    delete beltslots.slots.d;
+    // Calling delete on a EntityObject component that does
+    // not exist should return false
+    // when in strict mode, this will throw an exception
+    expect(()=>{delete beltslots.slots.d}).to.throw(TypeError);
   });
 
   it('Entity Set', () => {
