@@ -241,7 +241,7 @@ export declare class World {
   registerComponent<T extends typeof Component>(klass: T, spinup?: number): void;
   // registerComponent(klass: typeof Component, spinup?: number): void;
 
-  createEntity(definition: IEntityConfig): Entity;
+  createEntity(definition: IEntityConfig|IEntityObject): Entity;
   getObject(): IEntityObject[];
   createEntities(definition: IEntityConfig[]): void;
   copyTypes(world: World, types: string[]): void;
@@ -278,6 +278,7 @@ export interface IEntityObject {
   get(obj: IStringNullMap, prop: string): Entity;
   set(obj: IStringNullMap, prop: string, value: string): boolean;
   deleteProperty(obj: IStringNullMap, prop: string): boolean;
+  [others: string]: any;
 }
 
 

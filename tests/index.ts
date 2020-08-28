@@ -925,635 +925,635 @@ describe('entity & component refs', () => {
 
 });
 
-// describe('entity restore', () => {
-
-//   it('restore mapped object', () => {
-
-//     const ecs = new ECS.World();
-//     ecs.registerTags('Potion');
-
-//     class EquipmentSlot extends ECS.Component {
-//       static properties = {
-//         name: 'finger',
-//         slot: EntityRef
-//       };
-//     }
-//     ecs.registerComponent(EquipmentSlot);
-
-
-//     const potion1 = ecs.createEntity({
-//       tags: ['Potion']
-//     });
-//     const potion2 = ecs.createEntity({
-//       tags: ['Potion']
-//     });
-
-//     const entity = ecs.createEntity({
-//       c: {
-//         'main': { slot: potion1, type: 'EquipmentSlot' },
-//         'secondary': { slot: potion2, type: 'EquipmentSlot' }
-//       }
-//     });
-
-//     expect(entity.c.main.slot).to.equal(potion1);
-//     expect(entity.c.secondary.slot).to.equal(potion2);
-//     expect(potion1).to.not.equal(potion2);
-//   });
-
-//   it('restore unmapped object', () => {
-
-//     const ecs = new ECS.World();
-//     ecs.registerTags('Potion');
-
-//     class EquipmentSlot extends ECS.Component {
-//       static properties = {
-//         name: 'finger',
-//         slot: EntityRef
-//       };
-//     }
-//     ecs.registerComponent(EquipmentSlot);
-
-
-//     const potion1 = ecs.createEntity({
-//       tags: ['Potion']
-//     });
-//     const potion2 = ecs.createEntity({
-//       tags: ['Potion']
-//     });
-//     const potion3 = ecs.createEntity({
-//       tags: ['Potion']
-//     });
-
-//     const entity = ecs.createEntity({
-//       components: [
-//         {
-//           type: 'EquipmentSlot',
-//           key: 'slot3',
-//           name: 'slot3',
-//           slot: potion3
-//         }
-//       ],
-//       c: {
-//         slot1: { type: 'EquipmentSlot', name: 'slot1', slot: potion1 },
-//         slot2: { type: 'EquipmentSlot', name: 'slot2', slot: potion2 }
-//       }
-//     });
-
-//     expect(entity.c.slot1.slot).to.equal(potion1);
-//     expect(entity.c.slot1.name).to.equal('slot1');
-//     expect(entity.c.slot2.slot).to.equal(potion2);
-//     expect(entity.c.slot2.name).to.equal('slot2');
-//     expect(entity.c.slot3.slot).to.equal(potion3);
-//     expect(entity.c.slot3.name).to.equal('slot3');
-//   });
-
-//   it('Unregistered component throws', () => {
-
-//     const ecs = new ECS.World();
-//     ecs.registerComponent(class Potion extends ECS.Component {});
-
-//     const badName = () => {
-//       const entity = ecs.createEntity({
-//         c: {
-//           Posion: {} //misspelled
-//         }
-//       });
-//     };
-//     expect(badName).to.throw();
-//   });
-
-//   it('Unassigned field is not set', () => {
-
-//     const ecs = new ECS.World();
-//     class Potion extends ECS.Component {};
-//     ecs.registerComponent(Potion);
-//     const entity = ecs.createEntity({
-//       c: {
-//         Potion: { x: 37 }
-//       }
-//     });
-//     expect(entity.c.Potion.x).to.be.undefined;
-//   });
-
-//   it('removeComponentByName many', () => {
-
-//     const ecs = new ECS.World();
-//     ecs.registerComponent(class NPC extends ECS.Component {});
-//     ecs.registerComponent(class Other extends ECS.Component {});
-//     ecs.registerComponent(class Armor extends ECS.Component {
-//       static properties = { 'amount': 5 };
-//     });
-
-//     const entity = ecs.createEntity({
-//       c: {
-//         NPC: {},
-//       }
-//     });
-//     entity.addComponent({ type: 'Armor', amount: 10 });
-//     entity.addComponent({ type: 'Armor', amount: 30 });
-
-//     const entity2 = ecs.createEntity({
-//       c: {
-//         Other: {}
-//       }
-//     });
-
-//     expect(entity.has('NPC')).to.be.true;
-//     expect(entity.has('Armor')).to.be.true;
-//     const armors = entity.getComponents('Armor');
-//     expect(armors.size).to.equal(2);
-//     expect([...armors][0].amount).to.equal(10);
-//     expect([...armors][1].amount).to.equal(30);
-
-//     entity.removeComponent([...armors][0]);
-//     const armors2 = entity.getComponents('Armor');
-//     expect(armors2.size).to.equal(1);
-
-//     const others = entity2.getComponents('Other');
-//     expect(others.size).to.equal(1);
-//     const removed = entity2.removeComponent([...others][0]);
-
-//     const removed2 = entity2.removeComponent('nonexistant');
-
-//     expect(removed).to.be.true;
-//     expect(removed2).to.be.false;
-
-//   });
-
-//   it('EntitySet', () => {
-
-//     const ecs = new ECS.World();
-//     class SetInventory extends ECS.Component {
-//       static properties = {
-//         slots: EntitySet
-//       };
-//     }
-//     class Bottle extends ECS.Component {}
-//     class ThrowAway extends ECS.Component {
-//       static properties = {
-//         a: 1,
-//       };
-//       static serialize = false;
-//     }
-//     ecs.registerComponent(SetInventory);
-//     ecs.registerComponent(Bottle);
-//     ecs.registerComponent(ThrowAway);
-
-//     const container = ecs.createEntity({
-//       c: {
-//         SetInventory: {},
-//         ThrowAway: {}
-//       }
-//     });
-
-//     const bottle1 = ecs.createEntity({
-//       c: {
-//         Bottle: {}
-//       }
-//     });
-//     const bottle2 = ecs.createEntity({
-//       c: {
-//         Bottle: {}
-//       }
-//     });
-//     const bottle3 = ecs.createEntity({
-//       c: {
-//         Bottle: {}
-//       }
-//     });
-
-//     const setInv = container.c.SetInventory;
-//     setInv.slots.add(bottle1);
-//     setInv.slots.add(bottle2);
-
-//     expect(setInv.slots.has(bottle1.id)).to.be.true;
-//     expect(setInv.slots.has(bottle2)).to.be.true;
-//     expect(setInv.slots.has(bottle3)).to.be.false;
-
-//     const def = container.getObject(false);
-//     const defS = JSON.stringify(def);
-//     const def2 = JSON.parse(defS);
-//     delete def2.id;
-
-//     const container2 = ecs.createEntity(def2);
-//     const setInv2 = container2.c.SetInventory;
-//     expect(setInv2.slots.has(bottle1)).to.be.true;
-//     expect(setInv2.slots.has(bottle2)).to.be.true;
-//     expect(setInv2.slots.has(bottle3)).to.be.false;
-//     expect(container2.c.ThrowAway).to.be.undefined;
-
-//     let idx = 0;
-//     for (const entity of setInv2.slots) {
-//       if (idx === 0) {
-//         expect(entity).to.equal(bottle1);
-//       } else if (idx === 1) {
-//         expect(entity).to.equal(bottle2);
-//       }
-//       idx++;
-//     }
-//     expect(idx).to.equal(2);
-
-//     expect(setInv2.slots.has(bottle1)).to.be.true;
-//     bottle1.destroy();
-//     expect(setInv2.slots.has(bottle1)).to.be.false;
-//     expect(setInv2.slots.has(bottle2)).to.be.true;
-//     setInv2.slots.delete(bottle2.id);
-//     expect(setInv2.slots.has(bottle2)).to.be.false;
-
-//     expect(setInv.slots.has(bottle1)).to.be.false;
-//     expect(setInv.slots.has(bottle2)).to.be.true;
-
-//     setInv.slots.clear()
-//     expect(setInv.slots.has(bottle2)).to.be.false;
-
-//     const bottle4 = ecs.createEntity({
-//       c: {
-//         Bottle: {}
-//       }
-//     });
-
-//     const bottle5 = ecs.createEntity({
-//       c: {
-//         Bottle: {}
-//       }
-//     });
-
-//     const withValues = ecs.createEntity({
-//       c: {
-//         SetInventory: {
-//           slots: [bottle4, bottle5.id]
-//         }
-//       }
-//     });
-
-//     expect(withValues.c.SetInventory.slots.has(bottle4)).to.be.true;
-//     expect(withValues.c.SetInventory.slots.has(bottle5)).to.be.true;
-
-//     withValues.c.SetInventory.slots._reset();
-//     expect(withValues.c.SetInventory.slots.has(bottle4)).to.be.true;
-//     expect(withValues.c.SetInventory.slots.has(bottle5)).to.be.true;
-
-
-//   });
-
-// });
-
-// describe('exporting and restoring', () => {
-
-//   it('get object and stringify component', () => {
-
-//     const ecs = new ECS.World();
-//     class AI extends ECS.Component {
-//       static properties = {
-//         order: 'sun'
-//       };
-//     }
-//     ecs.registerComponent(AI);
-
-//     const entity = ecs.createEntity({
-//       c: {
-//         moon: { type: 'AI', order: 'moon' },
-//         jupiter: { type: 'AI', order: 'jupiter' },
-//       }
-//     });
-
-//     const moon = entity.c.moon;
-//     const obj = moon.getObject();
-
-//     expect(obj.type).to.equal('AI');
-//     expect(obj.id).to.equal(moon.id);
-//   });
-
-//   it('getObject on entity', () => {
-
-//     const ecs = new ECS.World();
-//     class EquipmentSlot extends ECS.Component {
-//       static properties = {
-//         name: 'ring',
-//         slot: EntityRef
-//       };
-//     }
-//     class Bottle extends ECS.Component {}
-//     class AI extends ECS.Component {}
-//     class Effect extends ECS.Component {
-//       static properties = {
-//         name: 'fire'
-//       };
-//     }
-//     ecs.registerComponent(EquipmentSlot);
-//     ecs.registerComponent(Bottle);
-//     ecs.registerComponent(AI);
-//     ecs.registerComponent(Effect);
-
-//     const bottle = ecs.createEntity({
-//       c: {
-//         Bottle: {}
-//       }
-//     });
-//     let npc = ecs.createEntity({
-//       c: {
-//         ring: { type: 'EquipmentSlot', slot: bottle },
-//         AI: {}
-//       }
-//     });
-//     npc.addComponent({ type: 'Effect', name: 'wet' });
-//     npc.addComponent({ type: 'Effect', name: 'annoyed' });
-
-//     const old = npc.getObject();
-
-//     expect(old.c.ring.slot).to.equal(bottle.id);
-
-//     npc.destroy();
-//     npc = undefined;
-
-//     npc = ecs.createEntity(old);
-
-//     const old2 = npc.getObject();
-
-//     const ring = npc.c.ring;
-//     expect(ring.slot).to.equal(bottle);
-//     const effect = npc.getComponents('Effect');
-//     expect(effect.size).to.equal(2);
-//     expect([...effect][0].name).to.equal('wet');
-//     expect([...effect][1].name).to.equal('annoyed');
-//   });
-
-//   it('property skipping', () => {
-
-//     const ecs = new ECS.World();
-//     class Effect extends ECS.Component {
-//       static properties = {
-//         name: 'fire',
-//         started: ''
-//       };
-//     }
-//     class AI extends ECS.Component {
-//       static properties = {
-//         name: 'thingy'
-//       };
-//     }
-//     ecs.registerComponent(Effect);
-//     ecs.registerComponent(AI);
-
-//     class Liquid extends ECS.Component {}
-//     ecs.registerComponent(Liquid);
-
-//     const entity = ecs.createEntity({
-//       c: {
-//         Effect: {
-//           name: 'fire',
-//           started: Date.now()
-//         },
-//         AI: {},
-//         Liquid: {}
-//       }
-//     });
-
-//     const old = entity.getObject();
-
-//     const entity2 = ecs.createEntity(old);
-
-//     expect(old.AI).to.not.exist;
-//     //expect(old.Effect.started).to.not.exist;
-//     expect(old.c.Effect.name).to.equal('fire');
-//     expect(old.c.Liquid).to.exist;
-//     expect(entity2.c.Liquid).to.exist;
-
-//     expect(entity.getOne('Effect')).to.equal(entity.c.Effect);
-
-//     entity2.c.Liquid.key = 'OtherLiquid';
-//     expect(entity2.c.Liquid).to.not.exist;
-//     expect(entity2.c.OtherLiquid).to.exist;
-
-//     entity2.c.OtherLiquid.key = undefined;
-//     expect(entity2.c.OtherLiquid).to.not.exist;
-//     expect(entity2.c.Liquid).to.not.exist;
-//   });
-
-// });
-
-// describe('advanced queries', () => {
-//   it('from and reverse queries', () => {
-
-//     const ecs = new ECS.World();
-
-//     ecs.registerTags('A', 'B', 'C');
-
-//     const entity1 = ecs.createEntity({
-//       tags: ['A']
-//     });
-//     const entity2 = ecs.createEntity({
-//       tags: ['B']
-//     });
-
-//     const entity3 = ecs.createEntity({
-//       tags: ['B', 'C']
-//     });
-
-//     const entity4 = ecs.createEntity({
-//       tags: ['B', 'C', 'A']
-//     });
-
-//     const q = ecs.createQuery({ from: [entity1, entity2, entity3] });
-//     const r = q.execute();
-
-//     expect(r.has(entity1)).to.be.true;
-//     expect(r.has(entity2)).to.be.true;
-//     expect(r.has(entity3)).to.be.true;
-
-//     class Person extends ECS.Component {
-//       static properties = {
-//         name: 'Bill'
-//       };
-//     }
-//     class Item extends ECS.Component {
-//       static properties = {
-//         name: 'knife'
-//       };
-//     }
-//     class InInventory extends ECS.Component {
-//       static properties = {
-//         person: EntityRef
-//       };
-//     }
-
-//     ecs.registerComponent(Person);
-//     ecs.registerComponent(Item);
-//     ecs.registerComponent(InInventory);
-
-//     const e4 = ecs.createEntity({
-//       c: {
-//         Person: {
-//           name: 'Bob'
-//         }
-//       }
-//     });
-
-//     const e5 = ecs.createEntity({
-//       c: {
-//         Item: {
-//           name: 'plate'
-//         },
-//         InInventory: {
-//           person: e4
-//         }
-//       }
-//     });
-
-//     const q2 = ecs.createQuery({ reverse: { entity: e4, type: 'InInventory'}, persist: true } );
-//     const r2 = q2.execute();
-
-//     expect(r2.size).to.equal(1);
-//     expect(r2.has(e5)).to.be.true;
-
-//     const q3 = ecs.createQuery({ any: ['B', 'C'], persist: true });
-//     const r3 = q3.execute();
-
-//     const q4 = ecs.createQuery({ all: ['B', 'C'], persist: true });
-//     const r3b = q4.execute();
-
-//     expect(r3.size).to.equal(3);
-//     expect(r3.has(entity2)).to.be.true;
-//     expect(r3.has(entity3)).to.be.true;
-//     expect(r3b.size).to.equal(2);
-//     expect(r3b.has(entity3)).to.be.true;
-//     expect(r3b.has(entity4)).to.be.true;
-
-//     e5.addTag('A');
-//     ecs.tick();
-
-//     entity2.removeTag('B');
-//     e5.removeComponent('InInventory');
-
-//     ecs.tick();
-//     const r4 = q3.execute();
-//     expect(r3.size).to.equal(2);
-//     expect(r3.has(entity2)).to.be.false;
-//     expect(r3.has(entity3)).to.be.true;
-
-//     const q2r2 = q2.execute();
-//     expect(q2r2.size).to.equal(0);
-
-//     const r5 = q4.execute();
-//     expect(r5.size).to.equal(2);
-
-//     expect(r3.has(entity1)).to.be.false;
-//     entity1.addTag('B');
-//     ecs.tick();
-
-//     const r6 = q3.execute();
-//     expect(r6.has(entity1)).to.be.true;
-//     const r7 = q2.execute();
-
-//     expect(r7.has(e5)).to.be.false;
-
-//   });
-
-//   it('track added and removed', () => {
-
-//     const ecs = new ECS.World();
-//     class S1 extends ECS.System {};
-//     class S2 extends ECS.System {};
-
-//     const s1 = ecs.registerSystem('group1', S1);
-//     const s2 = ecs.registerSystem('group2', S2);
-
-//     ecs.registerTags('A', 'B', 'C');
-
-//     const e1 = ecs.createEntity({
-//       tags: ['A']
-//     });
-//     const e2 = ecs.createEntity({
-//       tags: ['B']
-//     });
-//     const e3 = ecs.createEntity({
-//       tags: ['C']
-//     });
-//     const e4 = ecs.createEntity({
-//       tags: ['A', 'B']
-//     });
-//     const e5 = ecs.createEntity({
-//       tags: ['A', 'C']
-//     });
-//     const e6 = ecs.createEntity({
-//       tags: ['C', 'B']
-//     });
-//     const e7 = ecs.createEntity({
-//       tags: ['A', 'B', 'C']
-//     });
-
-//     const q1 = s1.createQuery({
-//       trackAdded: true,
-//     }).fromAll('A', 'C').persist();
-
-//     const r1 = q1.execute();
-
-//     expect(r1.has(e5)).to.be.true;
-//     expect(r1.has(e6)).to.be.false;
-//     expect(r1.has(e7)).to.be.true;
-//     expect(q1.added.size).to.be.equal(2);
-//     expect(q1.removed.size).to.be.equal(0);
-//     expect(q1.added.has(e5)).to.be.true;
-//     expect(q1.added.has(e6)).to.be.false;
-//     expect(q1.added.has(e7)).to.be.true;
-
-//     ecs.runSystems('group1');
-//     ecs.tick();
-
-//     expect(q1.added.size).to.be.equal(0);
-//     expect(q1.removed.size).to.be.equal(0);
-
-//     e5.removeTag('C');
-//     e1.addTag('C');
-
-//     ecs.tick();
-
-//     expect(r1.has(e5)).to.be.false;
-//     expect(r1.has(e7)).to.be.true;
-//     expect(r1.has(e1)).to.be.true;
-//     expect(q1.added.has(e1)).to.be.true;
-//     expect(q1.added.size).to.be.equal(1);
-//     expect(q1.removed.size).to.be.equal(0);
-
-//     const q2 = s2.createQuery({
-//       trackRemoved: true,
-//     }).fromAll('A', 'C').persist();
-
-//     const r2 = q2.execute();
-
-//     expect(r2.has(e1)).to.be.true;
-//     expect(r2.has(e6)).to.be.false;
-//     expect(r2.has(e5)).to.be.false;
-//     expect(r2.has(e7)).to.be.true;
-//     expect(q2.added.size).to.be.equal(0);
-//     expect(q2.removed.size).to.be.equal(0);
-
-//     ecs.tick();
-
-//     expect(q2.added.size).to.be.equal(0);
-//     expect(q2.removed.size).to.be.equal(0);
-
-//     e7.removeTag('A');
-//     e3.addTag('A');
-
-//     ecs.tick();
-
-//     expect(q2.added.size).to.be.equal(0);
-//     expect(q2.removed.size).to.be.equal(1);
-//     expect(r2.has(e3)).to.be.true;
-//     expect(r2.has(e7)).to.be.false;
-//     expect(q2.removed.has(e7)).to.be.true;
-
-//     ecs.runSystems('group1');
-//     expect(q1.added.size).to.be.equal(0);
-//     expect(q1.removed.size).to.be.equal(0);
-
-//     ecs.runSystems('group2');
-//     expect(q2.added.size).to.be.equal(0);
-//     expect(q2.removed.size).to.be.equal(0);
-
-//   });
-// });
+describe('entity restore', () => {
+
+  it('restore mapped object', () => {
+
+    const ecs = new ECS.World();
+    ecs.registerTags('Potion');
+
+    class EquipmentSlot extends ECS.Component {
+      static properties = {
+        name: 'finger',
+        slot: EntityRef
+      };
+    }
+    ecs.registerComponent(EquipmentSlot);
+
+
+    const potion1 = ecs.createEntity({
+      tags: ['Potion']
+    });
+    const potion2 = ecs.createEntity({
+      tags: ['Potion']
+    });
+
+    const entity = ecs.createEntity({
+      c: {
+        'main': { slot: potion1, type: 'EquipmentSlot' },
+        'secondary': { slot: potion2, type: 'EquipmentSlot' }
+      }
+    });
+
+    expect(entity.c.main.slot).to.equal(potion1);
+    expect(entity.c.secondary.slot).to.equal(potion2);
+    expect(potion1).to.not.equal(potion2);
+  });
+
+  it('restore unmapped object', () => {
+
+    const ecs = new ECS.World();
+    ecs.registerTags('Potion');
+
+    class EquipmentSlot extends ECS.Component {
+      static properties = {
+        name: 'finger',
+        slot: EntityRef
+      };
+    }
+    ecs.registerComponent(EquipmentSlot);
+
+
+    const potion1 = ecs.createEntity({
+      tags: ['Potion']
+    });
+    const potion2 = ecs.createEntity({
+      tags: ['Potion']
+    });
+    const potion3 = ecs.createEntity({
+      tags: ['Potion']
+    });
+
+    const entity = ecs.createEntity({
+      components: [
+        {
+          type: 'EquipmentSlot',
+          key: 'slot3',
+          name: 'slot3',
+          slot: potion3
+        }
+      ],
+      c: {
+        slot1: { type: 'EquipmentSlot', name: 'slot1', slot: potion1 },
+        slot2: { type: 'EquipmentSlot', name: 'slot2', slot: potion2 }
+      }
+    });
+
+    expect(entity.c.slot1.slot).to.equal(potion1);
+    expect(entity.c.slot1.name).to.equal('slot1');
+    expect(entity.c.slot2.slot).to.equal(potion2);
+    expect(entity.c.slot2.name).to.equal('slot2');
+    expect(entity.c.slot3.slot).to.equal(potion3);
+    expect(entity.c.slot3.name).to.equal('slot3');
+  });
+
+  it('Unregistered component throws', () => {
+
+    const ecs = new ECS.World();
+    ecs.registerComponent(class Potion extends ECS.Component {});
+
+    const badName = () => {
+      const entity = ecs.createEntity({
+        c: {
+          Posion: {} //misspelled
+        }
+      });
+    };
+    expect(badName).to.throw();
+  });
+
+  it('Unassigned field is not set', () => {
+
+    const ecs = new ECS.World();
+    class Potion extends ECS.Component {};
+    ecs.registerComponent(Potion);
+    const entity = ecs.createEntity({
+      c: {
+        Potion: { x: 37 }
+      }
+    });
+    expect(entity.c.Potion.x).to.be.undefined;
+  });
+
+  it('removeComponentByName many', () => {
+
+    const ecs = new ECS.World();
+    ecs.registerComponent(class NPC extends ECS.Component {});
+    ecs.registerComponent(class Other extends ECS.Component {});
+    ecs.registerComponent(class Armor extends ECS.Component {
+      static properties = { 'amount': 5 };
+    });
+
+    const entity = ecs.createEntity({
+      c: {
+        NPC: {},
+      }
+    });
+    entity.addComponent({ type: 'Armor', amount: 10 });
+    entity.addComponent({ type: 'Armor', amount: 30 });
+
+    const entity2 = ecs.createEntity({
+      c: {
+        Other: {}
+      }
+    });
+
+    expect(entity.has('NPC')).to.be.true;
+    expect(entity.has('Armor')).to.be.true;
+    const armors = entity.getComponents('Armor');
+    expect(armors.size).to.equal(2);
+    expect([...armors][0].amount).to.equal(10);
+    expect([...armors][1].amount).to.equal(30);
+
+    entity.removeComponent([...armors][0]);
+    const armors2 = entity.getComponents('Armor');
+    expect(armors2.size).to.equal(1);
+
+    const others = entity2.getComponents('Other');
+    expect(others.size).to.equal(1);
+    const removed = entity2.removeComponent([...others][0]);
+
+    const removed2 = entity2.removeComponent('nonexistant');
+
+    expect(removed).to.be.true;
+    expect(removed2).to.be.false;
+
+  });
+
+  it('EntitySet', () => {
+
+    const ecs = new ECS.World();
+    class SetInventory extends ECS.Component {
+      static properties = {
+        slots: EntitySet
+      };
+    }
+    class Bottle extends ECS.Component {}
+    class ThrowAway extends ECS.Component {
+      static properties = {
+        a: 1,
+      };
+      static serialize = false;
+    }
+    ecs.registerComponent(SetInventory);
+    ecs.registerComponent(Bottle);
+    ecs.registerComponent(ThrowAway);
+
+    const container = ecs.createEntity({
+      c: {
+        SetInventory: {},
+        ThrowAway: {}
+      }
+    });
+
+    const bottle1 = ecs.createEntity({
+      c: {
+        Bottle: {}
+      }
+    });
+    const bottle2 = ecs.createEntity({
+      c: {
+        Bottle: {}
+      }
+    });
+    const bottle3 = ecs.createEntity({
+      c: {
+        Bottle: {}
+      }
+    });
+
+    const setInv = container.c.SetInventory;
+    setInv.slots.add(bottle1);
+    setInv.slots.add(bottle2);
+
+    expect(setInv.slots.has(bottle1.id)).to.be.true;
+    expect(setInv.slots.has(bottle2)).to.be.true;
+    expect(setInv.slots.has(bottle3)).to.be.false;
+
+    const def = container.getObject(false);
+    const defS = JSON.stringify(def);
+    const def2 = JSON.parse(defS);
+    delete def2.id;
+
+    const container2 = ecs.createEntity(def2);
+    const setInv2 = container2.c.SetInventory;
+    expect(setInv2.slots.has(bottle1)).to.be.true;
+    expect(setInv2.slots.has(bottle2)).to.be.true;
+    expect(setInv2.slots.has(bottle3)).to.be.false;
+    expect(container2.c.ThrowAway).to.be.undefined;
+
+    let idx = 0;
+    for (const entity of setInv2.slots) {
+      if (idx === 0) {
+        expect(entity).to.equal(bottle1);
+      } else if (idx === 1) {
+        expect(entity).to.equal(bottle2);
+      }
+      idx++;
+    }
+    expect(idx).to.equal(2);
+
+    expect(setInv2.slots.has(bottle1)).to.be.true;
+    bottle1.destroy();
+    expect(setInv2.slots.has(bottle1)).to.be.false;
+    expect(setInv2.slots.has(bottle2)).to.be.true;
+    setInv2.slots.delete(bottle2.id);
+    expect(setInv2.slots.has(bottle2)).to.be.false;
+
+    expect(setInv.slots.has(bottle1)).to.be.false;
+    expect(setInv.slots.has(bottle2)).to.be.true;
+
+    setInv.slots.clear()
+    expect(setInv.slots.has(bottle2)).to.be.false;
+
+    const bottle4 = ecs.createEntity({
+      c: {
+        Bottle: {}
+      }
+    });
+
+    const bottle5 = ecs.createEntity({
+      c: {
+        Bottle: {}
+      }
+    });
+
+    const withValues = ecs.createEntity({
+      c: {
+        SetInventory: {
+          slots: [bottle4, bottle5.id]
+        }
+      }
+    });
+
+    expect(withValues.c.SetInventory.slots.has(bottle4)).to.be.true;
+    expect(withValues.c.SetInventory.slots.has(bottle5)).to.be.true;
+
+    withValues.c.SetInventory.slots._reset();
+    expect(withValues.c.SetInventory.slots.has(bottle4)).to.be.true;
+    expect(withValues.c.SetInventory.slots.has(bottle5)).to.be.true;
+
+
+  });
+
+});
+
+describe('exporting and restoring', () => {
+
+  it('get object and stringify component', () => {
+
+    const ecs = new ECS.World();
+    class AI extends ECS.Component {
+      static properties = {
+        order: 'sun'
+      };
+    }
+    ecs.registerComponent(AI);
+
+    const entity = ecs.createEntity({
+      c: {
+        moon: { type: 'AI', order: 'moon' },
+        jupiter: { type: 'AI', order: 'jupiter' },
+      }
+    });
+
+    const moon = entity.c.moon;
+    const obj = moon.getObject();
+
+    expect(obj.type).to.equal('AI');
+    expect(obj.id).to.equal(moon.id);
+  });
+
+  it('getObject on entity', () => {
+
+    const ecs = new ECS.World();
+    class EquipmentSlot extends ECS.Component {
+      static properties = {
+        name: 'ring',
+        slot: EntityRef
+      };
+    }
+    class Bottle extends ECS.Component {}
+    class AI extends ECS.Component {}
+    class Effect extends ECS.Component {
+      static properties = {
+        name: 'fire'
+      };
+    }
+    ecs.registerComponent(EquipmentSlot);
+    ecs.registerComponent(Bottle);
+    ecs.registerComponent(AI);
+    ecs.registerComponent(Effect);
+
+    const bottle = ecs.createEntity({
+      c: {
+        Bottle: {}
+      }
+    });
+    let npc = ecs.createEntity({
+      c: {
+        ring: { type: 'EquipmentSlot', slot: bottle },
+        AI: {}
+      }
+    });
+    npc.addComponent({ type: 'Effect', name: 'wet' });
+    npc.addComponent({ type: 'Effect', name: 'annoyed' });
+
+    const old = npc.getObject();
+
+    expect(old.c.ring.slot).to.equal(bottle.id);
+
+    npc.destroy();
+    npc = undefined;
+
+    npc = ecs.createEntity(old);
+
+    const old2 = npc.getObject();
+
+    const ring = npc.c.ring;
+    expect(ring.slot).to.equal(bottle);
+    const effect = npc.getComponents('Effect');
+    expect(effect.size).to.equal(2);
+    expect([...effect][0].name).to.equal('wet');
+    expect([...effect][1].name).to.equal('annoyed');
+  });
+
+  it('property skipping', () => {
+
+    const ecs = new ECS.World();
+    class Effect extends ECS.Component {
+      static properties = {
+        name: 'fire',
+        started: ''
+      };
+    }
+    class AI extends ECS.Component {
+      static properties = {
+        name: 'thingy'
+      };
+    }
+    ecs.registerComponent(Effect);
+    ecs.registerComponent(AI);
+
+    class Liquid extends ECS.Component {}
+    ecs.registerComponent(Liquid);
+
+    const entity = ecs.createEntity({
+      c: {
+        Effect: {
+          name: 'fire',
+          started: Date.now()
+        },
+        AI: {},
+        Liquid: {}
+      }
+    });
+
+    const old = entity.getObject();
+
+    const entity2 = ecs.createEntity(old);
+
+    expect(old.AI).to.not.exist;
+    //expect(old.Effect.started).to.not.exist;
+    expect(old.c.Effect.name).to.equal('fire');
+    expect(old.c.Liquid).to.exist;
+    expect(entity2.c.Liquid).to.exist;
+
+    expect(entity.getOne('Effect')).to.equal(entity.c.Effect);
+
+    entity2.c.Liquid.key = 'OtherLiquid';
+    expect(entity2.c.Liquid).to.not.exist;
+    expect(entity2.c.OtherLiquid).to.exist;
+
+    entity2.c.OtherLiquid.key = undefined;
+    expect(entity2.c.OtherLiquid).to.not.exist;
+    expect(entity2.c.Liquid).to.not.exist;
+  });
+
+});
+
+describe('advanced queries', () => {
+  it('from and reverse queries', () => {
+
+    const ecs = new ECS.World();
+
+    ecs.registerTags('A', 'B', 'C');
+
+    const entity1 = ecs.createEntity({
+      tags: ['A']
+    });
+    const entity2 = ecs.createEntity({
+      tags: ['B']
+    });
+
+    const entity3 = ecs.createEntity({
+      tags: ['B', 'C']
+    });
+
+    const entity4 = ecs.createEntity({
+      tags: ['B', 'C', 'A']
+    });
+
+    const q = ecs.createQuery({ from: [entity1, entity2, entity3] });
+    const r = q.execute();
+
+    expect(r.has(entity1)).to.be.true;
+    expect(r.has(entity2)).to.be.true;
+    expect(r.has(entity3)).to.be.true;
+
+    class Person extends ECS.Component {
+      static properties = {
+        name: 'Bill'
+      };
+    }
+    class Item extends ECS.Component {
+      static properties = {
+        name: 'knife'
+      };
+    }
+    class InInventory extends ECS.Component {
+      static properties = {
+        person: EntityRef
+      };
+    }
+
+    ecs.registerComponent(Person);
+    ecs.registerComponent(Item);
+    ecs.registerComponent(InInventory);
+
+    const e4 = ecs.createEntity({
+      c: {
+        Person: {
+          name: 'Bob'
+        }
+      }
+    });
+
+    const e5 = ecs.createEntity({
+      c: {
+        Item: {
+          name: 'plate'
+        },
+        InInventory: {
+          person: e4
+        }
+      }
+    });
+
+    const q2 = ecs.createQuery({ reverse: { entity: e4, type: 'InInventory'}, persist: true } );
+    const r2 = q2.execute();
+
+    expect(r2.size).to.equal(1);
+    expect(r2.has(e5)).to.be.true;
+
+    const q3 = ecs.createQuery({ any: ['B', 'C'], persist: true });
+    const r3 = q3.execute();
+
+    const q4 = ecs.createQuery({ all: ['B', 'C'], persist: true });
+    const r3b = q4.execute();
+
+    expect(r3.size).to.equal(3);
+    expect(r3.has(entity2)).to.be.true;
+    expect(r3.has(entity3)).to.be.true;
+    expect(r3b.size).to.equal(2);
+    expect(r3b.has(entity3)).to.be.true;
+    expect(r3b.has(entity4)).to.be.true;
+
+    e5.addTag('A');
+    ecs.tick();
+
+    entity2.removeTag('B');
+    e5.removeComponent('InInventory');
+
+    ecs.tick();
+    const r4 = q3.execute();
+    expect(r3.size).to.equal(2);
+    expect(r3.has(entity2)).to.be.false;
+    expect(r3.has(entity3)).to.be.true;
+
+    const q2r2 = q2.execute();
+    expect(q2r2.size).to.equal(0);
+
+    const r5 = q4.execute();
+    expect(r5.size).to.equal(2);
+
+    expect(r3.has(entity1)).to.be.false;
+    entity1.addTag('B');
+    ecs.tick();
+
+    const r6 = q3.execute();
+    expect(r6.has(entity1)).to.be.true;
+    const r7 = q2.execute();
+
+    expect(r7.has(e5)).to.be.false;
+
+  });
+
+  it('track added and removed', () => {
+
+    const ecs = new ECS.World();
+    class S1 extends ECS.System {};
+    class S2 extends ECS.System {};
+
+    const s1 = ecs.registerSystem('group1', S1);
+    const s2 = ecs.registerSystem('group2', S2);
+
+    ecs.registerTags('A', 'B', 'C');
+
+    const e1 = ecs.createEntity({
+      tags: ['A']
+    });
+    const e2 = ecs.createEntity({
+      tags: ['B']
+    });
+    const e3 = ecs.createEntity({
+      tags: ['C']
+    });
+    const e4 = ecs.createEntity({
+      tags: ['A', 'B']
+    });
+    const e5 = ecs.createEntity({
+      tags: ['A', 'C']
+    });
+    const e6 = ecs.createEntity({
+      tags: ['C', 'B']
+    });
+    const e7 = ecs.createEntity({
+      tags: ['A', 'B', 'C']
+    });
+
+    const q1 = s1.createQuery({
+      trackAdded: true,
+    }).fromAll('A', 'C').persist();
+
+    const r1 = q1.execute();
+
+    expect(r1.has(e5)).to.be.true;
+    expect(r1.has(e6)).to.be.false;
+    expect(r1.has(e7)).to.be.true;
+    expect(q1.added.size).to.be.equal(2);
+    expect(q1.removed.size).to.be.equal(0);
+    expect(q1.added.has(e5)).to.be.true;
+    expect(q1.added.has(e6)).to.be.false;
+    expect(q1.added.has(e7)).to.be.true;
+
+    ecs.runSystems('group1');
+    ecs.tick();
+
+    expect(q1.added.size).to.be.equal(0);
+    expect(q1.removed.size).to.be.equal(0);
+
+    e5.removeTag('C');
+    e1.addTag('C');
+
+    ecs.tick();
+
+    expect(r1.has(e5)).to.be.false;
+    expect(r1.has(e7)).to.be.true;
+    expect(r1.has(e1)).to.be.true;
+    expect(q1.added.has(e1)).to.be.true;
+    expect(q1.added.size).to.be.equal(1);
+    expect(q1.removed.size).to.be.equal(0);
+
+    const q2 = s2.createQuery({
+      trackRemoved: true,
+    }).fromAll('A', 'C').persist();
+
+    const r2 = q2.execute();
+
+    expect(r2.has(e1)).to.be.true;
+    expect(r2.has(e6)).to.be.false;
+    expect(r2.has(e5)).to.be.false;
+    expect(r2.has(e7)).to.be.true;
+    expect(q2.added.size).to.be.equal(0);
+    expect(q2.removed.size).to.be.equal(0);
+
+    ecs.tick();
+
+    expect(q2.added.size).to.be.equal(0);
+    expect(q2.removed.size).to.be.equal(0);
+
+    e7.removeTag('A');
+    e3.addTag('A');
+
+    ecs.tick();
+
+    expect(q2.added.size).to.be.equal(0);
+    expect(q2.removed.size).to.be.equal(1);
+    expect(r2.has(e3)).to.be.true;
+    expect(r2.has(e7)).to.be.false;
+    expect(q2.removed.has(e7)).to.be.true;
+
+    ecs.runSystems('group1');
+    expect(q1.added.size).to.be.equal(0);
+    expect(q1.removed.size).to.be.equal(0);
+
+    ecs.runSystems('group2');
+    expect(q2.added.size).to.be.equal(0);
+    expect(q2.removed.size).to.be.equal(0);
+
+  });
+});
 
 // describe('serialize and deserialize', () => {
 
