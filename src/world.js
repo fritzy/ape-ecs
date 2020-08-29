@@ -125,11 +125,10 @@ module.exports = class World {
 
     const stats = this.getStats();
     this._nextStat = 0;
-    let output = `=== Tick ${this.currentTick} ===
-Entities: ${stats.entity.active} active, ${stats.entity.pooled}/${stats.entity.target} pooled`;
+    let output = `${this.currentTick}, Entities: ${stats.entity.active} active, ${stats.entity.pooled}/${stats.entity.target} pooled`;
     for (const key of Object.keys(stats.components)) {
       const cstat = stats.components[key];
-      output += `\n${key}: ${cstat.active} active, ${cstat.pooled}/${cstat.target} pooled`;
+      output += `\n${this.currentTick}, ${key}: ${cstat.active} active, ${cstat.pooled}/${cstat.target} pooled`;
     }
     this._statCallback(output);
   }
