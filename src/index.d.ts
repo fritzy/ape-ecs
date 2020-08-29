@@ -18,6 +18,7 @@ export interface IQueryReverse {
 export interface IQueryConfig {
   trackAdded?: boolean;
   trackRemoved?: boolean;
+  includeApeDestroy?: boolean;
   persist?: boolean;
   from?: (Entity|string)[];
   all?: (string|ComponentClass)[];
@@ -78,6 +79,7 @@ export declare class Query {
   not<T extends typeof Component>(...types: (string|T)[]): Query;
   only<T extends typeof Component>(...types: (string|T)[]): Query;
   persist(trackAdded?: boolean, trackRemoved?: boolean): Query;
+  refresh(): Query;
   execute(filter?: IQueryExecuteConfig): Set<Entity>;
 }
 
@@ -208,6 +210,7 @@ export interface IWorldConfig {
   trackChanges?: boolean;
   entityPool?: number;
   cleanupPools?: boolean;
+  useApeDestroy?: boolean;
 }
 
 // passed to world.createEntity()
@@ -266,7 +269,7 @@ export declare class World {
   registerSystem<T extends typeof System>(group: string, system: T|System): any;
 
   runSystems(group: string): void;
-  updateIndexes(entity?: Entity): void;
+  updateIndexes(): void;
 }
 
 declare class EntitySetC extends Set<any> {
