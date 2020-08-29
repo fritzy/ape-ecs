@@ -10,9 +10,11 @@ class EntityPool {
     this.worldEntity = class WorldEntity extends Entity {};
     this.worldEntity.prototype.world = this.world;
     this.spinUp(spinup);
+    this.targetSize = spinup;
   }
 
   destroy(entity) {
+
     this.destroyed.push(entity);
   }
 
@@ -36,12 +38,24 @@ class EntityPool {
     }
   }
 
+  cleanup() {
+
+    if (this.pool.length > this.targetSize * 2) {
+      const diff = this.pool.length - this.targetSize;
+      const chunk = Math.max(Math.min(20, diff), Math.floor(diff / 4));
+      for (let i = 0; i < chunk; i++) {
+        this.pool.pop();
+      }
+    }
+  }
+
   spinUp(count) {
 
     for(let i = 0; i < count; i++) {
       const entity = new this.worldEntity();
       this.pool.push(entity);
     }
+    this.targetSize = Math.max(this.targetSize, this.pool.length);
   }
 }
 

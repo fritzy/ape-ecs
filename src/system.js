@@ -50,7 +50,6 @@ class System {
     for (const query of this.queries) {
       query.clearChanges();
     }
-    this.world.entityPool.release();
     this.world.updateIndexes();
   }
 

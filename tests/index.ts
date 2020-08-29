@@ -1668,4 +1668,62 @@ describe('serialize and deserialize', () => {
     expect(bottle.id).to.equal(bottle3.id);
     expect(bottle3.tags.size).to.equal(2);
   });
+
+});
+
+describe('pool stats', () => {
+  it('logs output', () => {
+
+    const ecs = new ECS.World({
+      entityPool: 10
+    });
+
+    const logs = [];
+    function logStats(output) {
+      logs.push(output);
+    }
+
+    class Test extends Component {};
+    ecs.registerComponent(Test, 50);
+    ecs.logStats(2, logStats);
+
+    for (let i = 0; i < 1000; i++) {
+      ecs.createEntity({
+        components: [{type: 'Test'}]
+      });
+    }
+
+    const stats1 = ecs.getStats();
+    const stest1 = stats1.components.Test;
+    expect(stats1.entity.target).to.equal(10);
+    expect(stats1.entity.pooled).to.equal(0);
+    expect(stats1.entity.active).to.equal(1000);
+    expect(stest1.target).to.equal(50);
+    expect(stest1.pooled).to.equal(0);
+    expect(stest1.active).to.equal(1000);
+
+    ecs.tick();
+
+    const entities = ecs.getEntities(Test);
+    for (const entity of entities) {
+      entity.destroy();
+    }
+
+    for (let i = 0; i < 14; i++) {
+      ecs.tick();
+    }
+    
+    expect(logs.length).to.equal(7);
+    const stats2 = ecs.getStats();
+    const stest2 = stats2.components.Test;
+    expect(stats2.entity.target).to.equal(10);
+    expect(stats2.entity.pooled).to.be.above(9);
+    expect(stats2.entity.pooled).to.be.below(100);
+    expect(stats2.entity.active).to.equal(0);
+    expect(stest2.target).to.equal(50);
+    expect(stest2.pooled).to.be.above(49);
+    expect(stest2.pooled).to.be.below(101);
+    expect(stest2.active).to.equal(0);
+  });
+
 });

@@ -207,6 +207,7 @@ export declare class Entity {
 export interface IWorldConfig {
   trackChanges?: boolean;
   entityPool?: number;
+  cleanupPools?: boolean;
 }
 
 // passed to world.createEntity()
@@ -217,14 +218,18 @@ export interface IEntityConfig {
   c?: IComponentConfigValObject;
 }
 
-// // alternate version (used heavily by tests)
-// export interface IEntityConfigAlt {
-//   id?: string;
-//   tags?: string[];
-// }
+export interface IPoolStat {
+  active: number,
+  pooled: number,
+  target: number
+}
 
-
-
+export interface IWorldStats {
+  entity: IPoolStat
+  components: {
+    [key:string]: IPoolStat
+  }
+}
 
 export declare class World {
   constructor(config?: IWorldConfig);
@@ -243,7 +248,9 @@ export declare class World {
 
   // Both options allow the passing of a class that extends Component 
   registerComponent<T extends typeof Component>(klass: T, spinup?: number): void;
-  // registerComponent(klass: typeof Component, spinup?: number): void;
+
+  getStats(): IWorldStats;
+  logStats(freq: number, callback?: Function): void;
 
   createEntity(definition: IEntityConfig|IEntityObject): Entity;
   getObject(): IEntityObject[];

@@ -41,7 +41,8 @@ module.exports = class World {
 
     this.config = Object.assign({
       trackChanges: true,
-      entityPool: 10
+      entityPool: 10,
+      cleanupPools: true
     }, config);
     this.currentTick = 0;
     this.entities = new Map();
@@ -59,6 +60,9 @@ module.exports = class World {
     this.refs = {};
     this.componentPool = new Map();
     this.entityPool = new EntityPool(this, this.config.entityPool);
+    this._statCallback = null;
+    this._statTicks = 0;
+    this._nextStat = 0;
   }
 
   /**
@@ -69,7 +73,65 @@ module.exports = class World {
 
     this.currentTick++;
     this.updateIndexes();
+    this.entityPool.release();
+    // istanbul ignore else
+    if (this.config.cleanupPools) {
+      this.entityPool.cleanup();
+      for (const [key, pool] of this.componentPool) {
+        pool.cleanup();
+      }
+    }
+    if (this._statCallback) {
+      this._nextStat += 1;
+      if (this._nextStat >= this._statTicks) {
+        this._outputStats();
+      }
+    }
     return this.currentTick;
+  }
+
+  getStats() {
+
+    const stats = {
+      entity: {
+        active: this.entities.size,
+        pooled: this.entityPool.pool.length,
+        target: this.entityPool.targetSize
+      },
+      components: {
+      }
+    };
+    for (const [key, pool] of this.componentPool) {
+      stats.components[key] = {
+        active: pool.active,
+        pooled: pool.pool.length,
+        target: pool.targetSize
+      };
+    }
+    return stats;
+  }
+
+  logStats(freq, callback) {
+    // istanbul ignore next
+    if (callback === undefined) {
+      callback = console.log;
+    }
+    this._statCallback = callback;
+    this._statTicks = freq;
+    this._nextStat = 0;
+  }
+
+  _outputStats() {
+
+    const stats = this.getStats();
+    this._nextStat = 0;
+    let output = `=== Tick ${this.currentTick} ===
+Entities: ${stats.entity.active} active, ${stats.entity.pooled}/${stats.entity.target} pooled`;
+    for (const key of Object.keys(stats.components)) {
+      const cstat = stats.components[key];
+      output += `\n${key}: ${cstat.active} active, ${cstat.pooled}/${cstat.target} pooled`;
+    }
+    this._statCallback(output);
   }
 
   _addRef(target, entity, component, prop, sub, key, type) {
