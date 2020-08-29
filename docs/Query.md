@@ -11,9 +11,9 @@ const entities = world.createQuery().fromAll('Mass', 'Point').execute();
 
 👆 A Queries must include at least one from* method call or init option.
 
-👆 `fromAll`, `fromAny`, `fromReverse`, `from`, `not`, `persist` can all be done in the creation factory's init `Object`.
+👆 `fromAll`, `fromAny`, `fromReverse`, `from`, `not`, `only`, `persist` can all be done in the creation factory's init `Object`.
 
-👆 `from*` and `not` methods do not distinguish between Component types and Entity tags.
+👆 `from*`, `not`, and `only` methods do not distinguish between Component types and Entity tags.
 
 ```js
 // functionally equivalent to the previous example
@@ -46,6 +46,21 @@ class ApplyMove extends ApeECS.System {
   }
 }
 ```
+
+### Query init object
+
+You can pass an init object to world or system `createQuery({})`
+
+* init
+  * from: `Array`, equiv to from()
+  * all: `Array`, equiv to fromAll()
+  * any: `Array`, equiv to fromAny()
+  * not `Array`, equiv to not()
+  * only: `Array`, equiv to only()
+  * persist: `bool`, equiv to persist()
+  * trackAdd: `bool`, track added entities between system runs on persisted query with the query.added Set.
+  * trackRemoved: `bool`, track removed entities between system runs on persisted query with query.removed Set.
+  * includeApeDestroy: `bool`, if world.config.useApeDestoy is true, queries default to removing Entities with the `ApeDestroy` tag, but you can include them by setting this to `true`.
 
 ## fromAll
 
@@ -198,6 +213,23 @@ If you want to update your persisted queries at other times, run [world.updateIn
 ⚠ Queries cannot be persisted if they use `from` a static set of Entities, or if they're not created from a System.
 
 💭 If you persist a LOT of Queries, it can have a performance from creating Entities, or adding/removing Components or Tags.
+
+## refresh
+
+[execute](#execute) will not update results for changed entities, and persisted queries won't update within a single system update. To get new results in these situations, use refresh.
+
+```js
+const world.registerTags('A', 'B');
+const entity1 = world.createEntity({ tags: ['A'] });
+const query = world.createQuery().fromAll('A', 'B');
+const results1 = query.execute(); // doesn't include entity1
+entity1.addTag('B');
+const results2 = query.execute(); // doesn't include entity1
+const result3 = query.refresh().execute(); //does include entity1
+```
+
+👆 After each system run and each tick, [world.updateIndexes()](./World.md#updateindexes) which will refresh persisted queries from changed entities.
+You can run this directly as well.
 
 ## execute
 

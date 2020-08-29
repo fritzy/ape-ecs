@@ -21,6 +21,7 @@ An instance of `World` is essentially a registry of your game or simulation data
 * [createQuery](#createquery)
 * [registerSystem](#registersystem)
 * [runSystems](#runsystems)
+* [updateIndexes](#updateindexes)
 
 ## World constructor
 
@@ -30,7 +31,8 @@ Constructs a new `World` instance.
 const myWorld = new ApeECS.World({ 
   trackChanges: true,
   entityPool: 10,
-  cleanupPools: true
+  cleanupPools: true,
+  useApeDestroy: true
 });
 ```
 
@@ -38,7 +40,8 @@ const myWorld = new ApeECS.World({
 * config: `Object`, optional
   - trackChanges: `bool`, default `true`
   - entityPool: `Number`, default `10`
-  - cleanupPools: `bool`, default `true`j
+  - cleanupPools: `bool`, default `true`
+  - useApeDestroy: `bool`, default `false`:
   
 ### Notes:
 
@@ -47,6 +50,11 @@ Turning off `trackChanges` removes the events that a `System` can subscribe to.
 The initial `entityPool` spins up a given number `Entity` instances for later use. Pooling configuration for `Component` instances is done by indivual types at registration.
 
 `cleanupPools` shrinks the pool back down to between the set pool size and double the the pool size. Without it, the pool can be as large as the max number of entities or a given component type that has ever existed.
+
+`useApeDestroy` adds the `ApeDestroy` tag and `ApeCleanup` system group, which then runs at each [tick()](#tick).
+If you want to destroy an Entity, but not until the end of the tick, just add the tag `ApeDestroy`.
+It keeps the entity around until the end, but it won't show up in [Query.execute()](./Query.md#execute) results unless you set `createQuery({ includeApeDestroy: true })`.
+`useApeDestroy` setup up a set of builtin behaviors for a common pattern.
 
 ### Example:
 ```js
@@ -412,12 +420,22 @@ world.logStats(60, console.log);
 ```
 
 ```
-=== Tick 3 ===
-Entity 23 active 77/100 pooled
-SomeComponent 30 active 20/50 pooled
-SomeOtherComponent 30 active 0/10 pooled
+3, Entity 23 active 77/100 pooled
+3, SomeComponent 30 active 20/50 pooled
+3, SomeOtherComponent 30 active 0/10 pooled
 ```
 
 **Arguments**:
 * freq: Number, _required_: How frequently in ticks to call the log
 * callback: function, _optional_: function to call with stats logs, default: console.log
+
+## updateIndexes
+
+Method that updates persisted queries after system runs and upon ticks.
+
+```js
+world.updateIndexes();
+```
+
+You can update the results of persisted queries for changed entities within a system update by calling this method.
+It won't do anything for non-system, non-persisted queries.

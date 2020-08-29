@@ -11,6 +11,7 @@ import {
   EntityObject,
   Query,
 } from '../src';
+import { SSL_OP_NO_TICKET } from 'constants';
 
 const ECS = {
   World,
@@ -494,7 +495,7 @@ describe('system queries', () => {
     expect(tileSystem.lastResults.has(tile1)).to.be.true;
 
     tile1.addComponent({ type: 'Hidden' });
-    ecs.updateIndexes(tile1);
+    ecs.updateIndexes();
 
     ecs.runSystems('map');
 
@@ -1725,5 +1726,53 @@ describe('pool stats', () => {
     expect(stest2.pooled).to.be.below(101);
     expect(stest2.active).to.equal(0);
   });
+});
 
+describe('ApeDestroy', () => {
+  it('Test ApeDestroy Queries', () => {
+
+    const ecs = new World({
+      useApeDestroy: true
+    });
+
+    class Test extends Component {}
+
+    ecs.registerTags('A', 'B', 'C');
+    ecs.registerComponent(Test, 10);
+
+    const e1 = ecs.createEntity({
+      tags: ['A'],
+      components: [{
+        type: 'Test'
+      }]
+    });
+
+    const q1 = ecs.createQuery().fromAll('Test', 'A');
+    const r1 = q1.execute();
+
+    expect(r1).contains(e1);
+
+    const q1b = ecs.createQuery({ all: ['Test', 'A']});
+    const r1b = q1b.execute();
+
+    expect(r1b).contains(e1);
+
+    e1.addTag('ApeDestroy');
+
+    const q2 = ecs.createQuery({ all: ['Test', 'A'], not: ['B'] });
+    const r2 = q2.execute();
+
+    expect(r2).not.contains(e1);
+
+    const q3 = ecs.createQuery({ includeApeDestroy: true, not: ['B'] }).fromAll('Test', 'A');
+    const r3 = q3.execute();
+
+    expect(r3).contains(e1);
+
+    ecs.tick();
+
+    q3.refresh();
+    const r3b = q3.execute();
+    expect(r3b).not.contains(e1);
+  });
 });

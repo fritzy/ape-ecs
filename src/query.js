@@ -19,12 +19,24 @@ class Query {
     this.added = new Set();
     this.removed = new Set();
 
+    if (this.world.config.useApeDestroy && !init) {
+
+      this.not('ApeDestroy');
+    }
+
     if (init) {
       this.trackAdded = init.trackAdded || false;
       this.trackRemoved = init.trackRemoved || false;
       // istanbul ignore if
       if ((this.trackAdded || this.trackRemoved) && !this.system) {
         throw new Error('Queries cannot track added or removed when initialized outside of a system');
+      }
+      if (this.world.config.useApeDestroy && !init.includeApeDestroy) {
+        if (init.not) {
+          init.not.push('ApeDestroy');
+        } else {
+          init.not = ['ApeDestroy'];
+        }
       }
       if (init.from) {
         this.from(...init.from);

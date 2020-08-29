@@ -8,6 +8,7 @@ const Query = require('./query');
 const Component = require('./component');
 const ComponentPool = require('./componentpool');
 const EntityPool = require('./entitypool');
+const setupApeDestroy = require('./cleanup');
 
 const componentReserved = new Set(
   [
@@ -42,7 +43,8 @@ module.exports = class World {
     this.config = Object.assign({
       trackChanges: true,
       entityPool: 10,
-      cleanupPools: true
+      cleanupPools: true,
+      useApeDestroy: false
     }, config);
     this.currentTick = 0;
     this.entities = new Map();
@@ -59,10 +61,13 @@ module.exports = class World {
     this.systems = new Map();
     this.refs = {};
     this.componentPool = new Map();
-    this.entityPool = new EntityPool(this, this.config.entityPool);
     this._statCallback = null;
     this._statTicks = 0;
     this._nextStat = 0;
+    this.entityPool = new EntityPool(this, this.config.entityPool);
+    if (this.config.useApeDestroy) {
+      setupApeDestroy(this);
+    }
   }
 
   /**
@@ -71,6 +76,9 @@ module.exports = class World {
    */
   tick() {
 
+    if (this.config.useApeDestroy) {
+      this.runSystems('ApeCleanup');
+    }
     this.currentTick++;
     this.updateIndexes();
     this.entityPool.release();
@@ -382,11 +390,8 @@ module.exports = class World {
     this.updatedEntities.delete(entity);
   }
 
-  updateIndexes(entity) {
+  updateIndexes() {
 
-    if (entity !== undefined) {
-      return this._updateIndexesEntity(entity);
-    }
     for (const entity of this.updatedEntities) {
       this._updateIndexesEntity(entity);
     }
