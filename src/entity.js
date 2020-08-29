@@ -88,7 +88,7 @@ class Entity {
 
   addTag(tag) {
 
-    // istanbul skip next
+    // istanbul ignore next
     if (!this.world.tags.has(tag)) {
       throw new Error(`addTag "${$tag}" is not registered. Type-O?`)
     }
