@@ -88,6 +88,10 @@ class Entity {
 
   addTag(tag) {
 
+    // istanbul skip next
+    if (!this.world.tags.has(tag)) {
+      throw new Error(`addTag "${$tag}" is not registered. Type-O?`)
+    }
     this.tags.add(tag);
     this.updatedComponents = this.world.currentTick;
     this.world.entitiesByComponent[tag].add(this.id);
