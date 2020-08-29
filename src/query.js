@@ -41,6 +41,9 @@ class Query {
       if (init.not) {
         this.not(...init.not);
       }
+      if (init.only) {
+        this.only(...init.only);
+      }
       if (init.persist) {
         this.persist();
       }
@@ -49,7 +52,6 @@ class Query {
 
   from(...entities) {
 
-    // istanbul ignore next
     entities = entities.map((e) => (typeof e !== 'string') ? e.id : e);
     this.query.froms.push({
       from: 'from',
@@ -61,9 +63,11 @@ class Query {
 
   fromReverse(entity, componentName) {
 
-    // istanbul ignore if
-    if(typeof entity !== 'object') {
+    if(typeof entity === 'string') {
       entity = this.world.getEntity(entity);
+    }
+    if (typeof componentName === 'function') {
+      componentName = componentName.name;
     }
     this.query.froms.push({
       from: 'reverse',
@@ -75,27 +79,40 @@ class Query {
 
   fromAll(...types) {
 
+    const stringTypes = types.map((t) => (typeof t !== 'string') ? t.name : t);
     this.query.froms.push({
       from: 'all',
-      types
+      types: stringTypes
     });
     return this;
   }
 
   fromAny(...types) {
 
+    const stringTypes = types.map((t) => (typeof t !== 'string') ? t.name : t);
     this.query.froms.push({
       from: 'any',
-      types
+      types: stringTypes
     });
     return this;
   }
 
   not(...types) {
 
+    const stringTypes = types.map((t) => (typeof t !== 'string') ? t.name : t);
     this.query.filters.push({
       filter: 'not',
-      types
+      types: stringTypes
+    });
+    return this;
+  }
+
+  only(... types) {
+
+    const stringTypes = types.map((t) => (typeof t !== 'string') ? t.name : t);
+    this.query.filters.push({
+      filter: 'only',
+      types: stringTypes
     });
     return this;
   }
@@ -231,7 +248,7 @@ class Query {
         }
         results = Util.setUnion(results, ...comps);
       } else /* istanbul ignore else */ if (source.from === 'reverse') {
-        //istanbul ignore else
+        // istanbul ignore else
         if (this.world.entityReverse[source.entity.id]
           && this.world.entityReverse[source.entity.id].hasOwnProperty(source.type)) {
           results = Util.setUnion(results, new Set([...this.world.entityReverse[source.entity.id][source.type].keys()]));
@@ -259,13 +276,23 @@ class Query {
   _filter(entity) {
 
     for (const filter of this.query.filters) {
-      // istanbul ignore else
       if (filter.filter === 'not') {
         for (const type of filter.types) {
           if (entity.has(type)) {
             this.results.delete(entity);
             break;
           }
+        }
+      } else /* istanbul ignore else */ if (filter.filter === 'only') {
+        let found = false;
+        for (const type of filter.types) {
+          if (entity.has(type)) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          this.results.delete(entity);
         }
       }
     }

@@ -6,6 +6,8 @@ class ComponentPool {
     this.type = type;
     this.klass = this.world.componentTypes[this.type];
     this.pool = [];
+    this.targetSize = spinup;
+    this.active = 0;
     this.spinUp(spinup);
   }
 
@@ -18,6 +20,7 @@ class ComponentPool {
       comp = this.pool.pop();
     }
     comp._setup(entity, initial);
+    this.active++;
     return comp;
   }
 
@@ -26,6 +29,18 @@ class ComponentPool {
     comp._reset();
     //comp._meta.entity = null;
     this.pool.push(comp);
+    this.active--;
+  }
+
+  cleanup() {
+
+    if (this.pool.length > this.targetSize * 2) {
+      const diff = this.pool.length - this.targetSize;
+      const chunk = Math.max(Math.min(20, diff), Math.floor(diff / 4));
+      for (let i = 0; i < chunk; i++) {
+        this.pool.pop();
+      }
+    }
   }
 
   spinUp(count) {
@@ -34,6 +49,7 @@ class ComponentPool {
       const comp = new this.klass();
       this.pool.push(comp);
     }
+    this.targetSize = Math.max(this.targetSize, this.pool.length);
   }
 }
 

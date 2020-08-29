@@ -29,20 +29,24 @@ Constructs a new `World` instance.
 ```js
 const myWorld = new ApeECS.World({ 
   trackChanges: true,
-  entityPool: 10
+  entityPool: 10,
+  cleanupPools: true
 });
 ```
 
 ### Arguments:
 * config: `Object`, optional
   - trackChanges: `bool`, default `true`
-  - entityPool: `Number`, default `1`
+  - entityPool: `Number`, default `10`
+  - cleanupPools: `bool`, default `true`j
   
 ### Notes:
 
 Turning off `trackChanges` removes the events that a `System` can subscribe to.
 
 The initial `entityPool` spins up a given number `Entity` instances for later use. Pooling configuration for `Component` instances is done by indivual types at registration.
+
+`cleanupPools` shrinks the pool back down to between the set pool size and double the the pool size. Without it, the pool can be as large as the max number of entities or a given component type that has ever existed.
 
 ### Example:
 ```js
@@ -379,3 +383,41 @@ world.runSystems(group);
 ### Notes:
 
 👀 See the [System Docs](System.md) for more information about running `Systems`.
+
+## getStats
+
+Get the World stats (currently pooling status)
+
+```js
+const stats = world.getStats();
+console.log(stats);
+```
+
+```js
+{
+  entity: { active: 23, pooled: 77, target: 100 },
+  SomeComponent: { active: 30 pooled: 20, target: 50 },
+  SomeOtherComponent: { active: 30 pooled: 0, target: 10 }
+}
+```
+
+👆 When you [registerComponent](#registercomponent), the second argument is your target pool size.
+
+👆 You can go over your target pool size, and if the world configuration of `cleanupPools` is true (the default), any unused pooled items over double the target will be slowly decreased until somewhere between double and the target.
+
+## logStats
+
+```js
+world.logStats(60, console.log);
+```
+
+```
+=== Tick 3 ===
+Entity 23 active 77/100 pooled
+SomeComponent 30 active 20/50 pooled
+SomeOtherComponent 30 active 0/10 pooled
+```
+
+**Arguments**:
+* freq: Number, _required_: How frequently in ticks to call the log
+* callback: function, _optional_: function to call with stats logs, default: console.log

@@ -61,7 +61,7 @@ describe('express components', () => {
       }
     });
 
-    const results = ecs.createQuery().fromAll('Health').execute();
+    const results = ecs.createQuery().fromAll(Health).execute();
 
     expect(results.size).to.equal(2);
   });
@@ -204,7 +204,7 @@ describe('express components', () => {
           const parent = this.world.getEntity(change.entity);
           if (change.op === 'addRef') {
             const value = this.world.getEntity(change.target);
-            if (value.has('Wearable')) {
+            if (value.has(Wearable)) {
               const components = [];
               for (const effectDef of value.c.Wearable.effects) {
                 const component = parent.addComponent(effectDef);
@@ -307,6 +307,7 @@ describe('express components', () => {
     ecs.runSystems('equipment');
 
     expect(entity.getComponents('EquipmentEffect')).to.not.be.empty;
+    expect(entity.getComponents(EquipmentEffect)).to.not.be.empty;
     const eEffects = new Set([...entity.getComponents('EquipmentEffect')][0].effects);
 
     expect(eEffects.has(effectExt.id)).to.be.true;
@@ -548,7 +549,7 @@ describe('system queries', () => {
 
     const result = ecs.createQuery()
       .fromAll('Tile', 'Billboard')
-      .not('Sprite', 'Hidden')
+      .not(Sprite, 'Hidden')
       .execute();
 
     const resultSet = new Set([...result]);
@@ -624,6 +625,14 @@ describe('system queries', () => {
     expect(result3.has(tile3)).to.be.false;
     expect(result3.has(tile4)).to.be.false;
     expect(result3.has(tile5)).to.be.false;
+
+    const result3b = ecs.getEntities(Sprite);
+
+    expect(result3b.has(tile1)).to.be.false;
+    expect(result3b.has(tile2)).to.be.false;
+    expect(result3b.has(tile3)).to.be.true;
+    expect(result3b.has(tile4)).to.be.false;
+    expect(result3b.has(tile5)).to.be.false;
 
     tile4.addTag('Billboard');
     tile2.removeTag('Hidden');
@@ -1319,6 +1328,7 @@ describe('exporting and restoring', () => {
     expect(old.c.Liquid).to.exist;
     expect(entity2.c.Liquid).to.exist;
 
+    expect(entity.getOne(Effect)).to.equal(entity.c.Effect);
     expect(entity.getOne('Effect')).to.equal(entity.c.Effect);
 
     entity2.c.Liquid.key = 'OtherLiquid';
@@ -1337,7 +1347,7 @@ describe('advanced queries', () => {
 
     const ecs = new ECS.World();
 
-    ecs.registerTags('A', 'B', 'C');
+    ecs.registerTags('A', 'B', 'C', 'D');
 
     const entity1 = ecs.createEntity({
       tags: ['A']
@@ -1354,12 +1364,19 @@ describe('advanced queries', () => {
       tags: ['B', 'C', 'A']
     });
 
-    const q = ecs.createQuery({ from: [entity1, entity2, entity3] });
+    const q = ecs.createQuery().from(entity1, entity2.id, entity3);
     const r = q.execute();
-
+    
     expect(r.has(entity1)).to.be.true;
     expect(r.has(entity2)).to.be.true;
     expect(r.has(entity3)).to.be.true;
+
+    const q1b = ecs.createQuery({ from: [entity1, entity2.id, entity3] });
+    const r1b = q.execute();
+    
+    expect(r1b.has(entity1)).to.be.true;
+    expect(r1b.has(entity2)).to.be.true;
+    expect(r1b.has(entity3)).to.be.true;
 
     class Person extends ECS.Component {
       static properties = {
@@ -1406,6 +1423,18 @@ describe('advanced queries', () => {
     expect(r2.size).to.equal(1);
     expect(r2.has(e5)).to.be.true;
 
+    const q2b = ecs.createQuery().fromReverse(e4.id, InInventory).persist();
+    const r2b = q2b.execute();
+
+    expect(r2b.size).to.equal(1);
+    expect(r2b.has(e5)).to.be.true;
+
+    const q2c = ecs.createQuery().fromAny(Person, 'Item');
+    const r2c = q2c.execute();
+
+    expect(r2c.has(e4)).to.be.true;
+    expect(r2c.has(e5)).to.be.true;
+
     const q3 = ecs.createQuery({ any: ['B', 'C'], persist: true });
     const r3 = q3.execute();
 
@@ -1446,6 +1475,23 @@ describe('advanced queries', () => {
     const r7 = q2.execute();
 
     expect(r7.has(e5)).to.be.false;
+
+    const entity5 = ecs.createEntity({
+      tags: ['D', 'B', 'A']
+    });
+
+    const q5 = ecs.createQuery().fromAll('A').only('D', 'C', Item)
+    const rq5 = q5.execute();
+
+    expect(rq5.has(entity5)).to.be.true;
+
+    const q5b = ecs.createQuery({
+      all: ['A'],
+      only: ['D', 'C', Item]
+    });
+    const rq5b = q5b.execute();
+
+    expect(rq5b.has(entity5)).to.be.true;
 
   });
 
@@ -1622,4 +1668,62 @@ describe('serialize and deserialize', () => {
     expect(bottle.id).to.equal(bottle3.id);
     expect(bottle3.tags.size).to.equal(2);
   });
+
+});
+
+describe('pool stats', () => {
+  it('logs output', () => {
+
+    const ecs = new ECS.World({
+      entityPool: 10
+    });
+
+    const logs = [];
+    function logStats(output) {
+      logs.push(output);
+    }
+
+    class Test extends Component {};
+    ecs.registerComponent(Test, 50);
+    ecs.logStats(2, logStats);
+
+    for (let i = 0; i < 1000; i++) {
+      ecs.createEntity({
+        components: [{type: 'Test'}]
+      });
+    }
+
+    const stats1 = ecs.getStats();
+    const stest1 = stats1.components.Test;
+    expect(stats1.entity.target).to.equal(10);
+    expect(stats1.entity.pooled).to.equal(0);
+    expect(stats1.entity.active).to.equal(1000);
+    expect(stest1.target).to.equal(50);
+    expect(stest1.pooled).to.equal(0);
+    expect(stest1.active).to.equal(1000);
+
+    ecs.tick();
+
+    const entities = ecs.getEntities(Test);
+    for (const entity of entities) {
+      entity.destroy();
+    }
+
+    for (let i = 0; i < 14; i++) {
+      ecs.tick();
+    }
+    
+    expect(logs.length).to.equal(7);
+    const stats2 = ecs.getStats();
+    const stest2 = stats2.components.Test;
+    expect(stats2.entity.target).to.equal(10);
+    expect(stats2.entity.pooled).to.be.above(9);
+    expect(stats2.entity.pooled).to.be.below(100);
+    expect(stats2.entity.active).to.equal(0);
+    expect(stest2.target).to.equal(50);
+    expect(stest2.pooled).to.be.above(49);
+    expect(stest2.pooled).to.be.below(101);
+    expect(stest2.active).to.equal(0);
+  });
+
 });

@@ -49,11 +49,11 @@ class ApplyMove extends ApeECS.System {
 
 ## fromAll
 
-Using `fromAll` limits the Query execution results to Entities with at least all of the Component types/Tags listed.
+Using `fromAll` adds to the Query execution results Entities with at least all of the Component types/Tags listed.
 It is literally a set union.
 
 **Arguments**:
-* ...types: `[]String`: _required_, array of strings that are the tags and Component types you require from an entity
+* ...types: `[]String|Component class`: _required_, array of strings that are the tags and Component types you require from an entity
 
 **Returns**:
 * `Query` instance for chaining methods.
@@ -70,7 +70,7 @@ const query = world.createQuery({
 
 ## fromAny
 
-Query `execute` results must include Entities with at least one of the tags or Component types listed.
+Query `execute` results include Entities with at least one of the tags or Component types listed.
 
 ```js
 //must have Character Component type or tag and must have one or more of Sprite, Image, or New.
@@ -85,7 +85,7 @@ const query = world.createQuery({
 ```
 
 **Arguments**:
-* ...types: `[]String`: _required_, array of strings that are the tags and Component types you require at least one of from an entity
+* ...types: `[]String|Component class`: _required_, array of strings that are the tags and Component types you require at least one of from an entity
 
 **Returns**:
 * `Query` instance for chaining methods.
@@ -137,9 +137,10 @@ const query = world.createQuery({
 ## not
 
 Limit Query `execute` results to not include Entities that have any of these Component types or tags.
+`not()` filters results, and thus the query must include at least one of `from`, `fromAll` or `fromAny` as well.
 
 **Arguments**:
-* ...types: `[]String`, _required_, Array of Component types and Tags to disqualify result entities
+* ...types: `[]String|Component class`, _required_, Array of Component types and Tags to disqualify result entities
 
 **Returns**:
 * `Query` instance for chaining methods.
@@ -150,8 +151,30 @@ const query = world.createQuery().fromAll('Character', 'Sprite').not('Invisible'
 
 ```js
 const query = world.createQuery({
-  all: ['Character', 'Sprite'],
+  all: ['Character', Sprite],
   not: ['Invisible', 'MarkedForRemoval']
+});
+```
+
+## only
+
+Limit Query `execute` results to only include Entities that have at least one of these Component types or tags.
+`only()` filters results, and thus the query must include at least one of `from`, `fromAll` or `fromAny` as well.
+
+**Arguments**:
+* ...types: `[]String|Component class`, _required_, Array of Component types and Tags to disqualify result entities
+
+**Returns**:
+* `Query` instance for chaining methods.
+
+```js
+const query = world.createQuery().fromAll('Character', 'Sprite').only('Invisible', 'MarkedForRemoval');
+```
+
+```js
+const query = world.createQuery({
+  all: ['Character', Sprite],
+  only: ['Invisible', 'MarkedForRemoval']
 });
 ```
 

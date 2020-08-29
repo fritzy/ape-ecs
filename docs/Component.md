@@ -7,6 +7,8 @@ Those properties can be JavaScript types and special Entity Reference values.
 ```js
 class EquipmentSlot extends ApeECS.Component {
 
+  // we could assign parameters and other static properties
+  // directly onto EquipmentSlot and it would be equivalant
   static parameters = {
     name: 'Right Hand',
     slotType: 'wieldable',
@@ -28,6 +30,8 @@ class EquipmentSlot extends ApeECS.Component {
   }
 }
 ```
+
+👆 While all current browsers and Node.js support the `static` paramter in classes, it isn't currently approved for usage in ECMAScript. Assigning those properties on the class or constructor is equivalant.
 
 👀 See the [World registerComponent documentation](./World.md#registercomponent) for information on how to define a new Component type.
 
