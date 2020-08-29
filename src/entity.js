@@ -13,6 +13,7 @@ class Entity {
     this.updatedComponents = 0;
     this.updatedValues = 0;
     this.destroyed = false;
+    this.ready = false;
   }
 
   _setup(definition) {
@@ -29,7 +30,7 @@ class Entity {
 
     if (definition.tags) {
       for (const tag of definition.tags) {
-        this.addTag(tag, true);
+        this.addTag(tag);
       }
     }
 
@@ -50,6 +51,8 @@ class Entity {
         this.addComponent(comp);
       }
     }
+    this.ready = true;
+    this.world._entityUpdated(this);
   }
 
 
@@ -83,12 +86,12 @@ class Entity {
     return this.types[type] || new Set();
   }
 
-  addTag(tag, skipUpdate=false) {
+  addTag(tag) {
 
     this.tags.add(tag);
     this.updatedComponents = this.world.currentTick;
     this.world.entitiesByComponent[tag].add(this.id);
-    if (!skipUpdate) {
+    if (this.ready) {
       this.world._entityUpdated(this);
     }
   }
@@ -115,7 +118,9 @@ class Entity {
     this.types[type].add(comp);
     this.world._addEntityComponent(type, this);
     this.updatedComponents = this.world.currentTick;
-    this.world._entityUpdated(this);
+    if (this.ready) {
+      this.world._entityUpdated(this);
+    }
     return comp;
   }
 
@@ -203,6 +208,7 @@ class Entity {
     this.world.entities.delete(this.id);
     delete this.world.entityReverse[this.id];
     this.destroyed = true;
+    this.ready = false;
     this.world.entityPool.destroy(this);
     this.world._clearIndexes(this);
   }

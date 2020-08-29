@@ -198,7 +198,7 @@ export declare class Entity {
   has(type: string|ComponentClass): boolean;
   getOne(type: string|ComponentClass): Component | undefined;
   getComponents(type: string|ComponentClass): Set<Component>;
-  addTag(tag: string, skipUpdate?: boolean): void;
+  addTag(tag: string): void;
   removeTag(tag: string): void;
   addComponent(properties: IComponentConfig): Component;
   removeComponent(component: Component|string): boolean;

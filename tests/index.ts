@@ -1547,12 +1547,13 @@ describe('advanced queries', () => {
     ecs.runSystems('group1');
     ecs.tick();
 
-    expect(q1.added.size).to.be.equal(0);
+    expect(q1.added.size).to.be.equal(2);
     expect(q1.removed.size).to.be.equal(0);
 
     e5.removeTag('C');
     e1.addTag('C');
 
+    ecs.runSystems('group1');
     ecs.tick();
 
     expect(r1.has(e5)).to.be.false;
