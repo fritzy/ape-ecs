@@ -132,7 +132,7 @@ This library has been inspired in part by:
 
 ## Example Game
 
-[Roguelike Example Using @fritzy/ecs + rot.js](https://github.com/fritzy/ecs-js-example)
+An in-progress arcade game [Missile Orders](https://github.com/fritzy/missileorders.git).
 
 ## Running the Tests
 
