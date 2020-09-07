@@ -37,7 +37,7 @@ export declare class System {
   static subscriptions: string[];
   init(): void;
   update(tick: number): void;
-  createQuery(init: IQueryConfig): Query;
+  createQuery(init?: IQueryConfig): Query;
   subscribe(type: string): void;
 }
 
