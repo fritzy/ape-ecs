@@ -200,7 +200,7 @@ export declare class Entity {
   getComponents(type: string|ComponentClass): Set<Component>;
   addTag(tag: string): void;
   removeTag(tag: string): void;
-  addComponent(properties: IComponentConfig): Component;
+  addComponent(properties: IComponentConfig|IComponentObject): Component;
   removeComponent(component: Component|string): boolean;
   getObject(componentIds?: boolean): IEntityObject;
   destroy(): void;
