@@ -43,6 +43,7 @@ class System {
 
     this.changes = this._stagedChanges;
     this._stagedChanges = [];
+    this.world.updateIndexes();
   }
 
   _postUpdate() {
@@ -50,7 +51,6 @@ class System {
     for (const query of this.queries) {
       query.clearChanges();
     }
-    this.world.updateIndexes();
   }
 
   _recvChange(change) {

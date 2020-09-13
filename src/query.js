@@ -314,10 +314,7 @@ class Query {
 
     if (!this.executed) {
       this.refresh();
-    } else {
-      this.added.clear();
     }
-    this.removed.clear();
     this.executed = true;
     // istanbul ignore next
     if (filter === undefined

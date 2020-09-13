@@ -1499,69 +1499,89 @@ describe('advanced queries', () => {
   it('track added and removed', () => {
 
     const ecs = new ECS.World();
-    class S1 extends ECS.System {};
-    class S2 extends ECS.System {};
+    class S1 extends ECS.System {
+
+      q1: Query;
+
+      init() {
+
+        this.q1 = this.createQuery({
+          trackAdded: true,
+        }).fromAll('A', 'C').persist();
+      }
+      
+      update(tick) {
+
+        const r1 = this.q1.execute();
+
+        switch(tick) {
+          case 0:
+            expect(r1.has(e5)).to.be.true;
+            expect(r1.has(e6)).to.be.false;
+            expect(r1.has(e7)).to.be.true;
+            expect(r1).not.contains(e1);
+            expect(this.q1.added.size).to.be.equal(2);
+            expect(this.q1.removed.size).to.be.equal(0);
+            expect(this.q1.added.has(e5)).to.be.true;
+            expect(this.q1.added.has(e6)).to.be.false;
+            expect(this.q1.added.has(e7)).to.be.true;
+            break;
+          case 1:
+            expect(r1).not.contains(e5);
+            expect(r1).contains(e1);
+            expect(this.q1.removed.size).to.equal(0);
+            expect(this.q1.added).contains(e1);
+            expect(this.q1.added.size).to.be.equal(1);
+            break;
+          case 2:
+            expect(r1.has(e5)).to.be.false;
+            expect(r1.has(e7)).to.be.true;
+            expect(r1.has(e1)).to.be.true;
+            expect(this.q1.added.has(e1)).to.be.true;
+            expect(this.q1.added.size).to.be.equal(1);
+            expect(this.q1.removed.size).to.be.equal(0);
+            break;
+        }
+        
+      }
+    }
+    class S2 extends ECS.System {}
 
     const s1 = ecs.registerSystem('group1', S1);
     const s2 = ecs.registerSystem('group2', S2);
 
     ecs.registerTags('A', 'B', 'C');
 
-    const e1 = ecs.createEntity({
+    var e1 = ecs.createEntity({
       tags: ['A']
     });
-    const e2 = ecs.createEntity({
+    var e2 = ecs.createEntity({
       tags: ['B']
     });
-    const e3 = ecs.createEntity({
+    var e3 = ecs.createEntity({
       tags: ['C']
     });
-    const e4 = ecs.createEntity({
+    var e4 = ecs.createEntity({
       tags: ['A', 'B']
     });
-    const e5 = ecs.createEntity({
+    var e5 = ecs.createEntity({
       tags: ['A', 'C']
     });
-    const e6 = ecs.createEntity({
+    var e6 = ecs.createEntity({
       tags: ['C', 'B']
     });
-    const e7 = ecs.createEntity({
+    var e7 = ecs.createEntity({
       tags: ['A', 'B', 'C']
     });
 
-    const q1 = s1.createQuery({
-      trackAdded: true,
-    }).fromAll('A', 'C').persist();
-
-    const r1 = q1.execute();
-
-    expect(r1.has(e5)).to.be.true;
-    expect(r1.has(e6)).to.be.false;
-    expect(r1.has(e7)).to.be.true;
-    expect(q1.added.size).to.be.equal(2);
-    expect(q1.removed.size).to.be.equal(0);
-    expect(q1.added.has(e5)).to.be.true;
-    expect(q1.added.has(e6)).to.be.false;
-    expect(q1.added.has(e7)).to.be.true;
-
     ecs.runSystems('group1');
     ecs.tick();
-
-    expect(q1.added.size).to.be.equal(2);
-    expect(q1.removed.size).to.be.equal(0);
 
     e5.removeTag('C');
     e1.addTag('C');
 
     ecs.runSystems('group1');
     ecs.tick();
-
-    expect(r1.has(e5)).to.be.false;
-    expect(r1.has(e7)).to.be.true;
-    expect(r1.has(e1)).to.be.true;
-    expect(q1.added.has(e1)).to.be.true;
-    expect(q1.added.size).to.be.equal(1);
-    expect(q1.removed.size).to.be.equal(0);
 
     const q2 = s2.createQuery({
       trackRemoved: true,
@@ -1593,8 +1613,8 @@ describe('advanced queries', () => {
     expect(q2.removed.has(e7)).to.be.true;
 
     ecs.runSystems('group1');
-    expect(q1.added.size).to.be.equal(0);
-    expect(q1.removed.size).to.be.equal(0);
+    expect(s1.q1.added.size).to.be.equal(0);
+    expect(s1.q1.removed.size).to.be.equal(0);
 
     ecs.runSystems('group2');
     expect(q2.added.size).to.be.equal(0);
