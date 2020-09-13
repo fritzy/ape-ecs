@@ -3,11 +3,6 @@ const idGen = new Util.IdGenerator();
 
 class Component {
 
-  static properties = {};
-  static serialize = true;
-  static serializeFields = null;
-  static subbed = false;
-
   constructor() {
 
     this._meta = {
@@ -180,5 +175,10 @@ class Component {
     this.world._deleteRef(value, this._meta.entityId, this.id, prop, sub, this._meta.key, this.type);
   }
 }
+
+Component.properties = {};
+Component.serialize = true;
+Component.serializeFields = null;
+Component.subbed = false;
 
 module.exports = Component;

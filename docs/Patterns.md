@@ -125,6 +125,8 @@ class GameLoop {
 }
 ```
 
+## Two Ways of Doing Inventory with Entity References
+
 ## Globals and GameLoop
 
 ## Function-Only Systems

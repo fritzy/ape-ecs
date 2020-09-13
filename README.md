@@ -13,13 +13,16 @@ A performant [Entity-Component-System](https://en.wikipedia.org/wiki/Entity_comp
 npm install ape-ecs 
 ```
 
-## Some Ape ECS Features
+## Differentiating Features
 
-* Easy to define Components.
-* Advanced Queries based on Entity-Component composition, Entity references, and the last updated.
-* Persisted queries are updated as Entity composition changes.
-* Component reference types to Entities (EntityRef, EntitySet, EntityObject)
-* Export/import support for saving/restoring state.
+* Advanced Queries for entities.
+* Persisted Queries (indexes) are updated as Entity composition changes.
+* Component reference properties to Entities (EntityRef, EntitySet, EntityObject)
+  * When a referenced entity is destroyed, the property is updated to null.
+  * Subscribe-able events for adding and removing references.
+  * Reverse query from entity to entity-components that reference it.
+* Not all systems need to run every frame.
+* Export/import support for saving/restoring state with component-level serialization configuration.
 * 100% Test Coverage.
 
 ## Example
