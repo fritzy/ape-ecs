@@ -1,7 +1,7 @@
 # Ape-ECS
 ![Ape-ECS Hero](https://raw.githubusercontent.com/fritzy/ape-ecs/master/imgs/ape_ecs900wbg.png)
 
-![npm](https://img.shields.io/npm/v/ape-ecs)
+[![npm](https://img.shields.io/npm/v/ape-ecs)](https://www.npmjs.com/package/ape-ecs)
 [![Build Status](https://travis-ci.com/fritzy/ape-ecs.svg?branch=master)](https://travis-ci.com/fritzy/ape-ecs)
 ![Coveralls github](https://img.shields.io/coveralls/github/fritzy/ape-ecs)
 
