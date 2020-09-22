@@ -1,5 +1,7 @@
 # Ape-ECS
 ![Ape-ECS Hero](https://raw.githubusercontent.com/fritzy/ape-ecs/master/imgs/ape_ecs900wbg.png)
+![npm](https://img.shields.io/npm/v/ape-ecs)
+[![Build Status](https://travis-ci.com/fritzy/ape-ecs.svg?branch=master)](https://travis-ci.com/fritzy/ape-ecs)
 
 A performant [Entity-Component-System](https://en.wikipedia.org/wiki/Entity_component_system) library for JavaScript, written in ECMAScript ES2018, intended for use in games and simulations.
 

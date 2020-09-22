@@ -12,6 +12,7 @@
     "test": "nyc npm run test_only",
     "test_only": "cross-env TS_NODE_FILES=true mocha --exit --require ts-node/register --colors tests/*.ts",
     "testp": "mocha tests/index.js",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
     "gendocs": "rm -rf out && jsdoc src/",
     "md": "jsdoc2md src/ecs.js",
     "webbench": "webpack-dev-server"
@@ -33,6 +34,7 @@
     "@types/mocha": "^8.0.3",
     "@types/node": "^14.6.1",
     "chai": "^4.2.0",
+    "coveralls": "^3.1.0",
     "cross-env": "^7.0.2",
     "mocha": "^8.1.2",
     "nyc": "^15.1.0",
