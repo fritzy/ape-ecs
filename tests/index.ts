@@ -1691,6 +1691,59 @@ describe('serialize and deserialize', () => {
     expect(bottle3.tags.size).to.equal(2);
   });
 
+  it('filters serlizable fields', () => {
+
+    const world = new ECS.World();
+    class T1 extends ECS.Component {
+      static properties = {
+        a: 1,
+        b: 2,
+        c: 3,
+        d: 'd',
+        e: 4
+      };
+      static serializeFields = ['a', 'b', 'd', 'e'];
+    }
+    class T2 extends ECS.Component {
+      static properties = {
+        a: 1,
+        b: 2,
+        c: 3,
+        d: 'd',
+        e: 4
+      };
+      static serializeFields = ['a', 'b', 'd', 'e'];
+      static skipSerializeFields = ['a', 'e'];
+    }
+    world.registerComponent(T1);
+    world.registerComponent(T2);
+    const entity = world.createEntity({
+      components: [
+        {
+          type: 'T1',
+          key: 'T1'
+        },
+        {
+          type: 'T2',
+          key: 'T2'
+        }
+      ]
+    });
+
+    const obj = entity.getObject();
+
+    expect(obj.c.T1).to.haveOwnProperty('a');
+    expect(obj.c.T1).to.haveOwnProperty('b');
+    expect(obj.c.T1).to.not.haveOwnProperty('c');
+    expect(obj.c.T1).to.haveOwnProperty('d');
+    expect(obj.c.T1).to.haveOwnProperty('e');
+
+    expect(obj.c.T2).to.not.haveOwnProperty('a');
+    expect(obj.c.T2).to.haveOwnProperty('b');
+    expect(obj.c.T2).to.not.haveOwnProperty('c');
+    expect(obj.c.T2).to.haveOwnProperty('d');
+    expect(obj.c.T2).to.not.haveOwnProperty('e');
+  });
 });
 
 describe('pool stats', () => {

@@ -80,7 +80,12 @@ class Component {
       obj.id = this.id;
       obj.entity = this.entity.id;
     }
-    const fields = this.constructor.serializeFields || this.constructor.fields;
+    let fields = this.constructor.serializeFields || this.constructor.fields;
+    if (Array.isArray(this.constructor.skipSerializeFields)) {
+      fields = fields.filter((field, idx, arr) => {
+        return this.constructor.skipSerializeFields.indexOf(field) === -1;
+      });
+    }
     for (const field of fields) {
       if (this[field] !== undefined && this[field] !== null && typeof this[field].getValue === 'function') {
         obj[field] = this[field].getValue();
@@ -179,6 +184,7 @@ class Component {
 Component.properties = {};
 Component.serialize = true;
 Component.serializeFields = null;
+Component.skipSerializeFields = null;
 Component.subbed = false;
 
 module.exports = Component;

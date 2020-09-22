@@ -12,13 +12,16 @@ class EquipmentSlot extends ApeECS.Component {
   static parameters = {
     name: 'Right Hand',
     slotType: 'wieldable',
-    slot: ApeECS.EntityRef
+    slot: ApeECS.EntityRef,
+    holding: false
   };
 
   //default
   static serialize = true;
-  // defaults to null, which behaves the same as all fields like this
+  // defaults to null, only serialize fields listed
   static serializeFields = ['name', 'slotType', 'slot']; 
+  // defaults to null, don't serialize these fieldsk
+  static skipSerializeFields = ['holding']; 
   // defaults to false, when true it sends change events
   // on property changes through component.update()
   static changeEvents = false;
@@ -214,6 +217,7 @@ console.log(obj);
 ```
 
 ☝️ If you have a static array for `serializeFields`, then only those fields will be in the resulting object.
+`skipSerializeFields` is the opposite approach, listing fields that you do not wish to serialize.
 
 ☝️ You can use the results of `component.getObject` as the component in [entity.addComponent](./Entity.md#addcomponent) and as a component part in [world.createEntity](./World.md#createentity) and [world.createEntities](./World.md#createentities).
 
