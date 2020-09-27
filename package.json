@@ -1,6 +1,6 @@
 {
   "name": "ape-ecs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Ape-ECS (Apex) Entity-Component-System library for simulation and game development.",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
