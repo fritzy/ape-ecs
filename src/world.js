@@ -2,10 +2,8 @@
  * @module ecs/ECS
  * @type {class}
  */
-const UUID = require('uuid/v1');
 const Entity = require('./entity');
 const Query = require('./query');
-const Component = require('./component');
 const ComponentPool = require('./componentpool');
 const EntityPool = require('./entitypool');
 const setupApeDestroy = require('./cleanup');
