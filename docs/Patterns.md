@@ -1,5 +1,8 @@
 # Patterns
 
+Some helpful patterns to using Ape ECS.
+Contributions encouraged!
+
 ## Input and Intentions
 
 One of the great things about the ECS pattern is that not everything needs to be in the ECS registry itself.
@@ -127,10 +130,38 @@ class GameLoop {
 
 ## Two Ways of Doing Inventory with Entity References
 
+TODO 
+
 ## Globals and GameLoop
+
+TODO
 
 ## Function-Only Systems
 
+You don't have to use the build in [world.registerSystem](./World.md#registersystem) or [world.runSystems](./World.md#runsystems).
+Instead, you can just use a function as a system, run queries within it, and update your entities.
+You will not, however, be able to use persistant (index) queries, nor keep track of query changes, as you can with System Queries [system.createQuery](./System.md#createquery).
+
+```js
+function gravity(world) {
+
+  const frameInfo = world.getEntity('GameLoop')
+    .getOne('FrameInfo');
+  const entities = world.createQuery()
+    .fromAll('Position', 'Vector')
+    .execute();
+  for (const entity of entities) {
+    const vector = entity.getOne('Vector');
+    vector.y += frameInfo.deltaTime * 9.807;
+    vector.update();
+  }
+}
+```
+
 ## Turn Ticks vs. Frame ticks
 
+TODO
+
 ## ApeDestroy
+
+TODO

@@ -23,6 +23,14 @@ It all comes down to the definitions:
 
 ## Advantages of ECS
 
+* allows for dynamic mixing of types
+* runtime mutations of types
+* organize your logic query the data to gather it there rather than spread between many classes and methods
+* data is already separated, easy to serialize.
+* faster performance of many objects
+* tag your data for easy inclusion or exclusion from systems
+* system-integrated data creates emergent gameplay/simulation
+
 ## How does Ape ECS implement ECS?
 
 ### Ape ECS Has Worlds

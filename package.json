@@ -1,6 +1,6 @@
 {
   "name": "ape-ecs",
-  "version": "0.12.0",
+  "version": "1.0.0",
   "description": "Ape-ECS (Apex) Entity-Component-System library for simulation and game development.",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
@@ -13,7 +13,6 @@
     "test_only": "cross-env TS_NODE_FILES=true mocha --exit --require ts-node/register --colors tests/*.ts",
     "testp": "mocha tests/index.js",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
-    "gendocs": "rm -rf out && jsdoc src/",
     "md": "jsdoc2md src/ecs.js",
     "webbench": "webpack-dev-server"
   },

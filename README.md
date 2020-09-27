@@ -141,6 +141,8 @@ This library has been inspired in part by:
 
 An in-progress arcade game [Missile Orders](https://github.com/fritzy/missileorders.git).
 
+This game is not in a complete state yet, nor does it show off all of the potential of ECS yet.
+
 ## Running the Tests
 
 The goal is to keep test coverage at 100%.
@@ -153,7 +155,6 @@ npm test
 ```
 ## Contributors
 * [Ben Morse](https://twitter.com/benathon) -- Ben is an early adopter that provided a lot of insight and you have him to thank for the TypeScript definitions!
-
 
 ## Special Thanks
 * [Jaime Robles](https://twitter.com/DrawnByJaime) -- For the Ape ECS banner!
