@@ -210,12 +210,12 @@ const playerEntity = world.createEntity({
 
 ☝️ The createEntity definition schema is the same one used by `entity.getObject` and `world.getObject`. As such, you can save and restore objects by saving the results of these methods and calling `world.createEntity` with the same `Object` to restore it.
 
-💭 **Ape ECS** uses a very fast unique id generator for `Components` and `Entities` if you don't specify a given id upon creation. Look at the code in [src/util.js](src/util.js).
+💭 **Ape ECS** uses a very fast unique id generator for `Components` and `Entities` if you don't specify a given id upon creation. Look at the code in [src/util.js](../src/util.js).
 
 ## getObject
 
 Retrieves a serializable object that includes all of the Entities and their Components in the World.
-Returns an array of Entity definitions. See [world.createEntity](#createEntity);
+Returns an array of Entity definitions. See [world.createEntity](#createntity);
 
 ```js
 const saveState = world.getObject();
@@ -224,7 +224,7 @@ const jsonState = JSON.stringify(saveState);
 
 ## createEntities
 
-Just like [world.createEntity](#createEntity) except that it takes an array of `createEntity` definitions.
+Just like [world.createEntity](#createentity) except that it takes an array of `createEntity` definitions.
 
 ```js
 world.createEntities([

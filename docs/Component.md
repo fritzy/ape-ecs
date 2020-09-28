@@ -38,7 +38,7 @@ class EquipmentSlot extends ApeECS.Component {
 
 👀 See the [World registerComponent documentation](./World.md#registercomponent) for information on how to define a new Component type.
 
-👀 See the [Entity Ref Docs](./Refs.md) for more on Entity Reference properties.
+👀 See the [Entity Ref Docs](./Entity_Refs.md) for more on Entity Reference properties.
 
 Components can only exist when they're part of an Entity.
 You can have any number of the same Component type within an Entity.

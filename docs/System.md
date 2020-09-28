@@ -7,7 +7,7 @@ Systems are where the work happens in ECS.
 * [init](#init)
 * [world](#world)
 * [update](#update)
-* [createQuery](#createQuery)
+* [createQuery](#createquery)
 * [subscribe](#subscribe)
 * [Registering and Running](#registering-and-running)
 * [Tracking Query Changes](#tracking-query-changes)
