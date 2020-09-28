@@ -5,11 +5,14 @@
 [![Build Status](https://travis-ci.com/fritzy/ape-ecs.svg?branch=master)](https://travis-ci.com/fritzy/ape-ecs)
 ![Coveralls github](https://img.shields.io/coveralls/github/fritzy/ape-ecs)
 
-A performant [Entity-Component-System](https://en.wikipedia.org/wiki/Entity_component_system) library for JavaScript, written in ECMAScript ES2018, intended for use in games and simulations.
+A performant, featureful, and flexible [Entity-Component-System](https://en.wikipedia.org/wiki/Entity_component_system) library for JavaScript, written in ECMAScript ES2018, intended for use in games and simulations.
 
 ## Documentation
 * [Overview](https://github.com/fritzy/ape-ecs/blob/master/docs/Overview.md)
 * [API Reference](https://github.com/fritzy/ape-ecs/blob/master/docs/API_Reference.md)
+* [Patterns](./Patterns.md)
+* [1.0 Announcement Post](https://dev.to/fritzy/introducing-ape-ecs-js-250o)
+* [@fritzy Twitter](https://twitter.com/fritzy)
 
 ## Install
 
@@ -154,7 +157,7 @@ npm install
 npm test
 ```
 ## Contributors
-* [Ben Morse](https://twitter.com/benathon) -- Ben is an early adopter that provided a lot of insight and you have him to thank for the TypeScript definitions!
+* [Ben Morse](https://twitter.com/benathon) -- Ben is an early adopter that provided a lot of insight and you have him to thank for the TypeScript definitions! Ben has a game, [Super Game of Life](https://github.com/esromneb/SuperGameOfLife) that uses Ape ECS.
 
 ## Special Thanks
 * [Jaime Robles](https://twitter.com/DrawnByJaime) -- For the Ape ECS banner!

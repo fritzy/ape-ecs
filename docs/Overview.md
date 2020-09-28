@@ -1,6 +1,7 @@
 # Ape ECS Overview
 
 * [API Reference](./API_Reference.md)
+* [Patterns](./Patterns.md)
 * [Back to the README](../README.md)
 
 ## What is ECS (Entity-Component-System)?
