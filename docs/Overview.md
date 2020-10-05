@@ -26,7 +26,7 @@ It all comes down to the definitions:
 
 * allows for dynamic mixing of types
 * runtime mutations of types
-* organize your logic query the data to gather it there rather than spread between many classes and methods
+* organize your logic around queries that gather relevant data rather than spread between many classes and methods
 * data is already separated, easy to serialize.
 * faster performance of many objects
 * tag your data for easy inclusion or exclusion from systems
@@ -63,19 +63,19 @@ Tags are within an `entity.tags` `Set`.
 Ape ECS [Systems](./System.md) are extended from `ApeECS.System`, typically with an overridden `init()` and `update(tick)` method.
 You should set up all of your queries in `init()` and do your system logic on the resulting entities in your `update()` method.
 
-Systems also manage [Queryies](./Query.md) that are created from them if persisted. Change feeds and results are updated automatically before the system is run and cleaned up afterward.
+Systems also manage [Queries](./Query.md) that are created from them if persisted. Change feeds and results are updated automatically before the system is run and cleaned up afterward.
 
 ### Ape ECS has Queries
 
-Ape ECS has fairly advanced [Queries](./Query.md). Like most ECS systems, you can query for Entities that have at least a subset of types and tags. Additionly you can add results from Entities that have least one of a subset (rather than all). Furthermore you can filter results with exclusion (`.not()`), and filter down to results that must have at least one of (`.only()`).
+Ape ECS has fairly advanced [Queries](./Query.md). Like most ECS systems, you can query for Entities that have at least a subset of types and tags. Additionly you can add results from Entities that have at least one of a subset (logical "any" rather than "all"). Furthermore you can filter results with exclusion (`.not()`), and filter down to results that must have at least one of (`.only()`).
 
-If Queries are created within a System with `System.createQuery()` they can be persisted and tracked for changes. You can futher filter the result set by which tick their component/tag structure was last changed, or one they had component values that changed.
+If Queries are created within a System with `System.createQuery()` they can be persisted and tracked for changes. You can further filter the result set by which tick their component/tag structure was last changed, or when they had component values that changed.
 
 [Entity References](./Entity_Refs.md) allow you to start with an Entity and query for any other entities that have a given type that references them.
 
 ### Other Ape ECS Features
 
-[Entity Refences](./Entity_Refs.md) allow for dynamicly maintained links between entities, and queries by reference.
+[Entity References](./Entity_Refs.md) allow for dynamically maintained links between entities, and queries by reference.
 
 [ApeDestroy](./World.md) is a tag that can be added to any entity that automatically cleans them up at the end of a world tick, and filters them from queries in the meantime (although you can override this per query). This is a common ECS lifecycle pattern.
 
