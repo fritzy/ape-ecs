@@ -20,7 +20,7 @@ class Gravity extends ApeECS.System {
   init() {
     // We're going to want a query that gives us Entitys that must have all of these Components at least.
     // We want it to be kept up to date, so we persist it.
-    this.massesQuery = this.createQuery.fromAll('Position', 'Movement', 'Mass').persist();
+    this.massesQuery = this.createQuery().fromAll('Position', 'Movement', 'Mass').persist();
     // Let's pretend we have an Entity with the id 'Frame' with a Component
     //  with a key called 'frameInfo' that has the deltaTime as property.
     // Cool.
