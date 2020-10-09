@@ -199,7 +199,7 @@ export declare class Entity {
   getOne(type: string): Component | undefined;
   getOne<T extends Component>(type: {new(): T}): T | undefined;
   getComponents(type: string): Set<Component>;
-  getComponents<T extends Component>(type: {new(): T}): Set<Component>;
+  getComponents<T extends Component>(type: {new(): T}): Set<T>;
   addTag(tag: string): void;
   removeTag(tag: string): void;
   addComponent(properties: IComponentConfig|IComponentObject): Component | undefined;
