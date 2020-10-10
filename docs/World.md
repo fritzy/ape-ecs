@@ -132,7 +132,7 @@ Registers a new Component type to be used with `world.createEntity()` or `entity
 ## registerTags
 
 ```js
-world.registerTicks('MarkForDelete', 'Invisible', 'IsSandwich');
+world.registerTags('MarkForDelete', 'Invisible', 'IsSandwich');
 ```
 
 Registers any tags that you'll be using for your Entities. 
