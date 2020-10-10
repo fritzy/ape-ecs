@@ -196,8 +196,10 @@ export declare class Entity {
   destroyed: boolean;
   // _setup(definition: any): void;
   has(type: string|ComponentClass): boolean;
-  getOne(type: string|ComponentClass): Component | undefined;
-  getComponents(type: string|ComponentClass): Set<Component>;
+  getOne(type: string): Component | undefined;
+  getOne<T extends Component>(type: {new(): T}): T | undefined;
+  getComponents(type: string): Set<Component>;
+  getComponents<T extends Component>(type: {new(): T}): Set<T>;
   addTag(tag: string): void;
   removeTag(tag: string): void;
   addComponent(properties: IComponentConfig|IComponentObject): Component | undefined;
