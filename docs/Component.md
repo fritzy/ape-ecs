@@ -34,7 +34,7 @@ class EquipmentSlot extends ApeECS.Component {
 }
 ```
 
-👆 While all current browsers and Node.js support the `static` paramter in classes, it isn't currently approved for usage in ECMAScript. Assigning those properties on the class or constructor is equivalant.
+👆 While all current browsers and Node.js support the `static` parameter in classes, it isn't currently approved for usage in ECMAScript. Assigning those properties on the class or constructor is equivalant.
 
 👀 See the [World registerComponent documentation](./World.md#registercomponent) for information on how to define a new Component type.
 
