@@ -215,7 +215,7 @@ const playerEntity = world.createEntity({
 ## getObject
 
 Retrieves a serializable object that includes all of the Entities and their Components in the World.
-Returns an array of Entity definitions. See [world.createEntity](#createntity);
+Returns an array of Entity definitions. See [world.createEntity](#createentity);
 
 ```js
 const saveState = world.getObject();
