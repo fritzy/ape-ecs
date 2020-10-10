@@ -55,7 +55,7 @@ Entities can also have Tags, which are like Components, they're just the types.
 Unlike Components, a Tag is just a string, and Entity can only have one of the same type at at time.
 Tags and Component types are not distinguished between each other for Queries or `entity.has(type)`.
 
-Components can be retrieved from Entities with `entity.getComponents(type)` or entity.types[type], each retrieving a `Set` of component instances.
+Components can be retrieved from Entities with `entity.getComponents(type)` or `entity.types[type]`, each retrieving a `Set` of component instances.
 Tags are within an `entity.tags` `Set`.
 
 ### Ape ECS has Systems
