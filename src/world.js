@@ -363,7 +363,7 @@ module.exports = class World {
     }
   }
 
-  runSystemsAsync(group) {
+  async runSystemsAsync(group) {
 
     const systems = this.systems.get(group);
     if (!systems) return;
