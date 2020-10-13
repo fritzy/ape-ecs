@@ -271,6 +271,7 @@ export declare class World {
   registerSystem<T extends typeof System>(group: string, system: T|System): any;
 
   runSystems(group: string): void;
+  runSystemsAsync(group: string): Promise<void>;
   updateIndexes(): void;
 }
 
