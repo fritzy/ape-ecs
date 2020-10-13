@@ -74,10 +74,10 @@ export declare class Query {
   trackRemoved: boolean;
   from(...entities: (Entity|string)[]): Query;
   fromReverse<T extends typeof Component>(entity: (Entity|string), componentName: string|T): Query;
-  fromAll<T extends typeof Component>(...types: (string|T)[]): Query;
-  fromAny<T extends typeof Component>(...types: (string|T)[]): Query;
-  not<T extends typeof Component>(...types: (string|T)[]): Query;
-  only<T extends typeof Component>(...types: (string|T)[]): Query;
+  fromAll(...types: (string|(new() => Component))[]): Query;
+  fromAny(...types: (string|(new() => Component))[]): Query;
+  not(...types: (string|(new() => Component))[]): Query;
+  only(...types: (string|(new() => Component))[]): Query;
   persist(trackAdded?: boolean, trackRemoved?: boolean): Query;
   refresh(): Query;
   execute(filter?: IQueryExecuteConfig): Set<Entity>;
