@@ -262,7 +262,7 @@ export declare class World {
   createEntities(definition: IEntityConfig[]|IEntityObject[]): void;
   copyTypes(world: World, types: string[]): void;
   removeEntity(id: Entity|string): void;
-  getEntity(entityId: string): any;
+  getEntity(entityId: string): Entity | undefined;
   getEntities(type: string|ComponentClass): Set<Entity>;
   getComponent(id: string): Component;
   createQuery(init?: IQueryConfig): Query;
