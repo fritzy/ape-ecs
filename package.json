@@ -28,7 +28,8 @@
   },
   "homepage": "https://github.com/fritzy/ape-ecs#readme",
   "dependencies": {
-    "markdown-link-check": "^3.8.3"
+    "markdown-link-check": "^3.8.3",
+    "uuid": "^8.3.1"
   },
   "devDependencies": {
     "@hapi/eslint-plugin-hapi": "^4.3.5",

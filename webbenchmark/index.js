@@ -1,11 +1,11 @@
 const CREATE = 500000;
-const ECS = require("../src/index.js");
+const ECS = require('../src/index');
 
 const descriptions = {
-  create2Comp: "Create 50,000 entities with two simple components ",
-  destroy2Comp: "Destroy 50,000 entities with two simple components",
-  recreating: "Recreating components now that pool is established",
-  rewriteComp: "Changing the values of each component             ",
+  create2Comp: 'Create 50,000 entities with two simple components ',
+  destroy2Comp: 'Destroy 50,000 entities with two simple components',
+  recreating: 'Recreating components now that pool is established',
+  rewriteComp: 'Changing the values of each component             ',
 };
 
 const times = {
@@ -48,14 +48,14 @@ function benchmarks() {
       ecs.createEntity({
         components: [
           {
-            type: "Test",
-            key: "Test",
+            type: 'Test',
+            key: 'Test',
             a: 4,
             b: 5,
           },
           {
-            type: "Test2",
-            key: "Test2",
+            type: 'Test2',
+            key: 'Test2',
             c: 6,
             d: 7,
           },
@@ -66,7 +66,7 @@ function benchmarks() {
 
   end = performance.now();
   times.create2Comp = end - start;
-  output("create2Comp");
+  output('create2Comp');
 
   start = performance.now();
   for (let i = 0; i < CREATE; i++) {
@@ -77,7 +77,7 @@ function benchmarks() {
   }
   end = performance.now();
   times.rewriteComp = end - start;
-  output("rewriteComp");
+  output('rewriteComp');
 
   start = performance.now();
   for (let i = 0; i < CREATE; i++) {
@@ -85,7 +85,7 @@ function benchmarks() {
   }
   end = performance.now();
   times.destroy2Comp = end - start;
-  output("destroy2Comp");
+  output('destroy2Comp');
 
   start = performance.now();
   for (let i = 0; i < CREATE; i++) {
@@ -93,14 +93,14 @@ function benchmarks() {
       ecs.createEntity({
         components: [
           {
-            type: "Test",
-            lookup: "Test",
+            type: 'Test',
+            lookup: 'Test',
             a: 4,
             b: 5,
           },
           {
-            type: "Test2",
-            lookup: "Test2",
+            type: 'Test2',
+            lookup: 'Test2',
             c: 6,
             d: 7,
           },
@@ -110,31 +110,31 @@ function benchmarks() {
   }
   end = performance.now();
   times.recreating = end - start;
-  output("recreating");
+  output('recreating');
   showButton();
 }
 
 function tick() {
   disableButton();
-  console.log("starting Benchmark");
+  console.log('starting Benchmark');
   setTimeout(benchmarks, 200);
 }
 
 function showButton() {
-  document.body.innerHTML = "";
-  const button = document.createElement("button");
-  button.id = "run-button";
-  button.innerHTML = "run test";
-  button.addEventListener("click", tick);
+  document.body.innerHTML = '';
+  const button = document.createElement('button');
+  button.id = 'run-button';
+  button.innerHTML = 'run test';
+  button.addEventListener('click', tick);
   document.body.appendChild(button);
 }
 
 function disableButton() {
-  document.body.innerHTML = "benchmark is running";
+  document.body.innerHTML = 'benchmark is running';
 }
 
-window.document.addEventListener("readystatechange", () => {
-  if (window.document.readyState === "complete") {
+window.document.addEventListener('readystatechange', () => {
+  if (window.document.readyState === 'complete') {
     showButton();
   }
 });
