@@ -18,20 +18,20 @@ function output(test) {
   console.log(`${descriptions[test]}: ${times[test].toFixed(2)}ms`);
 }
 
-class Test extends ECS.Component {}
-Test.properties = {
-  a: 1,
-  b: 2,
-};
-
-class Test2 extends ECS.Component {}
-Test2.properties = {
-  c: 3,
-  d: 4,
-};
-
 function benchmarks() {
   let start, end;
+
+  class Test extends ECS.Component {}
+  Test.properties = {
+    a: 1,
+    b: 2,
+  };
+
+  class Test2 extends ECS.Component {}
+  Test2.properties = {
+    c: 3,
+    d: 4,
+  };
 
   const ecs = new ECS.World({ trackChanges: false, entityPool: 100 });
   ecs.registerComponent(Test);
@@ -111,11 +111,30 @@ function benchmarks() {
   end = performance.now();
   times.recreating = end - start;
   output("recreating");
+  showButton();
 }
 
 function tick() {
-  benchmarks();
-  setTimeout(tick, 3000);
+  disableButton();
+  console.log("starting Benchmark");
+  setTimeout(benchmarks, 200);
 }
 
-tick();
+function showButton() {
+  document.body.innerHTML = "";
+  const button = document.createElement("button");
+  button.id = "run-button";
+  button.innerHTML = "run test";
+  button.addEventListener("click", tick);
+  document.body.appendChild(button);
+}
+
+function disableButton() {
+  document.body.innerHTML = "benchmark is running";
+}
+
+window.document.addEventListener("readystatechange", () => {
+  if (window.document.readyState === "complete") {
+    showButton();
+  }
+});

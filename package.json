@@ -38,6 +38,7 @@
     "chai": "^4.2.0",
     "coveralls": "^3.1.0",
     "cross-env": "^7.0.2",
+    "html-webpack-plugin": "^4.5.0",
     "mocha": "^8.1.2",
     "nyc": "^15.1.0",
     "ts-node": "^9.0.0",

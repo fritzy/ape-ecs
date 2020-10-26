@@ -92,6 +92,26 @@ Destroy 50,000 entities with two simple components: 339.78ms
 Recreating components now that pool is established: 287.00ms
 ```
 
+Results on a 2.9 GHz 6-Core Intel Core i9 2018 MacBook Pro
+
+```
+ape-ecs % node benchmark.js
+Create 50,000 entities with two simple components : 336.38ms
+Changing the values of each component             : 6.02ms
+Destroy 50,000 entities with two simple components: 313.18ms
+Recreating components now that pool is established: 259.19ms
+```
+
+```
+ape-ecs % npx webpack
+ape-ecs % npx serve webpack/dist
+Creating and destroying 500000 entities...
+Create 50,000 entities with two simple components : 2925.81ms
+Changing the values of each component             : 13.87ms
+Destroy 50,000 entities with two simple components: 2641.12ms
+Recreating components now that pool is established: 2434.85ms
+```
+
 Peformance is a strong priority for Ape ECS, so we'll continue to create more benchmarks, optimizations, and usage patterns.
 
 ## Future
