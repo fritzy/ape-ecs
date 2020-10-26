@@ -1,6 +1,6 @@
 {
   "name": "ape-ecs",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Ape-ECS (Apex) Entity-Component-System library for simulation and game development.",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fritzy/ecs-js.git"
+    "url": "git+https://github.com/fritzy/ape-ecs.git"
   },
   "author": "Nathanael Fritz",
   "license": "MIT",
