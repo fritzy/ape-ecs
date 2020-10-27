@@ -107,7 +107,6 @@ export declare class Component {
   entity: Entity;
   id: string;
   update(values?: IComponentUpdate): void;
-  [name: string]: any;
 }
 
 // an object that has strings as keys and strings as values
