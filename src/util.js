@@ -1,29 +1,17 @@
-const crypto = require('crypto');
+const uuid = require('uuid').v4;
 
 class IdGenerator {
-
   constructor() {
-
-    this.gen_last = Date.now();
-    this.gen_rnd = new Buffer.allocUnsafe(8);
-    this.gen_time = new Buffer.allocUnsafe(4);
-    this.gen_iter = new Buffer.allocUnsafe(4);
-    this.MAX = 4294967295;
     this.gen_num = 0;
     this.prefix = '';
     this.genPrefix();
   }
 
   genPrefix() {
-
-    this.gen_last = Date.now();
-    crypto.randomFillSync(this.gen_rnd);
-    this.gen_time.writeUInt32BE(this.gen_last >>> 0);
-    this.prefix = `${this.gen_rnd.toString('hex')}-${this.gen_time.toString('hex')}-`;
+    return uuid();
   }
 
-  genId(){
-
+  genId() {
     this.gen_num++;
     // istanbul ignore if
     if (this.gen_num === 4294967295) {
@@ -32,10 +20,7 @@ class IdGenerator {
     }
     return this.prefix + this.gen_num;
   }
-
-};
-
-
+}
 
 function setIntersection() {
   let sets = Array.from(arguments),
@@ -59,13 +44,13 @@ function setIntersection() {
 }
 
 function setUnion() {
-    let result = new Set;
+  let result = new Set;
 
-    Array.from(arguments).forEach(set => {
-        set.forEach(value => result.add(value));
-    });
+  Array.from(arguments).forEach(set => {
+    set.forEach(value => result.add(value));
+  });
 
-    return result;
+  return result;
 }
 
 module.exports = {
