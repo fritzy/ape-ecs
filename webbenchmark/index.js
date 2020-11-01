@@ -1,5 +1,5 @@
-const CREATE = 500000;
-const ECS = require('../src/index');
+const CREATE = 50000;
+const ECS = require('../src/index.js');
 
 const descriptions = {
   create2Comp: 'Create 50,000 entities with two simple components ',

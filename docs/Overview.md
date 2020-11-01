@@ -81,36 +81,40 @@ If Queries are created within a System with `System.createQuery()` they can be p
 
 ## Performance
 
-Right now, we've got benchmarks for creating, editing, pooling, and destroying entities and components. Here are the results on my 2.6 GHz 6-Core Intel Core i7 2019 Macbook Pro.
+Right now, we've got benchmarks for creating, editing, pooling, and destroying entities and components.
+
+Windows 10 Home (version 2004) WSL2 Ubuntu 20.04 on AMD Ryzen 5 3600 @ 3.6Ghz
 
 ```
 ape-ecs % node benchmark.js
 Creating and destroying 50000 entities...
-Create 50,000 entities with two simple components : 340.53ms
-Changing the values of each component             : 6.53ms
-Destroy 50,000 entities with two simple components: 339.78ms
-Recreating components now that pool is established: 287.00ms
+Create 50,000 entities with two simple components : 191.88ms
+Changing the values of each component             : 4.70ms
+Destroy 50,000 entities with two simple components: 156.16ms
+Recreating components now that pool is established: 149.00ms
 ```
 
 Results on a 2.9 GHz 6-Core Intel Core i9 2018 MacBook Pro
 
 ```
-ape-ecs % node benchmark.js
-Create 50,000 entities with two simple components : 336.38ms
-Changing the values of each component             : 6.02ms
-Destroy 50,000 entities with two simple components: 313.18ms
-Recreating components now that pool is established: 259.19ms
+Creating and destroying 50000 entities...
+Create 50,000 entities with two simple components : 175.81ms
+Changing the values of each component             : 5.30ms
+Destroy 50,000 entities with two simple components: 171.25ms
+Recreating components now that pool is established: 162.18ms
 ```
 
+Google Chrome on MacBook Pro Version 86.0.4240.111 (Official Build) (x86\_64)
 ```
-ape-ecs % npx webpack
-ape-ecs % npx serve webpack/dist
-Creating and destroying 500000 entities...
-Create 50,000 entities with two simple components : 2925.81ms
-Changing the values of each component             : 13.87ms
-Destroy 50,000 entities with two simple components: 2641.12ms
-Recreating components now that pool is established: 2434.85ms
+ape-ecs % npm run webbench
+Creating and destroying 50000 entities...
+Create 50,000 entities with two simple components : 187.64ms
+Changing the values of each component             : 9.02ms
+Destroy 50,000 entities with two simple components: 176.78ms
+Recreating components now that pool is established: 140.20ms
 ```
+
+📝 A previous version of this benchmark of the web benchmark was erroneously generating 5 million entities instead 50,0000, which blew the numbers up by more than 10x due to aggressive garbage collection.
 
 Peformance is a strong priority for Ape ECS, so we'll continue to create more benchmarks, optimizations, and usage patterns.
 
