@@ -12,6 +12,7 @@ A performant, featureful, and flexible [Entity-Component-System](https://en.wiki
 * [API Reference](https://github.com/fritzy/ape-ecs/blob/master/docs/API_Reference.md)
 * [Patterns](https://github.com/fritzy/ape-ecs/blob/master/docs/Patterns.md)
 * [1.0 Announcement Post](https://dev.to/fritzy/introducing-ape-ecs-js-250o)
+* [Changelog](https://github.com/fritzy/ape-ecs/blob/master/CHANGELOG.md)
 * [@fritzy Twitter](https://twitter.com/fritzy)
 
 ## Install
