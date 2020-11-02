@@ -1,6 +1,11 @@
 const Query = require('./query');
 
 class System {
+
+  get sysName() {
+    return this.constructor.name;
+  }
+
   constructor(world, ...initArgs) {
     this.world = world;
     this._stagedChanges = [];

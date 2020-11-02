@@ -29,6 +29,7 @@ export interface IQueryConfig {
 }
 
 export declare class System {
+  get sysName(): string;
   constructor(world: World, ...initArgs: any[]);
   world: World;
   changes: IComponentChange[];
