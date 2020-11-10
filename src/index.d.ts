@@ -268,7 +268,7 @@ export declare class World {
   createQuery(init?: IQueryConfig): Query;
 
   // Allows passing of a class that extends System, or an instance of such a class
-  registerSystem<T extends typeof System>(group: string, system: T|System): any;
+  registerSystem<T extends System>(group: string, system: T | (new(world: World) => T)): T;
 
   runSystems(group: string): void;
   updateIndexes(): void;
