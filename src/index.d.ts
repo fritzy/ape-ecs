@@ -247,7 +247,7 @@ export declare class World {
   componentTypes: IEntityComponents;
   queries: Query[];
   subscriptions: Map<string, System>;
-  systems: Map<string, System>;
+  systems: Map<string, Set<System>>;
   tick(): number;
   registerTags(...tags: string[]): void;
 
