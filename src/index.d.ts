@@ -30,13 +30,13 @@ export interface IQueryConfig {
 
 export declare class System {
   get sysName(): string;
-  constructor(world: World, ...initArgs: any[]);
+  constructor(world: World, ...initArgs: unknown[]);
   world: World;
   changes: IComponentChange[];
   queries: Query[];
   lastTick: number;
   static subscriptions: string[];
-  init(...initArgs: any[]): void;
+  init(...initArgs: unknown[]): void;
   update(tick: number): void;
   createQuery(init?: IQueryConfig): Query;
   subscribe(type: string | ComponentClass): void;
