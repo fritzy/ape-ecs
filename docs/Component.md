@@ -25,6 +25,8 @@ class EquipmentSlot extends ApeECS.Component {
   // defaults to false, when true it sends change events
   // on property changes through component.update()
   static changeEvents = false;
+  // set typeName if your build system renames functions
+  static typeName = 'EquipmentSlot';
 
   init(values) {
   }

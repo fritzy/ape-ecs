@@ -224,6 +224,9 @@ module.exports = class World {
 
   registerComponent(klass, spinup=1) {
 
+    if (klass.typeName) {
+      Object.defineProperty(klass, 'name', { value: klass.typeName });
+    }
     const name = klass.name;
     // istanbul ignore if
     if (this.tags.has(name)) {

@@ -32,6 +32,9 @@ class System {
 
   subscribe(type) {
 
+    if (typeof type !== 'string') {
+      type = type.name;
+    }
     if (!this.world.subscriptions.has(type)) {
       this.world.componentTypes[type].subbed = true;
       this.world.subscriptions.set(type, new Set());

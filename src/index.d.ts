@@ -38,7 +38,7 @@ export declare class System {
   init(): void;
   update(tick: number): void;
   createQuery(init?: IQueryConfig): Query;
-  subscribe(type: string): void;
+  subscribe(type: string | ComponentClass): void;
 }
 
 
@@ -247,7 +247,7 @@ export declare class World {
   componentTypes: IEntityComponents;
   queries: Query[];
   subscriptions: Map<string, System>;
-  systems: Map<string, System>;
+  systems: Map<string, Set<System>>;
   tick(): number;
   registerTags(...tags: string[]): void;
 

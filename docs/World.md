@@ -86,7 +86,6 @@ Increments the `world.currentTick` and manages any housekeeping that **Ape ECS**
 
 Register a new `Component` type in your `World`.
 
-👀 See the [Component Docs](Component.md) for info on how to use `Components`.
 
 ```js
 class Position extends ApeECS.Component {

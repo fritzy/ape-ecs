@@ -26,6 +26,7 @@ class Health extends ECS.Component {
     hp: 25,
     armor: 0
   };
+  static typeName = 'Health';
 }
 
 describe('express components', () => {
@@ -336,11 +337,19 @@ describe('express components', () => {
 
     let changes = [];
 
+    class Food2 extends ECS.Component {
+      static properties = {
+        rot: 300,
+        restore: 2
+      };
+      static changeEvents = true;
+    }
+
     class System extends ECS.System {
 
       init() {
 
-        this.subscribe('Food2');
+        this.subscribe(Food2);
       }
 
       update(tick) {
@@ -351,13 +360,6 @@ describe('express components', () => {
       }
     }
 
-    class Food2 extends ECS.Component {
-      static properties = {
-        rot: 300,
-        restore: 2
-      };
-      static changeEvents = true;
-    }
 
     ecs.registerComponent(Food2);
     const system = new System(ecs);
