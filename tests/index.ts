@@ -194,9 +194,11 @@ describe('express components', () => {
     /* $lab:coverage:off$ */
     class System extends ECS.System {
 
-      init() {
+      init(a, b) {
 
         this.subscribe('EquipmentSlot');
+        expect(a).to.equal(1);
+        expect(b).to.equal('b2');
       }
 
       update(tick) {
@@ -240,6 +242,13 @@ describe('express components', () => {
 
     class System2 extends ECS.System {
 
+      init(a, b, c) {
+
+        expect(a).to.equal(2);
+        expect(b).to.equal(4);
+        expect(c).to.equal('a');
+      }
+
       update(tick) {
 
         changes2 = this.changes;
@@ -270,11 +279,11 @@ describe('express components', () => {
     ecs.registerComponent(Wearable);
     ecs.registerComponent(Burning);
 
-    const system = new System(ecs);
+    const system = new System(ecs, 1, 'b2');
     //const system2 = new System2(ecs);
 
     ecs.registerSystem('equipment', system);
-    ecs.registerSystem('equipment', System2);
+    ecs.registerSystem('equipment', System2, [2, 4, 'a']);
 
     ecs.runSystems('equipment');
 

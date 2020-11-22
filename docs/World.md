@@ -365,6 +365,7 @@ world.registerSystem('movement', Gravity);
 ### Arguments:
 * group: `String` name for the group of Systems
 * system: `System class` or `System instance`
+* initParams: optional array of arguments for system init()
 
 ### Returns:
 * `System` instance.

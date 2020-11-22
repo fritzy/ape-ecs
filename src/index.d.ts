@@ -29,13 +29,13 @@ export interface IQueryConfig {
 }
 
 export declare class System {
-  constructor(world: World);
+  constructor(world: World, ...initArgs: any[]);
   world: World;
   changes: IComponentChange[];
   queries: Query[];
   lastTick: number;
   static subscriptions: string[];
-  init(): void;
+  init(...initArgs: any[]): void;
   update(tick: number): void;
   createQuery(init?: IQueryConfig): Query;
   subscribe(type: string | ComponentClass): void;
@@ -268,7 +268,7 @@ export declare class World {
   createQuery(init?: IQueryConfig): Query;
 
   // Allows passing of a class that extends System, or an instance of such a class
-  registerSystem<T extends typeof System>(group: string, system: T|System): any;
+  registerSystem<T extends typeof System>(group: string, system: T|System, initParams?: any[]): any;
 
   runSystems(group: string): void;
   updateIndexes(): void;

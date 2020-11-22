@@ -339,10 +339,11 @@ module.exports = class World {
     }
   }
 
-  registerSystem(group, system) {
+  registerSystem(group, system, initParams) {
 
+    initParams = initParams || [];
     if (typeof system === 'function') {
-      system = new system(this);
+      system = new system(this, ...initParams);
     }
     if (!this.systems.has(group)) {
       this.systems.set(group, new Set());

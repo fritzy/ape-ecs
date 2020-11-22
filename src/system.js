@@ -2,7 +2,7 @@ const Query = require('./query');
 
 class System {
 
-  constructor(world) {
+  constructor(world, ...initArgs) {
 
     this.world = world;
     this._stagedChanges = [];
@@ -14,7 +14,7 @@ class System {
         this.subscribe(sub);
       }
     }
-    this.init();
+    this.init(...initArgs);
   }
 
   init() {
