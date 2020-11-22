@@ -17,7 +17,7 @@ Systems are where the work happens in ECS.
 ```js
 class Gravity extends ApeECS.System {
 
-  init() {
+  init(gravityUp) {
     // We're going to want a query that gives us Entitys that must have all of these Components at least.
     // We want it to be kept up to date, so we persist it.
     this.massesQuery = this.createQuery().fromAll('Position', 'Movement', 'Mass').persist();
@@ -25,6 +25,7 @@ class Gravity extends ApeECS.System {
     //  with a key called 'frameInfo' that has the deltaTime as property.
     // Cool.
     this.frameInfo = this.world.getEntity('Frame').frameInfo;
+    this.gravityUp = !!gravityUp;
   }
 
   update(currentTick) {
@@ -32,7 +33,11 @@ class Gravity extends ApeECS.System {
     for (const entity of entities) {
       const position = entity.getOne('Position'); // we only expect to have one of these
       const movement = entity.getOne('Movement');
-      position.y += movement.y;
+      if(this.gravityUp) {
+        position.y -= movement.y;
+      } else {
+        position.y += movement.y;
+      }
       movement.x += 9.807 * this.frameInfo.deltaTime;
     }
   }
@@ -40,7 +45,7 @@ class Gravity extends ApeECS.System {
 
 // Add Gravity to the 'EveryFrame' group -- a set of Systems that run every rendering frame.
 // We made up the name 'EveryFrame'.
-world.registerSystem('EveryFrame', Gravity);
+world.registerSystem('EveryFrame', Gravity, [false]);
 ```
 
 ## init

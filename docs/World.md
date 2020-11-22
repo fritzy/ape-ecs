@@ -378,7 +378,7 @@ If you want to be able to run any `System` at an time in any order, you could re
 
 ### Notes:
 
-👀 See the [System Docs](System.md) for more information about registering `Systems`.
+👀 See the [System Docs](System.md) for more information about how `Systems` work.
 
 ## runSystems
 
