@@ -2,7 +2,8 @@ const Util = require('./util');
 const idGen = new Util.IdGenerator();
 
 class Component {
-  constructor() {
+  constructor(world) {
+    this.world = world;
     this._meta = {
       key: '',
       updated: 0,
@@ -202,5 +203,6 @@ Component.serialize = true;
 Component.serializeFields = null;
 Component.skipSerializeFields = null;
 Component.subbed = false;
+Component.registered = false;
 
 module.exports = Component;

@@ -12,7 +12,7 @@ class ComponentPool {
   get(entity, initial) {
     let comp;
     if (this.pool.length === 0) {
-      comp = new this.klass(entity, initial);
+      comp = new this.klass(this.world);
     } else {
       comp = this.pool.pop();
     }
@@ -40,7 +40,7 @@ class ComponentPool {
 
   spinUp(count) {
     for (let i = 0; i < count; i++) {
-      const comp = new this.klass();
+      const comp = new this.klass(this.world);
       this.pool.push(comp);
     }
     this.targetSize = Math.max(this.targetSize, this.pool.length);

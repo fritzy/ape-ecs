@@ -109,6 +109,12 @@ export declare class Component {
   id: string;
   update(values?: IComponentUpdate): void;
   [name: string]: any;
+  static properties: Object;
+  static serialize: Boolean;
+  static serializeFields: string[];
+  static skipSerializeFields: string[];
+  static subbed: Boolean;
+  static registered: Boolean;
 }
 
 // an object that has strings as keys and strings as values

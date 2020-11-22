@@ -1861,3 +1861,50 @@ describe('ApeDestroy', () => {
     expect(r3b).not.contains(e1);
   });
 });
+
+describe('Component Portability', () => {
+  it('Components on multiple worlds', () => {
+    const world1 = new World();
+    const world2 = new World();
+
+    class Testa extends Component {
+
+      static properties = {
+        greeting: "Hi",
+        a: 1
+      };
+
+      static typeName = 'Test';
+    }
+
+    world1.registerComponent(Testa);
+    world2.registerComponent(Testa);
+
+    const t1 = world1.createEntity({
+      c: {
+        Test: {}
+      }
+    });
+
+    const t2 = world2.createEntity({
+      c: {
+        Test: {}
+      }
+    });
+
+    const q1 = world1.createQuery().fromAll('Test');
+    const q2 = world2.createQuery().fromAll('Test');
+
+    t1.c.Test.greeting = "Hello";
+    t2.c.Test.greeting = "Howdy";
+
+    const r1 = q1.execute();
+    const r2 = q2.execute();
+    expect(r1.size).is.equal(1);
+    expect(r2.size).is.equal(1);
+    expect(r1).contains(t1);
+    expect(r2).contains(t2);
+    expect(t1.c.Test.greeting).is.equal('Hello');
+
+  });
+});

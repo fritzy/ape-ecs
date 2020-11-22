@@ -217,7 +217,7 @@ module.exports = class World {
   }
 
   registerComponent(klass, spinup = 1) {
-    if (klass.typeName) {
+    if (klass.typeName && klass.name !== klass.typeName) {
       Object.defineProperty(klass, 'name', { value: klass.typeName });
     }
     const name = klass.name;
@@ -231,22 +231,24 @@ module.exports = class World {
         `registerComponent: Component already defined for "${name}"`
       );
     }
-    klass.prototype.world = this;
     this.componentTypes[name] = klass;
-    klass.fields = Object.keys(klass.properties);
-    klass.primitives = {};
-    klass.factories = {};
-    for (const field of klass.fields) {
-      // istanbul ignore if
-      if (componentReserved.has(field)) {
-        throw new Error(
-          `Error registering ${klass.name}: Reserved property name "${field}"`
-        );
-      }
-      if (typeof klass.properties[field] === 'function') {
-        klass.factories[field] = klass.properties[field];
-      } else {
-        klass.primitives[field] = klass.properties[field];
+    if (!klass.registered) {
+      klass.registered = true;
+      klass.fields = Object.keys(klass.properties);
+      klass.primitives = {};
+      klass.factories = {};
+      for (const field of klass.fields) {
+        // istanbul ignore if
+        if (componentReserved.has(field)) {
+          throw new Error(
+            `Error registering ${klass.name}: Reserved property name "${field}"`
+          );
+        }
+        if (typeof klass.properties[field] === 'function') {
+          klass.factories[field] = klass.properties[field];
+        } else {
+          klass.primitives[field] = klass.properties[field];
+        }
       }
     }
     this.entitiesByComponent[name] = new Set();
