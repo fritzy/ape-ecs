@@ -24,14 +24,14 @@ class IdGenerator {
 
 function setIntersection() {
   let sets = Array.from(arguments),
-    setSizes = sets.map(set => set.size),
+    setSizes = sets.map((set) => set.size),
     smallestSetIndex = setSizes.indexOf(Math.min.apply(Math, setSizes)),
     smallestSet = sets[smallestSetIndex],
     result = new Set(smallestSet);
 
   sets.splice(smallestSetIndex, 1);
 
-  smallestSet.forEach(value => {
+  smallestSet.forEach((value) => {
     for (let i = 0; i < sets.length; i += 1) {
       if (!sets[i].has(value)) {
         result.delete(value);
@@ -44,10 +44,10 @@ function setIntersection() {
 }
 
 function setUnion() {
-  let result = new Set;
+  let result = new Set();
 
-  Array.from(arguments).forEach(set => {
-    set.forEach(value => result.add(value));
+  Array.from(arguments).forEach((set) => {
+    set.forEach((value) => result.add(value));
   });
 
   return result;

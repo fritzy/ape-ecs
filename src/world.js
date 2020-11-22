@@ -8,25 +8,24 @@ const ComponentPool = require('./componentpool');
 const EntityPool = require('./entitypool');
 const setupApeDestroy = require('./cleanup');
 
-const componentReserved = new Set(
-  [
-    'constructor',
-    'init',
-    'type',
-    'key',
-    'destroy',
-    'preDestroy',
-    'postDestroy',
-    'getObject',
-    '_setup',
-    '_reset',
-    'update',
-    'clone',
-    '_meta',
-    '_addRef',
-    '_deleteRef',
-    'prototype'
-  ]);
+const componentReserved = new Set([
+  'constructor',
+  'init',
+  'type',
+  'key',
+  'destroy',
+  'preDestroy',
+  'postDestroy',
+  'getObject',
+  '_setup',
+  '_reset',
+  'update',
+  'clone',
+  '_meta',
+  '_addRef',
+  '_deleteRef',
+  'prototype'
+]);
 
 /**
  * Main library class for registering Components, Systems, Queries,
@@ -35,15 +34,16 @@ const componentReserved = new Set(
  * @exports World
  */
 module.exports = class World {
-
   constructor(config) {
-
-    this.config = Object.assign({
-      trackChanges: true,
-      entityPool: 10,
-      cleanupPools: true,
-      useApeDestroy: false
-    }, config);
+    this.config = Object.assign(
+      {
+        trackChanges: true,
+        entityPool: 10,
+        cleanupPools: true,
+        useApeDestroy: false
+      },
+      config
+    );
     this.currentTick = 0;
     this.entities = new Map();
     this.types = {};
@@ -73,7 +73,6 @@ module.exports = class World {
    * @method module:ECS#tick
    */
   tick() {
-
     if (this.config.useApeDestroy) {
       this.runSystems('ApeCleanup');
     }
@@ -97,15 +96,13 @@ module.exports = class World {
   }
 
   getStats() {
-
     const stats = {
       entity: {
         active: this.entities.size,
         pooled: this.entityPool.pool.length,
         target: this.entityPool.targetSize
       },
-      components: {
-      }
+      components: {}
     };
     for (const [key, pool] of this.componentPool) {
       stats.components[key] = {
@@ -128,7 +125,6 @@ module.exports = class World {
   }
 
   _outputStats() {
-
     const stats = this.getStats();
     this._nextStat = 0;
     let output = `${this.currentTick}, Entities: ${stats.entity.active} active, ${stats.entity.pooled}/${stats.entity.target} pooled`;
@@ -140,22 +136,21 @@ module.exports = class World {
   }
 
   _addRef(target, entity, component, prop, sub, key, type) {
-
     if (!this.refs[target]) {
       this.refs[target] = new Set();
     }
     const eInst = this.getEntity(target);
-    if(!this.entityReverse.hasOwnProperty(target)) {
+    if (!this.entityReverse.hasOwnProperty(target)) {
       this.entityReverse[target] = {};
     }
-    if(!this.entityReverse[target].hasOwnProperty(key)) {
+    if (!this.entityReverse[target].hasOwnProperty(key)) {
       this.entityReverse[target][key] = new Map();
     }
     const reverse = this.entityReverse[target][key];
     let count = reverse.get(entity);
     /* $lab:coverage:off$ */
     if (count === undefined) {
-      count = 0
+      count = 0;
     }
     /* $lab:coverage:on$ */
     reverse.set(entity, count + 1);
@@ -171,7 +166,6 @@ module.exports = class World {
   }
 
   _deleteRef(target, entity, component, prop, sub, key, type) {
-
     const ref = this.entityReverse[target][key];
     let count = ref.get(entity);
     count--;
@@ -215,24 +209,27 @@ module.exports = class World {
     for (const tag of tags) {
       // istanbul ignore if
       if (this.entitiesByComponent.hasOwnProperty(tag)) {
-        throw new Error (`Cannot register tag "${tag}", name is already taken.`);
+        throw new Error(`Cannot register tag "${tag}", name is already taken.`);
       }
       this.entitiesByComponent[tag] = new Set();
       this.tags.add(tag);
     }
   }
 
-  registerComponent(klass, spinup=1) {
-
+  registerComponent(klass, spinup = 1) {
     if (klass.typeName) {
       Object.defineProperty(klass, 'name', { value: klass.typeName });
     }
     const name = klass.name;
     // istanbul ignore if
     if (this.tags.has(name)) {
-      throw new Error (`registerComponent: Tag already defined for "${name}"`);
-    } else /* istanbul ignore if */ if (this.componentTypes.hasOwnProperty(name)) {
-      throw new Error (`registerComponent: Component already defined for "${name}"`);
+      throw new Error(`registerComponent: Tag already defined for "${name}"`);
+    } /* istanbul ignore if */ else if (
+      this.componentTypes.hasOwnProperty(name)
+    ) {
+      throw new Error(
+        `registerComponent: Component already defined for "${name}"`
+      );
     }
     klass.prototype.world = this;
     this.componentTypes[name] = klass;
@@ -242,7 +239,9 @@ module.exports = class World {
     for (const field of klass.fields) {
       // istanbul ignore if
       if (componentReserved.has(field)) {
-        throw new Error(`Error registering ${klass.name}: Reserved property name "${field}"`);
+        throw new Error(
+          `Error registering ${klass.name}: Reserved property name "${field}"`
+        );
       }
       if (typeof klass.properties[field] === 'function') {
         klass.factories[field] = klass.properties[field];
@@ -255,12 +254,10 @@ module.exports = class World {
   }
 
   createEntity(definition) {
-
     return this.entityPool.get(definition);
   }
 
   getObject() {
-
     const obj = [];
     for (const kv of this.entities) {
       obj.push(kv[1].getObject());
@@ -269,14 +266,12 @@ module.exports = class World {
   }
 
   createEntities(definition) {
-
     for (const entityDef of definition) {
       this.createEntity(entityDef);
     }
   }
 
   copyTypes(world, types) {
-
     for (const name of types) {
       if (world.tags.has(name)) {
         this.registerTags(name);
@@ -290,7 +285,6 @@ module.exports = class World {
   }
 
   removeEntity(id) {
-
     let entity;
     if (id instanceof Entity) {
       entity = id;
@@ -302,12 +296,10 @@ module.exports = class World {
   }
 
   getEntity(entityId) {
-
     return this.entities.get(entityId);
   }
 
   getEntities(type) {
-
     if (typeof type !== 'string') {
       type = type.name;
     }
@@ -316,21 +308,18 @@ module.exports = class World {
   }
 
   getComponent(id) {
-
     return this.componentsById.get(id);
   }
 
   createQuery(init) {
-
     return new Query(this, null, init);
   }
 
   _sendChange(operation) {
-
     if (this.componentTypes[operation.type].subbed) {
       const systems = this.subscriptions.get(operation.type);
       // istanbul ignore if
-      if(!systems) {
+      if (!systems) {
         return;
       }
       for (const system of systems) {
@@ -340,7 +329,6 @@ module.exports = class World {
   }
 
   registerSystem(group, system, initParams) {
-
     initParams = initParams || [];
     if (typeof system === 'function') {
       system = new system(this, ...initParams);
@@ -353,7 +341,6 @@ module.exports = class World {
   }
 
   runSystems(group) {
-
     const systems = this.systems.get(group);
     if (!systems) return;
     for (const system of systems) {
@@ -368,7 +355,6 @@ module.exports = class World {
   }
 
   _entityUpdated(entity) {
-
     // istanbul ignore else
     if (this.config.trackChanges) {
       this.updatedEntities.add(entity);
@@ -376,12 +362,10 @@ module.exports = class World {
   }
 
   _addEntityComponent(name, entity) {
-
     this.entitiesByComponent[name].add(entity.id);
   }
 
   _deleteEntityComponent(component) {
-
     this.entitiesByComponent[component.type].delete(component._meta.entityId);
   }
 
@@ -393,7 +377,6 @@ module.exports = class World {
   }
 
   updateIndexes() {
-
     for (const entity of this.updatedEntities) {
       this._updateIndexesEntity(entity);
     }
@@ -401,10 +384,8 @@ module.exports = class World {
   }
 
   _updateIndexesEntity(entity) {
-
     for (const query of this.queries) {
       query.update(entity);
     }
   }
-
-}
+};

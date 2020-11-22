@@ -2,9 +2,7 @@ const Entity = require('./entity');
 const Util = require('./util');
 
 class Query {
-
   constructor(world, system, init) {
-
     this.system = system;
     this.world = world;
     this.query = {
@@ -20,7 +18,6 @@ class Query {
     this.removed = new Set();
 
     if (this.world.config.useApeDestroy && !init) {
-
       this.not('ApeDestroy');
     }
 
@@ -29,7 +26,9 @@ class Query {
       this.trackRemoved = init.trackRemoved || false;
       // istanbul ignore if
       if ((this.trackAdded || this.trackRemoved) && !this.system) {
-        throw new Error('Queries cannot track added or removed when initialized outside of a system');
+        throw new Error(
+          'Queries cannot track added or removed when initialized outside of a system'
+        );
       }
       if (this.world.config.useApeDestroy && !init.includeApeDestroy) {
         if (init.not) {
@@ -63,8 +62,7 @@ class Query {
   }
 
   from(...entities) {
-
-    entities = entities.map((e) => (typeof e !== 'string') ? e.id : e);
+    entities = entities.map((e) => (typeof e !== 'string' ? e.id : e));
     this.query.froms.push({
       from: 'from',
       entities
@@ -74,8 +72,7 @@ class Query {
   }
 
   fromReverse(entity, componentName) {
-
-    if(typeof entity === 'string') {
+    if (typeof entity === 'string') {
       entity = this.world.getEntity(entity);
     }
     if (typeof componentName === 'function') {
@@ -90,8 +87,7 @@ class Query {
   }
 
   fromAll(...types) {
-
-    const stringTypes = types.map((t) => (typeof t !== 'string') ? t.name : t);
+    const stringTypes = types.map((t) => (typeof t !== 'string' ? t.name : t));
     this.query.froms.push({
       from: 'all',
       types: stringTypes
@@ -100,8 +96,7 @@ class Query {
   }
 
   fromAny(...types) {
-
-    const stringTypes = types.map((t) => (typeof t !== 'string') ? t.name : t);
+    const stringTypes = types.map((t) => (typeof t !== 'string' ? t.name : t));
     this.query.froms.push({
       from: 'any',
       types: stringTypes
@@ -110,8 +105,7 @@ class Query {
   }
 
   not(...types) {
-
-    const stringTypes = types.map((t) => (typeof t !== 'string') ? t.name : t);
+    const stringTypes = types.map((t) => (typeof t !== 'string' ? t.name : t));
     this.query.filters.push({
       filter: 'not',
       types: stringTypes
@@ -119,9 +113,8 @@ class Query {
     return this;
   }
 
-  only(... types) {
-
-    const stringTypes = types.map((t) => (typeof t !== 'string') ? t.name : t);
+  only(...types) {
+    const stringTypes = types.map((t) => (typeof t !== 'string' ? t.name : t));
     this.query.filters.push({
       filter: 'only',
       types: stringTypes
@@ -130,7 +123,6 @@ class Query {
   }
 
   update(entity) {
-
     let inFrom = false;
     for (const source of this.query.froms) {
       if (source.from === 'all') {
@@ -158,12 +150,20 @@ class Query {
           inFrom = true;
           break;
         }
-      } else /* istanbul ignore else */ if (source.from === 'reverse') {
+      } /* istanbul ignore else */ else if (source.from === 'reverse') {
         // istanbul ignore else
-        if (this.world.entityReverse.hasOwnProperty(source.entity.id)
-          && this.world.entityReverse[source.entity.id].hasOwnProperty(source.type)) {
-          const keys = new Set(this.world.entityReverse[source.entity.id][source.type].keys());
-          if (new Set(this.world.entityReverse[source.entity.id][source.type].keys()).has(entity.id)) {
+        if (
+          this.world.entityReverse.hasOwnProperty(source.entity.id) &&
+          this.world.entityReverse[source.entity.id].hasOwnProperty(source.type)
+        ) {
+          const keys = new Set(
+            this.world.entityReverse[source.entity.id][source.type].keys()
+          );
+          if (
+            new Set(
+              this.world.entityReverse[source.entity.id][source.type].keys()
+            ).has(entity.id)
+          ) {
             inFrom = true;
             break;
           }
@@ -182,7 +182,6 @@ class Query {
   }
 
   _removeEntity(entity) {
-
     if (this.results.has(entity) && this.trackRemoved) {
       this.removed.add(entity);
     }
@@ -190,14 +189,15 @@ class Query {
   }
 
   persist(trackAdded, trackRemoved) {
-
     // istanbul ignore if
     if (this.hasStatic) {
       throw new Error('Cannot persist query with static list of entities.');
     }
     // istanbul ignore if
     if (this.query.froms.length === 0) {
-      throw new Error('Cannot persist query without entity source (fromAll, fromAny, fromReverse).');
+      throw new Error(
+        'Cannot persist query without entity source (fromAll, fromAny, fromReverse).'
+      );
     }
 
     this.world.queries.push(this);
@@ -208,7 +208,7 @@ class Query {
     if (typeof trackAdded === 'boolean') {
       this.trackAdded = trackAdded;
     }
-    if (typeof trackRemoved === 'boolean' ) {
+    if (typeof trackRemoved === 'boolean') {
       this.trackRemoved = trackRemoved;
     }
     this.persisted = true;
@@ -216,13 +216,11 @@ class Query {
   }
 
   clearChanges() {
-
     this.added.clear();
     this.removed.clear();
   }
 
   refresh() {
-
     //load in entities using from methods
     let results = new Set();
     for (const source of this.query.froms) {
@@ -233,9 +231,14 @@ class Query {
         if (source.types.length === 1) {
           // istanbul ignore if
           if (!this.world.entitiesByComponent.hasOwnProperty(source.types[0])) {
-            throw new Error(`${source.types[0]} is not a registered Component/Tag`);
+            throw new Error(
+              `${source.types[0]} is not a registered Component/Tag`
+            );
           }
-          results = Util.setUnion(results, this.world.entitiesByComponent[source.types[0]]);
+          results = Util.setUnion(
+            results,
+            this.world.entitiesByComponent[source.types[0]]
+          );
         } else {
           const comps = [];
           for (const type of source.types) {
@@ -259,18 +262,26 @@ class Query {
           comps.push(entities);
         }
         results = Util.setUnion(results, ...comps);
-      } else /* istanbul ignore else */ if (source.from === 'reverse') {
+      } /* istanbul ignore else */ else if (source.from === 'reverse') {
         // istanbul ignore else
-        if (this.world.entityReverse[source.entity.id]
-          && this.world.entityReverse[source.entity.id].hasOwnProperty(source.type)) {
-          results = Util.setUnion(results, new Set([...this.world.entityReverse[source.entity.id][source.type].keys()]));
+        if (
+          this.world.entityReverse[source.entity.id] &&
+          this.world.entityReverse[source.entity.id].hasOwnProperty(source.type)
+        ) {
+          results = Util.setUnion(
+            results,
+            new Set([
+              ...this.world.entityReverse[source.entity.id][source.type].keys()
+            ])
+          );
         }
       }
     }
 
-    this.results = new Set([...results]
-      .map(id => this.world.getEntity(id))
-      .filter(entity => !!entity)
+    this.results = new Set(
+      [...results]
+        .map((id) => this.world.getEntity(id))
+        .filter((entity) => !!entity)
     );
 
     //filter results
@@ -286,7 +297,6 @@ class Query {
   }
 
   _filter(entity) {
-
     for (const filter of this.query.filters) {
       if (filter.filter === 'not') {
         for (const type of filter.types) {
@@ -295,7 +305,7 @@ class Query {
             break;
           }
         }
-      } else /* istanbul ignore else */ if (filter.filter === 'only') {
+      } /* istanbul ignore else */ else if (filter.filter === 'only') {
         let found = false;
         for (const type of filter.types) {
           if (entity.has(type)) {
@@ -311,31 +321,33 @@ class Query {
   }
 
   execute(filter) {
-
     if (!this.executed) {
       this.refresh();
     }
     this.executed = true;
     // istanbul ignore next
-    if (filter === undefined
-      || (!filter.hasOwnProperty('updatedComponents')
-        && !filter.hasOwnProperty('updatedValues')
-      )) {
+    if (
+      filter === undefined ||
+      (!filter.hasOwnProperty('updatedComponents') &&
+        !filter.hasOwnProperty('updatedValues'))
+    ) {
       return this.results;
     }
     const output = [];
     for (const entity of this.results) {
       // istanbul ignore next
       if (
-        !(filter.updatedComponents && entity.updatedComponents < filter.updatedComponents)
-        && !(filter.updatedValues && entity.updatedValues < filter.updatedValues)
+        !(
+          filter.updatedComponents &&
+          entity.updatedComponents < filter.updatedComponents
+        ) &&
+        !(filter.updatedValues && entity.updatedValues < filter.updatedValues)
       ) {
-        output.push(entity)
+        output.push(entity);
       }
     }
     return new Set(output);
   }
-
 }
 
 module.exports = Query;

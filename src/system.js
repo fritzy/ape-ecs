@@ -1,9 +1,7 @@
 const Query = require('./query');
 
 class System {
-
   constructor(world, ...initArgs) {
-
     this.world = world;
     this._stagedChanges = [];
     this.changes = [];
@@ -17,21 +15,15 @@ class System {
     this.init(...initArgs);
   }
 
-  init() {
+  init() {}
 
-  }
-
-  update(tick) {
-
-  }
+  update(tick) {}
 
   createQuery(init) {
-
     return new Query(this.world, this, init);
   }
 
   subscribe(type) {
-
     if (typeof type !== 'string') {
       type = type.name;
     }
@@ -43,24 +35,20 @@ class System {
   }
 
   _preUpdate() {
-
     this.changes = this._stagedChanges;
     this._stagedChanges = [];
     this.world.updateIndexes();
   }
 
   _postUpdate() {
-
     for (const query of this.queries) {
       query.clearChanges();
     }
   }
 
   _recvChange(change) {
-
     this._stagedChanges.push(change);
   }
-
 }
 
 module.exports = System;

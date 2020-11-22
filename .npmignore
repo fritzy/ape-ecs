@@ -4,3 +4,4 @@ webpack.config.js
 docs
 imgs
 builds
+.prettierrc.json

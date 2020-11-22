@@ -2,9 +2,7 @@ const Util = require('./util');
 const idGen = new Util.IdGenerator();
 
 class Component {
-
   constructor() {
-
     this._meta = {
       key: '',
       updated: 0,
@@ -16,26 +14,20 @@ class Component {
   }
 
   preInit(initial) {
-
     return initial;
   }
 
-  init(initial) {
-
-  }
+  init(initial) {}
 
   get type() {
-
     return this.constructor.name;
   }
 
   get key() {
-
     return this._meta.key;
   }
 
   set key(value) {
-
     const old = this._meta.key;
     this._meta.key = value;
     if (old) {
@@ -47,12 +39,19 @@ class Component {
   }
 
   destroy() {
-
     this.preDestroy();
     this._meta.values = {};
     for (const ref of this._meta.refs) {
       const [value, prop, sub] = ref.split('||');
-      this.world._deleteRef(value, this._meta.entityId, this.id, prop, sub, this._meta.key, this.type);
+      this.world._deleteRef(
+        value,
+        this._meta.entityId,
+        this.id,
+        prop,
+        sub,
+        this._meta.key,
+        this.type
+      );
     }
     this.world._sendChange({
       op: 'destroy',
@@ -65,14 +64,11 @@ class Component {
     this.postDestroy();
   }
 
-  preDestroy() {
-  }
+  preDestroy() {}
 
-  postDestroy() {
-  }
+  postDestroy() {}
 
-  getObject(withIds=true) {
-
+  getObject(withIds = true) {
     const obj = {
       type: this.constructor.name
     };
@@ -87,7 +83,11 @@ class Component {
       });
     }
     for (const field of fields) {
-      if (this[field] !== undefined && this[field] !== null && typeof this[field].getValue === 'function') {
+      if (
+        this[field] !== undefined &&
+        this[field] !== null &&
+        typeof this[field].getValue === 'function'
+      ) {
         obj[field] = this[field].getValue();
       } else if (this._meta.values.hasOwnProperty(field)) {
         obj[field] = this._meta.values[field];
@@ -102,7 +102,6 @@ class Component {
   }
 
   _setup(entity, initial) {
-
     this.entity = entity;
     this.id = initial.id || idGen.genId();
     this._meta.updated = this.world.currentTick;
@@ -139,11 +138,9 @@ class Component {
       entity: this._meta.entityId,
       type: this.type
     });
-
   }
 
   _reset() {
-
     this._meta.key = '';
     this._meta.updated = 0;
     this._meta.entityId = 0;
@@ -153,13 +150,18 @@ class Component {
   }
 
   update(values) {
-
     if (values) {
       delete values.type;
       Object.assign(this, values);
       if (this.constructor.changeEvents) {
-        const change = {op:'change', props: [], component: this.id, entity: this._meta.entityId, type: this.type};
-        for(const prop in values) {
+        const change = {
+          op: 'change',
+          props: [],
+          component: this.id,
+          entity: this._meta.entityId,
+          type: this.type
+        };
+        for (const prop in values) {
           change.props.push(prop);
         }
         this.world._sendChange(change);
@@ -169,15 +171,29 @@ class Component {
   }
 
   _addRef(value, prop, sub) {
-
     this._meta.refs.add(`${value}||${prop}||${sub}`);
-    this.world._addRef(value, this._meta.entityId, this.id, prop, sub, this._meta.key, this.type);
+    this.world._addRef(
+      value,
+      this._meta.entityId,
+      this.id,
+      prop,
+      sub,
+      this._meta.key,
+      this.type
+    );
   }
 
   _deleteRef(value, prop, sub) {
-
     this._meta.refs.delete(`${value}||${prop}||${sub}`);
-    this.world._deleteRef(value, this._meta.entityId, this.id, prop, sub, this._meta.key, this.type);
+    this.world._deleteRef(
+      value,
+      this._meta.entityId,
+      this.id,
+      prop,
+      sub,
+      this._meta.key,
+      this.type
+    );
   }
 }
 

@@ -1,7 +1,5 @@
 class ComponentPool {
-
   constructor(world, type, spinup) {
-
     this.world = world;
     this.type = type;
     this.klass = this.world.componentTypes[this.type];
@@ -12,7 +10,6 @@ class ComponentPool {
   }
 
   get(entity, initial) {
-
     let comp;
     if (this.pool.length === 0) {
       comp = new this.klass(entity, initial);
@@ -25,7 +22,6 @@ class ComponentPool {
   }
 
   release(comp) {
-
     comp._reset();
     //comp._meta.entity = null;
     this.pool.push(comp);
@@ -33,7 +29,6 @@ class ComponentPool {
   }
 
   cleanup() {
-
     if (this.pool.length > this.targetSize * 2) {
       const diff = this.pool.length - this.targetSize;
       const chunk = Math.max(Math.min(20, diff), Math.floor(diff / 4));
@@ -44,8 +39,7 @@ class ComponentPool {
   }
 
   spinUp(count) {
-
-    for(let i = 0; i < count; i++) {
+    for (let i = 0; i < count; i++) {
       const comp = new this.klass();
       this.pool.push(comp);
     }

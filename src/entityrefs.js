@@ -1,12 +1,12 @@
 class EntitySet extends Set {
-
-  constructor (component, object, field) {
-
+  constructor(component, object, field) {
     super();
     this.component = component;
     this.field = field;
     this.sub = '__set__';
-    object = object.map(value => (typeof value === 'string') ? value : value.id );
+    object = object.map((value) =>
+      typeof value === 'string' ? value : value.id
+    );
     this.dvalue = object;
     for (const item of object) {
       this.add(item);
@@ -14,7 +14,6 @@ class EntitySet extends Set {
   }
 
   _reset() {
-
     this.clear();
     for (const item of this.dvalue) {
       this.add(item);
@@ -22,7 +21,6 @@ class EntitySet extends Set {
   }
 
   add(value) {
-
     if (value.id) {
       value = value.id;
     }
@@ -31,7 +29,6 @@ class EntitySet extends Set {
   }
 
   delete(value) {
-
     if (value.id) {
       value = value.id;
     }
@@ -41,7 +38,6 @@ class EntitySet extends Set {
   }
 
   has(value) {
-
     if (value.id) {
       value = value.id;
     }
@@ -49,42 +45,35 @@ class EntitySet extends Set {
   }
 
   [Symbol.iterator]() {
-
     const that = this;
     const siterator = super[Symbol.iterator]();
     return {
       next() {
-
         const result = siterator.next();
         if (typeof result.value === 'string') {
           result.value = that.component.entity.world.getEntity(result.value);
         }
         return result;
       }
-    }
+    };
   }
 
   getValue() {
-
-    return [...this].map(entity => entity.id);
+    return [...this].map((entity) => entity.id);
   }
 }
 
 module.exports = {
-
   EntityRef(comp, dvalue, field) {
-
     dvalue = dvalue || null;
     if (!comp.hasOwnProperty(field)) {
       Object.defineProperty(comp, field, {
         get() {
-
           return comp.world.getEntity(comp._meta.values[field]);
         },
         set(value) {
-
           const old = comp._meta.values[field];
-          value = (value && typeof value !== 'string') ? value.id : value;
+          value = value && typeof value !== 'string' ? value.id : value;
           if (old && old !== value) {
             comp._deleteRef(old, field, undefined);
           }
@@ -100,8 +89,7 @@ module.exports = {
   },
 
   EntityObject(comp, object, field) {
-
-    comp._meta.values[field] = object || {}
+    comp._meta.values[field] = object || {};
     const values = comp._meta.values[field];
     const keys = Object.keys(values);
     for (const key of keys) {
@@ -111,11 +99,9 @@ module.exports = {
     }
     return new Proxy(comp._meta.values[field], {
       get(obj, prop) {
-
         return comp.world.getEntity(obj[prop]);
       },
       set(obj, prop, value) {
-
         const old = obj[prop];
         if (value && value.id) {
           value = value.id;
@@ -130,7 +116,6 @@ module.exports = {
         return true;
       },
       deleteProperty(obj, prop) {
-
         if (!obj.hasOwnProperty(prop)) return false;
         const old = obj[prop];
         delete obj[prop];
@@ -141,7 +126,6 @@ module.exports = {
   },
 
   EntitySet(component, object = [], field) {
-
     return new EntitySet(component, object, field);
   }
 };

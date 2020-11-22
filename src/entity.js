@@ -3,9 +3,7 @@ const IdGenerator = require('./util').IdGenerator;
 const idGen = new IdGenerator();
 
 class Entity {
-
   constructor() {
-
     this.types = {};
     this.c = {};
     this.id = '';
@@ -17,9 +15,8 @@ class Entity {
   }
 
   _setup(definition) {
-
     this.destroyed = false;
-    if (definition.id)  {
+    if (definition.id) {
       this.id = definition.id;
     } else {
       this.id = idGen.genId();
@@ -55,18 +52,14 @@ class Entity {
     this.world._entityUpdated(this);
   }
 
-
   has(type) {
-
     if (typeof type !== 'string') {
       type = type.name;
     }
-    return (this.tags.has(type)
-      || this.types.hasOwnProperty(type));
+    return this.tags.has(type) || this.types.hasOwnProperty(type);
   }
 
   getOne(type) {
-
     if (typeof type !== 'string') {
       type = type.name;
     }
@@ -79,7 +72,6 @@ class Entity {
   }
 
   getComponents(type) {
-
     if (typeof type !== 'string') {
       type = type.name;
     }
@@ -87,10 +79,9 @@ class Entity {
   }
 
   addTag(tag) {
-
     // istanbul ignore next
     if (!this.world.tags.has(tag)) {
-      throw new Error(`addTag "${tag}" is not registered. Type-O?`)
+      throw new Error(`addTag "${tag}" is not registered. Type-O?`);
     }
     this.tags.add(tag);
     this.updatedComponents = this.world.currentTick;
@@ -101,7 +92,6 @@ class Entity {
   }
 
   removeTag(tag) {
-
     this.tags.delete(tag);
     this.updatedComponents = this.world.currentTick;
     this.world.entitiesByComponent[tag].delete(this.id);
@@ -109,7 +99,6 @@ class Entity {
   }
 
   addComponent(properties) {
-
     const type = properties.type;
     const pool = this.world.componentPool.get(type);
     if (pool === undefined) {
@@ -129,7 +118,6 @@ class Entity {
   }
 
   removeComponent(component) {
-
     if (typeof component === 'string') {
       component = this.c[component];
     }
@@ -150,8 +138,7 @@ class Entity {
     return true;
   }
 
-  getObject(componentIds=true) {
-
+  getObject(componentIds = true) {
     const obj = {
       id: this.id,
       tags: [...this.tags],
@@ -176,7 +163,6 @@ class Entity {
   }
 
   destroy() {
-
     if (this.world.refs[this.id]) {
       for (const ref of this.world.refs[this.id]) {
         const [entityId, componentId, prop, sub] = ref.split('...');
@@ -199,7 +185,7 @@ class Entity {
         } else if (sub === '__obj__') {
           delete parent[path[1]];
         } else {
-          parent[prop] = null
+          parent[prop] = null;
         }
       }
     }

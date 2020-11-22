@@ -10,8 +10,8 @@ export interface IComponentChange {
 
 // used by .fromReverse() in queries
 export interface IQueryReverse {
-  entity: Entity|string;
-  type: string|ComponentClass;
+  entity: Entity | string;
+  type: string | ComponentClass;
 }
 
 // the object passed to world.createQuery()
@@ -20,12 +20,12 @@ export interface IQueryConfig {
   trackRemoved?: boolean;
   includeApeDestroy?: boolean;
   persist?: boolean;
-  from?: (Entity|string)[];
-  all?: (string|ComponentClass)[];
-  any?: (string|ComponentClass)[];
+  from?: (Entity | string)[];
+  all?: (string | ComponentClass)[];
+  any?: (string | ComponentClass)[];
   reverse?: IQueryReverse;
-  not?: (string|ComponentClass)[];
-  only?: (string|ComponentClass)[];
+  not?: (string | ComponentClass)[];
+  only?: (string | ComponentClass)[];
 }
 
 export declare class System {
@@ -40,7 +40,6 @@ export declare class System {
   createQuery(init?: IQueryConfig): Query;
   subscribe(type: string | ComponentClass): void;
 }
-
 
 // passed to query.execute()
 export interface IQueryExecuteConfig {
@@ -72,17 +71,19 @@ export declare class Query {
   removed: Set<Entity>;
   trackAdded: boolean;
   trackRemoved: boolean;
-  from(...entities: (Entity|string)[]): Query;
-  fromReverse<T extends typeof Component>(entity: (Entity|string), componentName: string|T): Query;
-  fromAll(...types: (string|(new() => Component))[]): Query;
-  fromAny(...types: (string|(new() => Component))[]): Query;
-  not(...types: (string|(new() => Component))[]): Query;
-  only(...types: (string|(new() => Component))[]): Query;
+  from(...entities: (Entity | string)[]): Query;
+  fromReverse<T extends typeof Component>(
+    entity: Entity | string,
+    componentName: string | T
+  ): Query;
+  fromAll(...types: (string | (new () => Component))[]): Query;
+  fromAny(...types: (string | (new () => Component))[]): Query;
+  not(...types: (string | (new () => Component))[]): Query;
+  only(...types: (string | (new () => Component))[]): Query;
   persist(trackAdded?: boolean, trackRemoved?: boolean): Query;
   refresh(): Query;
   execute(filter?: IQueryExecuteConfig): Set<Entity>;
 }
-
 
 export interface IComponentUpdate {
   type?: never;
@@ -91,7 +92,7 @@ export interface IComponentUpdate {
 
 // in order to reference the class rather than the instance
 interface ComponentClass {
-  new(): Component;
+  new (): Component;
 }
 
 export declare class Component {
@@ -120,7 +121,6 @@ export interface IStringMap {
 export interface IStringNullMap {
   [name: string]: string | null;
 }
-
 
 // an object where the key is a string and the val is a set of Components
 export interface IEntityByType {
@@ -169,8 +169,6 @@ export interface IComponentConfigValObject {
   [name: string]: IComponentConfigVal;
 }
 
-
-
 // returned from entity.getObject()
 export interface IEntityObject {
   id: string;
@@ -179,12 +177,10 @@ export interface IEntityObject {
   c: IEntityComponentObjects;
 }
 
-
 // an object where the key is a string and the val is a single System
 // export interface IWorldSubscriptions {
 //   [name: string]: System;
 // }
-
 
 export declare class Entity {
   types: IEntityByType;
@@ -195,15 +191,17 @@ export declare class Entity {
   updatedValues: number;
   destroyed: boolean;
   // _setup(definition: any): void;
-  has(type: string|ComponentClass): boolean;
+  has(type: string | ComponentClass): boolean;
   getOne(type: string): Component | undefined;
-  getOne<T extends Component>(type: {new(): T}): T | undefined;
+  getOne<T extends Component>(type: { new (): T }): T | undefined;
   getComponents(type: string): Set<Component>;
-  getComponents<T extends Component>(type: {new(): T}): Set<T>;
+  getComponents<T extends Component>(type: { new (): T }): Set<T>;
   addTag(tag: string): void;
   removeTag(tag: string): void;
-  addComponent(properties: IComponentConfig|IComponentObject): Component | undefined;
-  removeComponent(component: Component|string): boolean;
+  addComponent(
+    properties: IComponentConfig | IComponentObject
+  ): Component | undefined;
+  removeComponent(component: Component | string): boolean;
   getObject(componentIds?: boolean): IEntityObject;
   destroy(): void;
 }
@@ -219,21 +217,21 @@ export interface IWorldConfig {
 export interface IEntityConfig {
   id?: string;
   tags?: string[];
-  components?: (IComponentConfig)[];
+  components?: IComponentConfig[];
   c?: IComponentConfigValObject;
 }
 
 export interface IPoolStat {
-  active: number,
-  pooled: number,
-  target: number
+  active: number;
+  pooled: number;
+  target: number;
 }
 
 export interface IWorldStats {
-  entity: IPoolStat
+  entity: IPoolStat;
   components: {
-    [key:string]: IPoolStat
-  }
+    [key: string]: IPoolStat;
+  };
 }
 
 export declare class World {
@@ -251,24 +249,31 @@ export declare class World {
   tick(): number;
   registerTags(...tags: string[]): void;
 
-  // Both options allow the passing of a class that extends Component 
-  registerComponent<T extends typeof Component>(klass: T, spinup?: number): void;
+  // Both options allow the passing of a class that extends Component
+  registerComponent<T extends typeof Component>(
+    klass: T,
+    spinup?: number
+  ): void;
 
   getStats(): IWorldStats;
   logStats(freq: number, callback?: Function): void;
 
-  createEntity(definition: IEntityConfig|IEntityObject): Entity;
+  createEntity(definition: IEntityConfig | IEntityObject): Entity;
   getObject(): IEntityObject[];
-  createEntities(definition: IEntityConfig[]|IEntityObject[]): void;
+  createEntities(definition: IEntityConfig[] | IEntityObject[]): void;
   copyTypes(world: World, types: string[]): void;
-  removeEntity(id: Entity|string): void;
+  removeEntity(id: Entity | string): void;
   getEntity(entityId: string): Entity | undefined;
-  getEntities(type: string|ComponentClass): Set<Entity>;
+  getEntities(type: string | ComponentClass): Set<Entity>;
   getComponent(id: string): Component;
   createQuery(init?: IQueryConfig): Query;
 
   // Allows passing of a class that extends System, or an instance of such a class
-  registerSystem<T extends typeof System>(group: string, system: T|System, initParams?: any[]): any;
+  registerSystem<T extends typeof System>(
+    group: string,
+    system: T | System,
+    initParams?: any[]
+  ): any;
 
   runSystems(group: string): void;
   updateIndexes(): void;
@@ -286,7 +291,7 @@ declare class EntitySetC extends Set<any> {
 // This is a proxy
 export interface IEntityRef {
   get(): Entity;
-  set(value: Entity|string): void;
+  set(value: Entity | string): void;
 }
 
 // This is a proxy
@@ -297,9 +302,18 @@ export interface IEntityObject {
   [others: string]: any;
 }
 
-
-
-
-export function EntityRef(comp: Component, dvalue: any, field: string): IEntityRef;
-export function EntityObject(comp: Component, object: any, field: string): IEntityObject;
-export function EntitySet(component: Component, object: any[], field: string): EntitySetC;
+export function EntityRef(
+  comp: Component,
+  dvalue: any,
+  field: string
+): IEntityRef;
+export function EntityObject(
+  comp: Component,
+  object: any,
+  field: string
+): IEntityObject;
+export function EntitySet(
+  component: Component,
+  object: any[],
+  field: string
+): EntitySetC;

@@ -15,6 +15,7 @@
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "build": "webpack --config ./build.webpack.config.js",
     "md": "jsdoc2md src/ecs.js",
+    "prettier": "prettier --write src/",
     "webbench": "webpack-dev-server",
     "check-links": "markdown-link-check README.md && markdown-link-check docs/API_Reference.md && markdown-link-check docs/Component.md && markdown-link-check docs/Entity.md && markdown-link-check docs/Entity_Refs.md && markdown-link-check docs/Overview.md && markdown-link-check docs/Patterns.md && markdown-link-check docs/Query.md && markdown-link-check docs/System.md && markdown-link-check docs/World.md"
   },
@@ -43,6 +44,7 @@
     "html-webpack-plugin": "^4.5.0",
     "mocha": "^8.1.2",
     "nyc": "^15.1.0",
+    "prettier": "^2.2.0",
     "ts-node": "^9.0.0",
     "typescript": "^4.0.2",
     "webpack": "^4.43.0",
