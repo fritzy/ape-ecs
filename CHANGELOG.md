@@ -7,3 +7,12 @@ Build sizes are also significantly smaller due to no longer using the node.js `c
 * Swap to UUIDv4 for performance improvements \([martinemmert](https://github.com/martinemmert)\]
 * Fix of webbenchmark \[[martinemmert](https://github.com/martinemmert)\]
 * Web Benchmark is now apples-to-apples comparison, reflected in Overview.md \[[fritzy](https://github.com/fritzy)\]
+
+## 1.2.0 November 22, 2020
+
+* Components can be registered to multiple worlds. (more multi-world support to come)
+* Prettier config and formatting.
+* Components typeName static property to deal with minimizers (compiling packages sometimes change function/class names).
+* Custom System init parameters.
+* TypeScript fixes.
+* System.subscribe will now take Component class as well as name (to match other functions that take Component type).
