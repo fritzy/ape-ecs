@@ -108,6 +108,7 @@ export declare class Component {
   entity: Entity;
   id: string;
   update(values?: IComponentUpdate): void;
+  [name: string]: any;
   static properties: Object;
   static serialize: Boolean;
   static serializeFields: string[];

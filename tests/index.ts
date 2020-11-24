@@ -1875,6 +1875,10 @@ describe('Component Portability', () => {
       };
 
       static typeName = 'Test';
+
+      greeting: string;
+      a: number;
+
     }
 
     world1.registerComponent(Testa);
