@@ -8,7 +8,7 @@ class IdGenerator {
   }
 
   genPrefix() {
-    return uuid();
+    this.prefix = uuid();
   }
 
   genId() {
@@ -18,7 +18,7 @@ class IdGenerator {
       this.gen_num = 0;
       this.genPrefix();
     }
-    return this.prefix + this.gen_num;
+    return `${this.prefix}-${this.gen_num}`;
   }
 }
 
