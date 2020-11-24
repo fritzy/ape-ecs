@@ -115,6 +115,7 @@ export declare class Component {
   static skipSerializeFields: string[];
   static subbed: Boolean;
   static registered: Boolean;
+  static typeName?: string;
 }
 
 // an object that has strings as keys and strings as values
