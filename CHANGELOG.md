@@ -16,3 +16,8 @@ Build sizes are also significantly smaller due to no longer using the node.js `c
 * Custom System init parameters.
 * TypeScript fixes.
 * System.subscribe will now take Component class as well as name (to match other functions that take Component type).
+
+## 1.3.0 November 29, 2020
+
+* Fix id prefixes
+* added typeName Component property

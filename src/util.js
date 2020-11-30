@@ -1,5 +1,3 @@
-const uuid = require('uuid').v4;
-
 class IdGenerator {
   constructor() {
     this.gen_num = 0;
@@ -8,7 +6,7 @@ class IdGenerator {
   }
 
   genPrefix() {
-    this.prefix = uuid();
+    this.prefix = Date.now().toString(32);
   }
 
   genId() {
@@ -18,7 +16,7 @@ class IdGenerator {
       this.gen_num = 0;
       this.genPrefix();
     }
-    return `${this.prefix}-${this.gen_num}`;
+    return this.prefix + this.gen_num;
   }
 }
 
