@@ -34,10 +34,6 @@ EquipmentSlot.skipSerializeFields = ['holding'];
 EquipmentSlot.changeEvents = false;
 // set typeName if your build system renames functions
 EquipmentSlot.typeName = 'EquipmentSlot';
-EquipmentSlot.parameters = {
-};
-EquipmentSlot.serialize = {
-};
 ```
 
 👆 You could use `static` parameters instead of assigning these values to the class, but as of this writing is still a stage-3 proposal for ECMAScript.
