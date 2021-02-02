@@ -10,18 +10,17 @@ Entity references themselves are functions that set up the property.
 Simply assign the function to a Component.properties value.
 
 ```js
-class InventorySlot extends ApeECS.Component {
-  static properties = {
-    name: 'Right Hand',
-    slotType: 'any',
-    slot: ApeECS.EntityRef
-  }
-}
-class Bottle extends ApeECS.Component {
-  static properties = {
-    liquid: 'water',
-    amount: 1
-  }
+class InventorySlot extends ApeECS.Component {}
+InventorySlot.properties = {
+  name: 'Right Hand',
+  slotType: 'any',
+  slot: ApeECS.EntityRef
+};
+
+class Bottle extends ApeECS.Component {}
+Bottle.properties = {
+  liquid: 'water',
+  amount: 1
 }
 
 world.registerComponent(InventorySlot);
@@ -72,11 +71,11 @@ Serializes to the `Entity` id.
 Serializes to an `Object` of `Entity` ids and restores back to an `EntityObject`.
 
 ```js
-class CarParts extends ApeECS.Component {
-  static properties = {
-    mountPoints: ApeECS.EntityObject
-  };
-}
+class CarParts extends ApeECS.Component {}
+CarParts.properties = {
+  mountPoints: ApeECS.EntityObject
+};
+
 world.registerComponents(CarParts)
 
 const car = world.creatEntity({
@@ -116,11 +115,10 @@ console.log(JSON.stringify(car.getObject));
 `Component` property factory that creates a `Set` that manages Entity references.
 
 ```js
-class Inventory extends ApeECS.Component {
-  static properties: {
-    slots: ApeECS.EntitySet
-  }
-}
+class Inventory extends ApeECS.Component {}
+Inventory.properties = {
+  slots: ApeECS.EntitySet
+};
 world.registerComponent(Inventory);
 
 const npc = world.createEntity({

@@ -89,16 +89,6 @@ Register a new `Component` type in your `World`.
 
 ```js
 class Position extends ApeECS.Component {
-  static properties = {
-    x: 0,
-    y: 0,
-    coord: '0x0',
-    parent: ApeECS.EntityRef
-  }
-
-  static serialize = true; // optional, default
-  static serializeFields = ['x', 'y']; // optional
-  // default is null, when serializeFields not specified, all properties are serialized
 
   init() { // optional
     this.coord = `${this.x}x${this.y}`;
@@ -113,6 +103,15 @@ class Position extends ApeECS.Component {
   }
 
 }
+Position.properties = {
+  x: 0,
+  y: 0,
+  coord: '0x0',
+  parent: ApeECS.EntityRef
+};
+Position.serialize = true; // optional, default
+Position.serializeFields = ['x', 'y']; // optional
+// default is null, when serializeFields not specified, all properties are serialized
 
 world.registerComponent(Position, 100);
 ```

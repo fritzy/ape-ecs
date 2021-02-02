@@ -12,21 +12,19 @@ In the case of input, it's nice to attach an action component to an entity.
 Those actions could come from user input or NPC AI or network.
 
 ```js
-class Position extends ApeECS.Component {
-  static properties = {
-    x: 0,
-    y: 0
-  }
-}
+class Position extends ApeECS.Component {}
+Position.properties = {
+  x: 0,
+  y: 0
+};
 
 // we could just make a separate action for each direction as tags
 // but this is more flexible
-class ActionMove extends ApeECS.Component {
-  static properties = {
-    x: 0,
-    y: 0
-  }
-}
+class ActionMove extends ApeECS.Component {}
+ActionMove.properties = {
+  x: 0,
+  y: 0
+};
 
 class ActionSystem extends ApeECS.System {
 

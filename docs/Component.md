@@ -7,36 +7,40 @@ Those properties can be JavaScript types and special Entity Reference values.
 ```js
 class EquipmentSlot extends ApeECS.Component {
 
-  // we could assign parameters and other static properties
-  // directly onto EquipmentSlot and it would be equivalant
-  static parameters = {
-    name: 'Right Hand',
-    slotType: 'wieldable',
-    slot: ApeECS.EntityRef,
-    holding: false
-  };
-
-  //default
-  static serialize = true;
-  // defaults to null, only serialize fields listed
-  static serializeFields = ['name', 'slotType', 'slot']; 
-  // defaults to null, don't serialize these fieldsk
-  static skipSerializeFields = ['holding']; 
-  // defaults to false, when true it sends change events
-  // on property changes through component.update()
-  static changeEvents = false;
-  // set typeName if your build system renames functions
-  static typeName = 'EquipmentSlot';
-
   init(values) {
   }
 
   preDestroy() {
   }
 }
+
+// we could assign parameters and other static properties
+// directly onto EquipmentSlot and it would be equivalant
+EquipmentSlot.parameters = {
+  name: 'Right Hand',
+  slotType: 'wieldable',
+  slot: ApeECS.EntityRef,
+  holding: false
+};
+
+//default
+EquipmentSlot.serialize = true;
+// defaults to null, only serialize fields listed
+EquipmentSlot.serializeFields = ['name', 'slotType', 'slot']; 
+// defaults to null, don't serialize these fieldsk
+EquipmentSlot.skipSerializeFields = ['holding']; 
+// defaults to false, when true it sends change events
+// on property changes through component.update()
+EquipmentSlot.changeEvents = false;
+// set typeName if your build system renames functions
+EquipmentSlot.typeName = 'EquipmentSlot';
+EquipmentSlot.parameters = {
+};
+EquipmentSlot.serialize = {
+};
 ```
 
-👆 While all current browsers and Node.js support the `static` parameter in classes, it isn't currently approved for usage in ECMAScript. Assigning those properties on the class or constructor is equivalant.
+👆 You could use `static` parameters instead of assigning these values to the class, but as of this writing is still a stage-3 proposal for ECMAScript.
 
 👀 See the [World registerComponent documentation](./World.md#registercomponent) for information on how to define a new Component type.
 
@@ -218,7 +222,7 @@ console.log(obj);
 }
 ```
 
-☝️ If you have a static array for `serializeFields`, then only those fields will be in the resulting object.
+☝️ If you have a staticarray for `serializeFields`, then only those fields will be in the resulting object.
 `skipSerializeFields` is the opposite approach, listing fields that you do not wish to serialize.
 
 ☝️ You can use the results of `component.getObject` as the component in [entity.addComponent](./Entity.md#addcomponent) and as a component part in [world.createEntity](./World.md#createentity) and [world.createEntities](./World.md#createentities).
@@ -245,11 +249,6 @@ You can add setters and getters for any property that you defined.
 
 ```js
 class Position extends ApeECS.Component {
-  static properties = {
-    x: 0,
-    y: 0,
-    coord: '0x0'
-  }
 
   get x() {
     return this._meta.values.x;
@@ -269,6 +268,12 @@ class Position extends ApeECS.Component {
     this.coord = `${this.x}x${this.y}`;
   }
 }
+
+Position.properties = {
+  x: 0,
+  y: 0,
+  coord: '0x0'
+};
 ```
 
 If you define a setter for a property, be sure to store it in the `_meta.values` `Object` since you won't be able to store it under the same name.
@@ -282,14 +287,15 @@ Here's the simpler version:
 
 ```js
 class Position extends ApeECS.Component {
-  static properties = {
-    x: 0,
-    y: 0,
-    coord: '0x0'
-  }
 
   get coord() {
     return `${this.x}x${this.y}`;
   }
 }
+
+Position.properties = {
+  x: 0,
+  y: 0,
+  coord: '0x0'
+};
  ```
