@@ -21,3 +21,8 @@ Build sizes are also significantly smaller due to no longer using the node.js `c
 
 * Fix id prefixes
 * added typeName Component property
+
+## 1.3.1 February 1, 2021
+
+* check for calling entity.destroy() twice
+* updated Docs to not use static property pattern
