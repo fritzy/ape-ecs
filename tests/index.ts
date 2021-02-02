@@ -1912,3 +1912,60 @@ describe('Component Portability', () => {
 
   });
 });
+
+describe('Regressions', () => {
+
+  it('#66 Calling destroy twice has very odd effects', () => {
+
+    const world = new World({ entityPool: 1 });
+    class TestA extends Component {
+
+      static properties = {
+        greeting: "Hi",
+        a: 1
+      };
+
+      static typeName = 'TestA';
+      greeting: string;
+      a: number;
+    }
+
+    class TestB extends Component {
+
+      static properties = {
+        greeting: "Hi",
+        a: 1
+      };
+
+      static typeName = 'TestB';
+      greeting: string;
+      a: number;
+    }
+
+    world.registerComponent(TestA);
+    world.registerComponent(TestB);
+
+    const e = world.createEntity({
+      c: {
+        TestA: {
+          greeting: "What",
+          a: 2
+        }
+      }
+    });
+    world.removeEntity(e);
+    e.destroy();
+
+    const e2 = world.createEntity({
+      c: {
+        TestB: {
+          greeting: "No",
+          a: 3
+        }
+      }
+    });
+
+    expect(e2.has('TestA')).to.be.false;
+    expect(e2.has('TestB')).to.be.true;
+  });
+});

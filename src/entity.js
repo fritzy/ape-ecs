@@ -163,6 +163,8 @@ class Entity {
   }
 
   destroy() {
+
+    if (this.destroyed) return;
     if (this.world.refs[this.id]) {
       for (const ref of this.world.refs[this.id]) {
         const [entityId, componentId, prop, sub] = ref.split('...');
