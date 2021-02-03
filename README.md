@@ -63,32 +63,30 @@ class Gravity extends ApeECS.System {
   }
 }
 
-class Position extends ApeECS.Component {
-  static properties = {
-    x: 0,
-    y: 0
-  }
-}
+class Position extends ApeECS.Component {}
+Position.properties = {
+  x: 0,
+  y: 0
+};
 
 class Vector extends ApeECS.Component {
-  static properties = {
-    mx: 0,
-    my: 0,
-    speed: 0
-  }
 
   get speed() {
     return Math.sqrt(this.mx**2 + this.my**2);
   }
 }
+Vector.properties = {
+  mx: 0,
+  my: 0,
+  speed: 0
+};
 
-class FrameInfo extends ApeECS.Component {
-  static properties = {
-    deltaTime: 0,
-    deltaFrame: 0,
-    time: 0
-  }
-}
+class FrameInfo extends ApeECS.Component {}
+FrameInfo.properties = {
+  deltaTime: 0,
+  deltaFrame: 0,
+  time: 0
+};
 
 const world = new ApeECS.World();
 world.registerComponent(Position);
