@@ -356,6 +356,21 @@ module.exports = class World {
     }
   }
 
+  async runSystemsAsync(group) {
+
+    const systems = this.systems.get(group);
+    if (!systems) return;
+    for (const system of systems) {
+      await system._preUpdate();
+      await system.update(this.currentTick);
+      await system._postUpdate();
+      system.lastTick = this.currentTick;
+      if (system.changes.length !== 0) {
+        system.changes = [];
+      }
+    }
+  }
+  
   _entityUpdated(entity) {
     // istanbul ignore else
     if (this.config.trackChanges) {

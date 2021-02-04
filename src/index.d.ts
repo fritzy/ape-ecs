@@ -283,6 +283,7 @@ export declare class World {
   ): any;
 
   runSystems(group: string): void;
+  runSystemsAsync(group: string): Promise<void>;
   updateIndexes(): void;
 }
 
