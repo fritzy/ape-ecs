@@ -5,7 +5,9 @@
 [![Build Status](https://travis-ci.com/fritzy/ape-ecs.svg?branch=master)](https://travis-ci.com/fritzy/ape-ecs)
 ![Coveralls github](https://img.shields.io/coveralls/github/fritzy/ape-ecs)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/fritzy/ape-ecs/pulls)
-[![chat on discord](https://img.shields.io/discord/782736130550267948?label=chat&logo=discord)](https://discord.gg/hdbdueTDJk)
+
+[![chat on discord](https://img.shields.io/discord/782736130550267948?label=chat&logo=discord&color=blue)](https://discord.gg/hdbdueTDJk)
+[![@fritzy twitter](https://img.shields.io/badge/@fritzy-twitter-blue?logo=twitter&color=blue)](https://twitter.com/fritzy)
 
 A performant, featureful, and flexible [Entity-Component-System](https://en.wikipedia.org/wiki/Entity_component_system) library for JavaScript, written in ECMAScript ES2018, intended for use in games and simulations.
 
