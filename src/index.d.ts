@@ -218,6 +218,7 @@ export interface IWorldConfig {
   entityPool?: number;
   cleanupPools?: boolean;
   useApeDestroy?: boolean;
+  newRepo?: boolean;
 }
 
 // passed to world.createEntity()
@@ -241,15 +242,24 @@ export interface IWorldStats {
   };
 }
 
+export declare class ComponentRepo {
+  clear(): void;
+  registerTags(...tags: string[]): void;
+
+  // Both options allow the passing of a class that extends Component
+  registerComponent<T extends typeof Component>(
+    klass: T,
+    spinup?: number
+  ): void;
+}
+
 export declare class World {
   constructor(config?: IWorldConfig);
   currentTick: number;
+  repo: ComponentRepo;
   entities: Map<string, Entity>;
-  tags: Set<string>;
-  entitiesByComponent: IEntityByType;
   componentsById: Map<string, Component>;
   updatedEntities: Set<Entity>;
-  componentTypes: IEntityComponents;
   queries: Query[];
   subscriptions: Map<string, System>;
   systems: Map<string, Set<System>>;

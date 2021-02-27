@@ -61,7 +61,7 @@ class Component {
       type: this.type
     });
     this.world.componentsById.delete(this.id);
-    this.world.componentPool.get(this.type).release(this);
+    this.world.repo.pool.get(this.type).release(this);
     this.postDestroy();
   }
 
@@ -102,7 +102,8 @@ class Component {
     return obj;
   }
 
-  _setup(entity, initial) {
+  _setup(world, entity, initial) {
+    this.world = world;
     this.entity = entity;
     this.id = initial.id || idGen.genId();
     this._meta.updated = this.world.currentTick;

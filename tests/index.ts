@@ -577,6 +577,7 @@ describe('system queries', () => {
   it('tags', () => {
 
     const ecs = new ECS.World();
+    ecs.repo.clear();
     class Tile extends ECS.Component {};
     class Sprite extends ECS.Component {};
 
@@ -703,6 +704,8 @@ describe('system queries', () => {
   it('filter by updatedComponents', () => {
 
     const ecs = new ECS.World();
+    ecs.repo.clear();
+
     class Comp1 extends ECS.Component {
       static properties = {
         greeting: 'hi'
@@ -751,6 +754,8 @@ describe('system queries', () => {
   it('destroyed entity should be cleared', () => {
 
     const ecs = new ECS.World();
+    ecs.repo.clear();
+
     class Comp1 extends ECS.Component {}
     ecs.registerComponent(Comp1);
 
@@ -777,19 +782,19 @@ describe('system queries', () => {
 
 describe('entity & component refs', () => {
 
-  const ecs = new ECS.World();
-
-  class BeltSlots extends ECS.Component {
-    static properties = {
-      slots: EntityObject,
-    };
-  }
-  class Potion extends ECS.Component {}
-
-  ecs.registerComponent(BeltSlots);
-  ecs.registerComponent(Potion);
 
   it('Entity Object', () => {
+    const ecs = new ECS.World();
+
+    class BeltSlots extends ECS.Component {
+      static properties = {
+        slots: EntityObject,
+      };
+    }
+    class Potion extends ECS.Component {}
+
+    ecs.registerComponent(BeltSlots);
+    ecs.registerComponent(Potion);
 
     const belt = ecs.createEntity({
       c: {
@@ -842,6 +847,19 @@ describe('entity & component refs', () => {
   });
 
   it('Entity Set', () => {
+
+    const ecs = new ECS.World();
+    ecs.repo.clear();
+
+    class BeltSlots extends ECS.Component {
+      static properties = {
+        slots: EntityObject,
+      };
+    }
+    class Potion extends ECS.Component {}
+
+    ecs.registerComponent(BeltSlots);
+    ecs.registerComponent(Potion);
 
     class BeltSlots2 extends ECS.Component {
       static properties = {
@@ -896,12 +914,15 @@ describe('entity & component refs', () => {
 
   });
 
-  class Crying extends ECS.Component {}
-  class Angry extends ECS.Component {}
-  ecs.registerComponent(Crying);
-  ecs.registerComponent(Angry);
 
   it('Assign entity ref by id', () => {
+
+    const ecs = new ECS.World();
+
+    class Crying extends ECS.Component {}
+    class Angry extends ECS.Component {}
+    ecs.registerComponent(Crying);
+    ecs.registerComponent(Angry);
 
     class Ref extends ECS.Component {
       static properties = {
@@ -926,6 +947,7 @@ describe('entity & component refs', () => {
   });
 
   it('Reassign same entity ref', () => {
+    const ecs = new ECS.World();
 
     const entity = ecs.createEntity({
       c: {
@@ -951,6 +973,7 @@ describe('entity restore', () => {
   it('restore mapped object', () => {
 
     const ecs = new ECS.World();
+    ecs.repo.clear();
     ecs.registerTags('Potion');
 
     class EquipmentSlot extends ECS.Component {
@@ -984,6 +1007,8 @@ describe('entity restore', () => {
   it('restore unmapped object', () => {
 
     const ecs = new ECS.World();
+    ecs.repo.clear();
+
     ecs.registerTags('Potion');
 
     class EquipmentSlot extends ECS.Component {
@@ -1031,6 +1056,7 @@ describe('entity restore', () => {
   it('Unregistered component throws', () => {
 
     const ecs = new ECS.World();
+    ecs.repo.clear();
     ecs.registerComponent(class Potion extends ECS.Component {});
 
     const badName = () => {
@@ -1046,6 +1072,8 @@ describe('entity restore', () => {
   it('Unassigned field is not set', () => {
 
     const ecs = new ECS.World();
+    ecs.repo.clear();
+
     class Potion extends ECS.Component {};
     ecs.registerComponent(Potion);
     const entity = ecs.createEntity({
@@ -1248,6 +1276,8 @@ describe('exporting and restoring', () => {
   it('getObject on entity', () => {
 
     const ecs = new ECS.World();
+    ecs.repo.clear();
+
     class EquipmentSlot extends ECS.Component {
       static properties = {
         name: 'ring',
@@ -1302,6 +1332,8 @@ describe('exporting and restoring', () => {
   it('property skipping', () => {
 
     const ecs = new ECS.World();
+    ecs.repo.clear();
+
     class Effect extends ECS.Component {
       static properties = {
         name: 'fire',
@@ -1358,6 +1390,7 @@ describe('advanced queries', () => {
   it('from and reverse queries', () => {
 
     const ecs = new ECS.World();
+    ecs.repo.clear();
 
     ecs.registerTags('A', 'B', 'C', 'D');
 
@@ -1510,6 +1543,8 @@ describe('advanced queries', () => {
   it('track added and removed', () => {
 
     const ecs = new ECS.World();
+    ecs.repo.clear();
+
     class S1 extends ECS.System {
 
       q1: Query;
@@ -1673,9 +1708,8 @@ describe('serialize and deserialize', () => {
       };
     }
     Object.defineProperty(Inventory2, 'name', { value: 'Inventory' });
-    worldB.registerComponent(Inventory2);
-
-    worldB.registerTags('Bottle', 'Item', 'NPC');
+    //worldB.registerComponent(Inventory2);
+    //worldB.registerTags('Bottle', 'Item', 'NPC');
 
     worldB.createEntities(entities1);
 
@@ -1690,7 +1724,7 @@ describe('serialize and deserialize', () => {
 
     const worldC = new ECS.World();
 
-    worldC.copyTypes(worldA, ['Inventory', 'Bottle', 'Item', 'NPC']);
+    //worldC.copyTypes(worldA, ['Inventory', 'Bottle', 'Item', 'NPC']);
 
     worldC.createEntities(entities1.reverse());
 
@@ -1817,7 +1851,8 @@ describe('ApeDestroy', () => {
   it('Test ApeDestroy Queries', () => {
 
     const ecs = new World({
-      useApeDestroy: true
+      useApeDestroy: true,
+      newRepo: true
     });
 
     class Test extends Component {}
@@ -1864,8 +1899,8 @@ describe('ApeDestroy', () => {
 
 describe('Component Portability', () => {
   it('Components on multiple worlds', () => {
-    const world1 = new World();
-    const world2 = new World();
+    const world1 = new World({ newRepo: true });
+    const world2 = new World({ newRepo: true });
 
     class Testa extends Component {
 

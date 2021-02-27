@@ -230,14 +230,14 @@ class Query {
       } else if (source.from === 'all') {
         if (source.types.length === 1) {
           // istanbul ignore if
-          if (!this.world.entitiesByComponent.hasOwnProperty(source.types[0])) {
+          if (!this.world.repo.typeset.has(source.types[0])) {
             throw new Error(
               `${source.types[0]} is not a registered Component/Tag`
             );
           }
           results = Util.setUnion(
             results,
-            this.world.entitiesByComponent[source.types[0]]
+            this.world.entitiesByComponent[source.types[0]] || new Set()
           );
         } else {
           const comps = [];

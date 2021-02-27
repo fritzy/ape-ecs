@@ -1,22 +1,22 @@
 class ComponentPool {
-  constructor(world, type, spinup) {
-    this.world = world;
+  constructor(repo, type, spinup) {
+    this.repo = repo;
     this.type = type;
-    this.klass = this.world.componentTypes[this.type];
+    this.klass = this.repo.types[this.type];
     this.pool = [];
     this.targetSize = spinup;
     this.active = 0;
     this.spinUp(spinup);
   }
 
-  get(entity, initial) {
+  get(world, entity, initial) {
     let comp;
     if (this.pool.length === 0) {
-      comp = new this.klass(this.world);
+      comp = new this.klass(world);
     } else {
       comp = this.pool.pop();
     }
-    comp._setup(entity, initial);
+    comp._setup(world, entity, initial);
     this.active++;
     return comp;
   }
@@ -40,7 +40,7 @@ class ComponentPool {
 
   spinUp(count) {
     for (let i = 0; i < count; i++) {
-      const comp = new this.klass(this.world);
+      const comp = new this.klass(undefined);
       this.pool.push(comp);
     }
     this.targetSize = Math.max(this.targetSize, this.pool.length);

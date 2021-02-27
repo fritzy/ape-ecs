@@ -28,7 +28,7 @@ class System {
       type = type.name;
     }
     if (!this.world.subscriptions.has(type)) {
-      this.world.componentTypes[type].subbed = true;
+      this.world.repo.types[type].subbed = true;
       this.world.subscriptions.set(type, new Set());
     }
     this.world.subscriptions.get(type).add(this);

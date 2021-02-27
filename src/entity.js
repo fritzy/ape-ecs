@@ -80,11 +80,14 @@ class Entity {
 
   addTag(tag) {
     // istanbul ignore next
-    if (!this.world.tags.has(tag)) {
+    if (!this.world.repo.tags.has(tag)) {
       throw new Error(`addTag "${tag}" is not registered. Type-O?`);
     }
     this.tags.add(tag);
     this.updatedComponents = this.world.currentTick;
+    if (!this.world.entitiesByComponent.hasOwnProperty(tag)) {
+      this.world.entitiesByComponent[tag] = new Set();
+    }
     this.world.entitiesByComponent[tag].add(this.id);
     if (this.ready) {
       this.world._entityUpdated(this);
@@ -100,11 +103,11 @@ class Entity {
 
   addComponent(properties) {
     const type = properties.type;
-    const pool = this.world.componentPool.get(type);
+    const pool = this.world.repo.pool.get(type);
     if (pool === undefined) {
       throw new Error(`Component "${type}" has not been registered.`);
     }
-    const comp = pool.get(this, properties);
+    const comp = pool.get(this.world, this, properties);
     if (!this.types[type]) {
       this.types[type] = new Set();
     }
