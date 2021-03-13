@@ -80,7 +80,7 @@ class Entity {
 
   addTag(tag) {
     // istanbul ignore next
-    if (!this.world.repo.tags.has(tag)) {
+    if (!this.world.registry.tags.has(tag)) {
       throw new Error(`addTag "${tag}" is not registered. Type-O?`);
     }
     this.tags.add(tag);
@@ -103,7 +103,7 @@ class Entity {
 
   addComponent(properties) {
     const type = properties.type;
-    const pool = this.world.repo.pool.get(type);
+    const pool = this.world.registry.pool.get(type);
     if (pool === undefined) {
       throw new Error(`Component "${type}" has not been registered.`);
     }

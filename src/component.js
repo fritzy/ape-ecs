@@ -61,7 +61,7 @@ class Component {
       type: this.type
     });
     this.world.componentsById.delete(this.id);
-    this.world.repo.pool.get(this.type).release(this);
+    this.world.registry.pool.get(this.type).release(this);
     this.postDestroy();
   }
 

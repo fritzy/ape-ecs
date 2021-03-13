@@ -7,7 +7,7 @@ const Query = require('./query');
 const ComponentPool = require('./componentpool');
 const EntityPool = require('./entitypool');
 const setupApeDestroy = require('./cleanup');
-const { singletonRepo, ComponentRepo } = require('./componentrepo');
+const { singletonRepo, ComponentRegistry } = require('./componentregistry');
 
 module.exports = class World {
   constructor(config) {
@@ -22,9 +22,9 @@ module.exports = class World {
       config
     );
     if (this.config.newRepo) {
-      this.repo = new ComponentRepo();
+      this.registry = new ComponentRegistry();
     } else {
-      this.repo = singletonRepo;
+      this.registry = singletonRepo;
     }
     /*
     this.componentTypes = {};
@@ -66,7 +66,7 @@ module.exports = class World {
     // istanbul ignore else
     if (this.config.cleanupPools) {
       this.entityPool.cleanup();
-      for (const [key, pool] of this.repo.pool) {
+      for (const [key, pool] of this.registry.pool) {
         pool.cleanup();
       }
     }
@@ -88,7 +88,7 @@ module.exports = class World {
       },
       components: {}
     };
-    for (const [key, pool] of this.repo.pool) {
+    for (const [key, pool] of this.registry.pool) {
       stats.components[key] = {
         active: pool.active,
         pooled: pool.pool.length,
@@ -177,11 +177,11 @@ module.exports = class World {
   }
 
   registerTags(...tags) {
-    this.repo.registerTags(...tags);
+    this.registry.registerTags(...tags);
   }
 
   registerComponent(klass, spinup = 1) {
-    this.repo.registerComponent(klass, spinup);
+    this.registry.registerComponent(klass, spinup);
   }
 
   createEntity(definition) {
@@ -234,7 +234,7 @@ module.exports = class World {
   }
 
   _sendChange(operation) {
-    if (this.repo.types[operation.type].subbed) {
+    if (this.registry.types[operation.type].subbed) {
       const systems = this.subscriptions.get(operation.type);
       // istanbul ignore if
       if (!systems) {

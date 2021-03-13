@@ -242,7 +242,7 @@ export interface IWorldStats {
   };
 }
 
-export declare class ComponentRepo {
+export declare class ComponentRegistry {
   clear(): void;
   registerTags(...tags: string[]): void;
 
@@ -256,7 +256,7 @@ export declare class ComponentRepo {
 export declare class World {
   constructor(config?: IWorldConfig);
   currentTick: number;
-  repo: ComponentRepo;
+  registry: ComponentRegistry;
   entities: Map<string, Entity>;
   componentsById: Map<string, Component>;
   updatedEntities: Set<Entity>;

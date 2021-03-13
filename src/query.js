@@ -230,7 +230,7 @@ class Query {
       } else if (source.from === 'all') {
         if (source.types.length === 1) {
           // istanbul ignore if
-          if (!this.world.repo.typeset.has(source.types[0])) {
+          if (!this.world.registry.typeset.has(source.types[0])) {
             throw new Error(
               `${source.types[0]} is not a registered Component/Tag`
             );

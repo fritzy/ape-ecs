@@ -1,8 +1,8 @@
 class ComponentPool {
-  constructor(repo, type, spinup) {
-    this.repo = repo;
+  constructor(registry, type, spinup) {
+    this.registry = registry;
     this.type = type;
-    this.klass = this.repo.types[this.type];
+    this.klass = this.registry.types[this.type];
     this.pool = [];
     this.targetSize = spinup;
     this.active = 0;

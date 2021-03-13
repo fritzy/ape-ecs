@@ -1,5 +1,5 @@
 const { EntityRef, EntitySet, EntityObject } = require('./entityrefs');
-const { ComponentRepo } = require('./componentrepo');
+const { ComponentRegistry } = require('./componentregistry');
 
 module.exports = {
   World: require('./world'),
@@ -9,5 +9,5 @@ module.exports = {
   EntityRef,
   EntitySet,
   EntityObject,
-  ComponentRepo
+  ComponentRegistry
 };

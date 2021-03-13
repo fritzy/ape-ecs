@@ -577,7 +577,7 @@ describe('system queries', () => {
   it('tags', () => {
 
     const ecs = new ECS.World();
-    ecs.repo.clear();
+    ecs.registry.clear();
     class Tile extends ECS.Component {};
     class Sprite extends ECS.Component {};
 
@@ -704,7 +704,7 @@ describe('system queries', () => {
   it('filter by updatedComponents', () => {
 
     const ecs = new ECS.World();
-    ecs.repo.clear();
+    ecs.registry.clear();
 
     class Comp1 extends ECS.Component {
       static properties = {
@@ -754,7 +754,7 @@ describe('system queries', () => {
   it('destroyed entity should be cleared', () => {
 
     const ecs = new ECS.World();
-    ecs.repo.clear();
+    ecs.registry.clear();
 
     class Comp1 extends ECS.Component {}
     ecs.registerComponent(Comp1);
@@ -849,7 +849,7 @@ describe('entity & component refs', () => {
   it('Entity Set', () => {
 
     const ecs = new ECS.World();
-    ecs.repo.clear();
+    ecs.registry.clear();
 
     class BeltSlots extends ECS.Component {
       static properties = {
@@ -973,7 +973,7 @@ describe('entity restore', () => {
   it('restore mapped object', () => {
 
     const ecs = new ECS.World();
-    ecs.repo.clear();
+    ecs.registry.clear();
     ecs.registerTags('Potion');
 
     class EquipmentSlot extends ECS.Component {
@@ -1007,7 +1007,7 @@ describe('entity restore', () => {
   it('restore unmapped object', () => {
 
     const ecs = new ECS.World();
-    ecs.repo.clear();
+    ecs.registry.clear();
 
     ecs.registerTags('Potion');
 
@@ -1056,7 +1056,7 @@ describe('entity restore', () => {
   it('Unregistered component throws', () => {
 
     const ecs = new ECS.World();
-    ecs.repo.clear();
+    ecs.registry.clear();
     ecs.registerComponent(class Potion extends ECS.Component {});
 
     const badName = () => {
@@ -1072,7 +1072,7 @@ describe('entity restore', () => {
   it('Unassigned field is not set', () => {
 
     const ecs = new ECS.World();
-    ecs.repo.clear();
+    ecs.registry.clear();
 
     class Potion extends ECS.Component {};
     ecs.registerComponent(Potion);
@@ -1276,7 +1276,7 @@ describe('exporting and restoring', () => {
   it('getObject on entity', () => {
 
     const ecs = new ECS.World();
-    ecs.repo.clear();
+    ecs.registry.clear();
 
     class EquipmentSlot extends ECS.Component {
       static properties = {
@@ -1332,7 +1332,7 @@ describe('exporting and restoring', () => {
   it('property skipping', () => {
 
     const ecs = new ECS.World();
-    ecs.repo.clear();
+    ecs.registry.clear();
 
     class Effect extends ECS.Component {
       static properties = {
@@ -1390,7 +1390,7 @@ describe('advanced queries', () => {
   it('from and reverse queries', () => {
 
     const ecs = new ECS.World();
-    ecs.repo.clear();
+    ecs.registry.clear();
 
     ecs.registerTags('A', 'B', 'C', 'D');
 
@@ -1543,7 +1543,7 @@ describe('advanced queries', () => {
   it('track added and removed', () => {
 
     const ecs = new ECS.World();
-    ecs.repo.clear();
+    ecs.registry.clear();
 
     class S1 extends ECS.System {
 

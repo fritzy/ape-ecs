@@ -19,7 +19,7 @@ const componentReserved = new Set([
   'prototype'
 ]);
 
-class ComponentRepo {
+class ComponentRegistry {
 
   constructor() {
 
@@ -90,9 +90,9 @@ class ComponentRepo {
   }
 }
 
-const singletonRepo = new ComponentRepo();
+const singletonRepo = new ComponentRegistry();
 
 module.exports = {
   singletonRepo,
-  ComponentRepo
+  ComponentRegistry
 };
