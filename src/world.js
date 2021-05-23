@@ -26,6 +26,7 @@ module.exports = class World {
     } else {
       this.registry = singletonRepo;
     }
+    this.registery.addWorld(world);
     /*
     this.componentTypes = {};
     this.componentPool = new Map();

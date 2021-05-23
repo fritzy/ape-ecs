@@ -28,6 +28,12 @@ class ComponentRegistry {
     this.pool = new Map();
     this.tags = new Set();
     this.componentNum = 0n;
+    this.worlds = new Set();
+  }
+
+  addWorld(world) {
+
+    this.worlds.add(world);
   }
 
   registerComponent(klass, spinup) {
