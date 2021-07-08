@@ -72,14 +72,14 @@ export declare class Query {
   trackAdded: boolean;
   trackRemoved: boolean;
   from(...entities: (Entity | string)[]): Query;
-  fromReverse<T extends typeof Component>(
+  fromReverse<T extends ComponentClass>(
     entity: Entity | string,
     componentName: string | T
   ): Query;
-  fromAll(...types: (string | (new () => Component))[]): Query;
-  fromAny(...types: (string | (new () => Component))[]): Query;
-  not(...types: (string | (new () => Component))[]): Query;
-  only(...types: (string | (new () => Component))[]): Query;
+  fromAll(...types: (string | ComponentClass)[]): Query;
+  fromAny(...types: (string | ComponentClass)[]): Query;
+  not(...types: (string | ComponentClass)[]): Query;
+  only(...types: (string | ComponentClass)[]): Query;
   persist(trackAdded?: boolean, trackRemoved?: boolean): Query;
   refresh(): Query;
   execute(filter?: IQueryExecuteConfig): Set<Entity>;
@@ -90,12 +90,15 @@ export interface IComponentUpdate {
   [others: string]: any;
 }
 
-// in order to reference the class rather than the instance
-interface ComponentClass {
-  new (): Component;
-}
+type DefaultProperties = Record<string, any>;
+type Constructor<T> = new (...args: any[]) => T;
+type ComponentClass<T = DefaultProperties> = ClassType<Component<T>>;
+type ClassType<T> = { new (): T };
+export function TypedComponent<TProperties extends DefaultProperties>(
+  properties: TProperties
+): ClassType<Component<TProperties>> & Constructor<Component & TProperties>;
 
-export declare class Component {
+export declare class Component<TProperties extends DefaultProperties = {}> {
   preInit(initial: any): any;
   init(initial: any): void;
   get type(): string;
@@ -108,6 +111,7 @@ export declare class Component {
   entity: Entity;
   id: string;
   update(values?: IComponentUpdate): void;
+  properties: TProperties;
   [name: string]: any;
   static properties: Object;
   static serialize: Boolean;
@@ -188,6 +192,22 @@ export interface IEntityObject {
 // export interface IWorldSubscriptions {
 //   [name: string]: System;
 // }
+type TypedComponentConfig<T = any> = T extends Component<infer TProperties>
+  ? {
+      type: ClassType<T>;
+      key?: string;
+    } & TProperties
+  : never;
+
+export type TypedComponentConfigVal<T = any> = T extends Component<
+  infer TProperties
+>
+  ? {
+      type: ClassType<T>;
+      id?: string;
+      entity?: string;
+    } & TProperties
+  : never;
 
 export declare class Entity {
   types: IEntityByType;
@@ -208,6 +228,9 @@ export declare class Entity {
   addComponent(
     properties: IComponentConfig | IComponentObject
   ): Component | undefined;
+  addTypedComponent<T extends Component>(
+    properties: TypedComponentConfig<T>
+  ): Component | undefined;
   removeComponent(component: Component | string): boolean;
   getObject(componentIds?: boolean): IEntityObject;
   destroy(): void;
@@ -227,6 +250,18 @@ export interface IEntityConfig {
   components?: IComponentConfig[];
   c?: IComponentConfigValObject;
 }
+
+export type TypedEntityConfig<TComponents extends Component[] = []> = {
+  id?: string;
+  tags?: string[];
+  c?: {
+    [TComponent in keyof TComponents]: TComponents[TComponent] extends Component<
+      infer TProperties
+    >
+      ? TypedComponentConfigVal<TComponents[TComponent]>
+      : never;
+  };
+};
 
 export interface IPoolStat {
   active: number;
@@ -257,7 +292,7 @@ export declare class World {
   registerTags(...tags: string[]): void;
 
   // Both options allow the passing of a class that extends Component
-  registerComponent<T extends typeof Component>(
+  registerComponent<T extends ComponentClass | string>(
     klass: T,
     spinup?: number
   ): void;
@@ -266,6 +301,9 @@ export declare class World {
   logStats(freq: number, callback?: Function): void;
 
   createEntity(definition: IEntityConfig | IEntityObject): Entity;
+  createEntityTypesafe<T extends Array<Component>>(
+    definition: TypedEntityConfig<T>
+  ): Entity;
   getObject(): IEntityObject[];
   createEntities(definition: IEntityConfig[] | IEntityObject[]): void;
   copyTypes(world: World, types: string[]): void;

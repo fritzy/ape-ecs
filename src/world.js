@@ -255,6 +255,16 @@ module.exports = class World {
     this.componentPool.set(name, new ComponentPool(this, name, spinup));
   }
 
+  createEntityTypesafe(definition) {
+    definition = {
+      ...definition,
+      c: definition.c.map((c) => {
+        return { ...c, type: c.type.name };
+      })
+    };
+    return this.createEntity(definition);
+  }
+
   createEntity(definition) {
     return this.entityPool.get(definition);
   }
