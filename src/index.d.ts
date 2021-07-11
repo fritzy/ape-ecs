@@ -90,13 +90,12 @@ export interface IComponentUpdate {
   [others: string]: any;
 }
 
-type DefaultProperties = Record<string, any>;
-type Constructor<T> = new (...args: any[]) => T;
-type ComponentClass<T = DefaultProperties> = ClassType<Component<T>>;
-type ClassType<T> = { new (): T };
+type DefaultProperties = {};
+type Constructor<T> = { new (...args: any[]): T };
+type ComponentClass<T = DefaultProperties> = Constructor<Component<T>>;
 export function TypedComponent<TProperties extends DefaultProperties>(
-  properties: TProperties
-): ClassType<Component<TProperties>> & Constructor<Component & TProperties>;
+  properties?: TProperties
+): Constructor<Component<TProperties>> & Constructor<Component & TProperties>;
 
 export declare class Component<TProperties extends DefaultProperties = {}> {
   preInit(initial: any): any;
@@ -192,21 +191,15 @@ export interface IEntityObject {
 // export interface IWorldSubscriptions {
 //   [name: string]: System;
 // }
-type TypedComponentConfig<T = any> = T extends Component<infer TProperties>
+type TypedComponentConfig<T> = T extends Component<infer TProperties>
   ? {
-      type: ClassType<T>;
+      type: Constructor<T>;
       key?: string;
     } & TProperties
   : never;
 
-export type TypedComponentConfigVal<T = any> = T extends Component<
-  infer TProperties
->
-  ? {
-      type: ClassType<T>;
-      id?: string;
-      entity?: string;
-    } & TProperties
+export type TypedComponentConfigVal<T> = T extends Component<infer TProperties>
+  ? { type: Constructor<T>; id?: string; entity?: string } & TProperties
   : never;
 
 export declare class Entity {
@@ -225,11 +218,10 @@ export declare class Entity {
   getComponents<T extends Component>(type: { new (): T }): Set<T>;
   addTag(tag: string): void;
   removeTag(tag: string): void;
-  addComponent(
-    properties: IComponentConfig | IComponentObject
-  ): Component | undefined;
-  addTypedComponent<T extends Component>(
-    properties: TypedComponentConfig<T>
+  addComponent<T>(
+    properties: T extends Component<infer TProperties>
+      ? TypedComponentConfig<T>
+      : IComponentConfig | IComponentObject
   ): Component | undefined;
   removeComponent(component: Component | string): boolean;
   getObject(componentIds?: boolean): IEntityObject;
@@ -251,15 +243,11 @@ export interface IEntityConfig {
   c?: IComponentConfigValObject;
 }
 
-export type TypedEntityConfig<TComponents extends Component[] = []> = {
+export type TypedEntityConfig<TComponents extends readonly any[]> = {
   id?: string;
   tags?: string[];
-  c?: {
-    [TComponent in keyof TComponents]: TComponents[TComponent] extends Component<
-      infer TProperties
-    >
-      ? TypedComponentConfigVal<TComponents[TComponent]>
-      : never;
+  c: {
+    [K in keyof TComponents]: TypedComponentConfigVal<TComponents[K]>;
   };
 };
 
@@ -301,8 +289,8 @@ export declare class World {
   logStats(freq: number, callback?: Function): void;
 
   createEntity(definition: IEntityConfig | IEntityObject): Entity;
-  createEntityTypesafe<T extends Array<Component>>(
-    definition: TypedEntityConfig<T>
+  createEntityTypesafe<T extends readonly any[]>(
+    definition: TypedEntityConfig<[...T]>
   ): Entity;
   getObject(): IEntityObject[];
   createEntities(definition: IEntityConfig[] | IEntityObject[]): void;

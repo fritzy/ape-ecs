@@ -219,19 +219,21 @@ The `type` of the `Component` is used to check the types of the initial argument
 class Position extends TypedComponent<{x: number, y?: number}> {};
 class Texture extends TypedComponent<{filePath: string}> {};
 
-const playerEntity = world.createEntityTypesafe({
+const playerEntity = world.createEntityTypesafe<[{type: Position}, {type: Texture}]>({
   id: 'Player', // optional
   tags: ['Character', 'Visible'], //optional
   c: [ // optional
     {
       type: Position,
-      x: 15
+      x: 15,
+      z: 1
+      // ^ errors
     },
     {
       type: Texture,
       filePath: "/assets/img.png",
     }
-  }
+  ]
 });
 ```
 
