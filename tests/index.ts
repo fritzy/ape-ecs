@@ -81,6 +81,13 @@ describe('express components', () => {
     expect(results.size).to.equal(1);
   });
 
+  it('addComponent with type!=string', () => {
+    const e = ecs.createEntity({});
+    e.addComponent({ type: Position, x: 1 });
+    const results = ecs.createQuery().fromAll(Position).execute();
+    expect(results.size).to.equal(2);
+  });
+
   it('entity refs', () => {
     class Storage extends ECS.Component {
       static properties = {

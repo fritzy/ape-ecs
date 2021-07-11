@@ -99,7 +99,10 @@ class Entity {
   }
 
   addComponent(properties) {
-    const type = properties.type;
+    let type = properties.type;
+    if (typeof type !== 'string') {
+      type = type.name;
+    }
     const pool = this.world.componentPool.get(type);
     if (pool === undefined) {
       throw new Error(`Component "${type}" has not been registered.`);
@@ -163,7 +166,6 @@ class Entity {
   }
 
   destroy() {
-
     if (this.destroyed) return;
     if (this.world.refs[this.id]) {
       for (const ref of this.world.refs[this.id]) {

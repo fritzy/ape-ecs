@@ -225,11 +225,10 @@ export declare class Entity {
   getComponents<T extends Component>(type: { new (): T }): Set<T>;
   addTag(tag: string): void;
   removeTag(tag: string): void;
-  addComponent(
-    properties: IComponentConfig | IComponentObject
-  ): Component | undefined;
-  addTypedComponent<T extends Component>(
-    properties: TypedComponentConfig<T>
+  addComponent<T>(
+    properties: T extends Component<infer TProperties>
+      ? TypedComponentConfig<T>
+      : IComponentConfig | IComponentObject
   ): Component | undefined;
   removeComponent(component: Component | string): boolean;
   getObject(componentIds?: boolean): IEntityObject;
