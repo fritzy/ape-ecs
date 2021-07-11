@@ -295,3 +295,22 @@ Position.properties = {
   coord: '0x0'
 };
  ```
+
+# TypedComponent
+
+There's an additional API for creating typed Components, which have typed `.properties` defined for the Component class and fields of those types on the instances. This uses the mixin pattern in TypeScript.
+
+To create a `TypedComponent`:
+
+```ts
+class Position extends ApeECS.TypedComponent({x: 0, y: 0}) {};
+```
+
+This creates a `Position` class with `typeof properties === {x: number, y: number}`.
+A `TypedComponent` can have `properties` typed as a superset of the initial properties. For example:
+
+```ts
+class Position extends ApeECS.TypedComponent<{x: number, y?: number}>({x: 0}) {};
+```
+
+These types are used in the [world.createEntityTypesafe](./World.md#createEntityTypesafe) API.
