@@ -246,7 +246,7 @@ export interface IEntityConfig {
 export type TypedEntityConfig<TComponents extends readonly any[]> = {
   id?: string;
   tags?: string[];
-  c: {
+  components: {
     [K in keyof TComponents]: TypedComponentConfigVal<TComponents[K]>;
   };
 };

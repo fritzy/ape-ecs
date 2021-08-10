@@ -212,17 +212,21 @@ const playerEntity = world.createEntity({
 
 ## createEntityTypesafe
 
-Create a new Entity, including its type-checked `Components`. This API is slightly reduced from `createEntity`, in that it does not take `components`, only `c`.
-The `type` of the `Component` is used to check the types of the initial arguments.
+Create a new Entity, including its type-checked `Components`. This API is slightly reduced from `createEntity`, in that it does not `c`.
+The `type` of the `Component` is used to check the types of the initial arguments, and `type` must be a Component class.
 
 ```ts
 class Position extends TypedComponent<{x: number, y?: number}> {};
 class Texture extends TypedComponent<{filePath: string}> {};
+class Flag extends TypedComponent() {};
 
 const playerEntity = world.createEntityTypesafe<[{type: Position}, {type: Texture}]>({
   id: 'Player', // optional
   tags: ['Character', 'Visible'], //optional
-  c: [ // optional
+  components: [ // optional
+    {
+      type: Flag,
+    },
     {
       type: Position,
       x: 15,

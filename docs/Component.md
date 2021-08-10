@@ -306,11 +306,11 @@ To create a `TypedComponent`:
 class Position extends ApeECS.TypedComponent({x: 0, y: 0}) {};
 ```
 
-This creates a `Position` class with `typeof properties === {x: number, y: number}`.
+This creates a `Position` class with properties typed `{x: number, y: number}`.
 A `TypedComponent` can have `properties` typed as a superset of the initial properties. For example:
 
 ```ts
 class Position extends ApeECS.TypedComponent<{x: number, y?: number}>({x: 0}) {};
 ```
 
-These types are used in the [world.createEntityTypesafe](./World.md#createEntityTypesafe) API.
+These types are used in the [world.createEntityTypesafe](./World.md#createEntityTypesafe) API and [entity.addComponent](./Entity.md#addComponent).

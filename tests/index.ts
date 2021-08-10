@@ -75,7 +75,7 @@ describe('express components', () => {
 
   it('create typesafe entities', () => {
     ecs.createEntityTypesafe({
-      c: [{ type: Position, x: 1 }]
+      components: [{ type: Position, x: 1 }]
     });
     const results = ecs.createQuery().fromAll(Position).execute();
     expect(results.size).to.equal(1);
