@@ -258,7 +258,7 @@ module.exports = class World {
   createEntityTypesafe(definition) {
     definition = {
       ...definition,
-      c: definition.c.map((c) => {
+      components: definition.components.map((c) => {
         return { ...c, type: c.type.name };
       })
     };
