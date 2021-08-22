@@ -1852,7 +1852,7 @@ describe('ApeDestroy', () => {
 
     const ecs = new World({
       useApeDestroy: true,
-      newRepo: true
+      newRegistry: true
     });
 
     class Test extends Component {}
@@ -1899,8 +1899,8 @@ describe('ApeDestroy', () => {
 
 describe('Component Portability', () => {
   it('Components on multiple worlds', () => {
-    const world1 = new World({ newRepo: true });
-    const world2 = new World({ newRepo: true });
+    const world1 = new World({ newRegistry: true });
+    const world2 = new World({ newRegistry: true });
 
     class Testa extends Component {
 

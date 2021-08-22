@@ -17,16 +17,19 @@ module.exports = class World {
         entityPool: 10,
         cleanupPools: true,
         useApeDestroy: false,
-        newRepo: false
+        newRegistry: false,
+        registry: null
       },
       config
     );
-    if (this.config.newRepo) {
+    if (this.config.registry !== null) {
+      this.registry = this.config.registry;
+    } else if (this.config.newRegistry) {
       this.registry = new ComponentRegistry();
     } else {
       this.registry = singletonRepo;
     }
-    this.registery.addWorld(world);
+    this.registry.addWorld(this);
     /*
     this.componentTypes = {};
     this.componentPool = new Map();

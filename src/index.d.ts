@@ -218,7 +218,8 @@ export interface IWorldConfig {
   entityPool?: number;
   cleanupPools?: boolean;
   useApeDestroy?: boolean;
-  newRepo?: boolean;
+  newRegistry?: boolean;
+  registry?: object;
 }
 
 // passed to world.createEntity()
