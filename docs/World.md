@@ -220,7 +220,7 @@ class Position extends TypedComponent<{x: number, y?: number}> {};
 class Texture extends TypedComponent<{filePath: string}> {};
 class Flag extends TypedComponent() {};
 
-const playerEntity = world.createEntityTypesafe<[{type: Position}, {type: Texture}]>({
+const playerEntity = world.createEntityTypesafe({
   id: 'Player', // optional
   tags: ['Character', 'Visible'], //optional
   components: [ // optional
