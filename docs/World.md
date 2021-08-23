@@ -210,6 +210,37 @@ const playerEntity = world.createEntity({
 
 💭 **Ape ECS** uses a very fast unique id generator for `Components` and `Entities` if you don't specify a given id upon creation. Look at the code in [src/util.js](../src/util.js).
 
+## createEntityTypesafe
+
+Create a new Entity, including its type-checked `Components`. This API is slightly reduced from `createEntity`, in that it does not `c`.
+The `type` of the `Component` is used to check the types of the initial arguments, and `type` must be a Component class.
+
+```ts
+class Position extends TypedComponent<{x: number, y?: number}> {};
+class Texture extends TypedComponent<{filePath: string}> {};
+class Flag extends TypedComponent() {};
+
+const playerEntity = world.createEntityTypesafe({
+  id: 'Player', // optional
+  tags: ['Character', 'Visible'], //optional
+  components: [ // optional
+    {
+      type: Flag,
+    },
+    {
+      type: Position,
+      x: 15,
+      z: 1
+      // ^ errors
+    },
+    {
+      type: Texture,
+      filePath: "/assets/img.png",
+    }
+  ]
+});
+```
+
 ## getObject
 
 Retrieves a serializable object that includes all of the Entities and their Components in the World.

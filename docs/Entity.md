@@ -124,6 +124,16 @@ entity.addComponent({
 
 Setting a key makes the `Component` instance accessible as a property of the `Entity`.
 
+👆 Using the api `addComponent({type: Point})` (using the `Point` class rather than a string) will enforce type checking for that component in TypeScript.
+```ts
+entity.addComponent({
+  type: Point,
+  x: 123,
+  y: 'three',
+  // ^ error
+})
+```
+
 💭 It can sometimes be useful to set a custom id for an `Entity`, but there may not be a valid usecase for a new `Component`. You should generally only specify the `id` in `addComponent` if you're restoring a previous `Component` from `getObject`.
 
 👀 See [world.createEntity](./World.md#createEntity) for another perspective on `Component` instance definitions.

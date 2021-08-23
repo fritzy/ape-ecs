@@ -1,4 +1,3 @@
-
 import { expect } from 'chai';
 
 import {
@@ -10,6 +9,9 @@ import {
   EntitySet,
   EntityObject,
   Query,
+  TypedComponent,
+  IComponentConfigVal,
+  TypedComponentConfigVal
 } from '../src';
 import { SSL_OP_NO_TICKET } from 'constants';
 
@@ -17,8 +19,8 @@ const ECS = {
   World,
   System: System,
   Component,
+  TypedComponent
 };
-
 
 class Health extends ECS.Component {
   static properties = {
@@ -29,15 +31,19 @@ class Health extends ECS.Component {
   static typeName = 'Health';
 }
 
-describe('express components', () => {
+class Position extends ECS.TypedComponent<{ x: number; y?: number }>({
+  x: 1,
+  y: 1
+}) {}
 
+describe('express components', () => {
   const ecs = new ECS.World();
 
   ecs.registerComponent(Health);
+  ecs.registerComponent(Position);
 
   it('create entity', () => {
-
-    const S1 = class System extends ECS.System {}
+    const S1 = class System extends ECS.System {};
     const s1 = new S1(ecs);
 
     ecs.createEntity({
@@ -56,7 +62,6 @@ describe('express components', () => {
   });
 
   it('create 2nd entity', () => {
-
     ecs.createEntity({
       c: {
         Health: { hp: 10 }
@@ -68,8 +73,22 @@ describe('express components', () => {
     expect(results.size).to.equal(2);
   });
 
-  it('entity refs', () => {
+  it('create typesafe entities', () => {
+    ecs.createEntityTypesafe({
+      components: [{ type: Position, x: 1 }]
+    });
+    const results = ecs.createQuery().fromAll(Position).execute();
+    expect(results.size).to.equal(1);
+  });
 
+  it('addComponent with type!=string', () => {
+    const e = ecs.createEntity({});
+    e.addComponent({ type: Position, x: 1 });
+    const results = ecs.createQuery().fromAll(Position).execute();
+    expect(results.size).to.equal(2);
+  });
+
+  it('entity refs', () => {
     class Storage extends ECS.Component {
       static properties = {
         name: 'inventory',
@@ -120,7 +139,6 @@ describe('express components', () => {
       }
     });
 
-
     entity.c.pockets.items.add(food);
     expect(entity.c.pockets.items.has(food)).to.be.true;
 
@@ -143,11 +161,9 @@ describe('express components', () => {
     ecs.removeEntity(entity.id);
 
     expect(ecs.getEntity(entity.id)).to.be.undefined;
-
   });
 
   it('init and destroy component', () => {
-
     let hit = false;
 
     const ecs = new ECS.World();
@@ -166,43 +182,35 @@ describe('express components', () => {
       init() {
         this.y++;
       }
-
     }
     ecs.registerComponent(Test);
 
     const entity = ecs.createEntity({
       c: {
-        Test: {
-        }
+        Test: {}
       }
     });
-
 
     expect(entity.c.Test.y).to.equal(1);
     expect(hit).to.equal(false);
 
     entity.removeComponent(entity.c.Test);
     expect(hit).to.equal(true);
-
   });
 
   it('system subscriptions', () => {
-
     let changes = [];
     let changes2 = [];
     let effectExt = null;
     /* $lab:coverage:off$ */
     class System extends ECS.System {
-
       init(a, b) {
-
         this.subscribe('EquipmentSlot');
         expect(a).to.equal(1);
         expect(b).to.equal('b2');
       }
 
       update(tick) {
-
         changes = this.changes;
         for (const change of this.changes) {
           const parent = this.world.getEntity(change.entity);
@@ -241,16 +249,13 @@ describe('express components', () => {
     }
 
     class System2 extends ECS.System {
-
       init(a, b, c) {
-
         expect(a).to.equal(2);
         expect(b).to.equal(4);
         expect(c).to.equal('a');
       }
 
       update(tick) {
-
         changes2 = this.changes;
       }
     }
@@ -267,13 +272,11 @@ describe('express components', () => {
     class Wearable extends ECS.Component {
       static properties = {
         name: 'ring',
-        effects: [
-          { type: 'Burning' }
-        ]
+        effects: [{ type: 'Burning' }]
       };
     }
 
-    class Burning extends ECS.Component {};
+    class Burning extends ECS.Component {}
 
     ecs.registerComponent(EquipmentEffect);
     ecs.registerComponent(Wearable);
@@ -302,11 +305,7 @@ describe('express components', () => {
 
     const pants = ecs.createEntity({
       c: {
-        Wearable: { name: 'Nice Pants',
-          effects: [
-            { type: 'Burning' }
-          ]
-        }
+        Wearable: { name: 'Nice Pants', effects: [{ type: 'Burning' }] }
       }
     });
 
@@ -319,7 +318,9 @@ describe('express components', () => {
 
     expect(entity.getComponents('EquipmentEffect')).to.not.be.empty;
     expect(entity.getComponents(EquipmentEffect)).to.not.be.empty;
-    const eEffects = new Set([...entity.getComponents('EquipmentEffect')][0].effects);
+    const eEffects = new Set(
+      [...entity.getComponents('EquipmentEffect')][0].effects
+    );
 
     expect(eEffects.has(effectExt.id)).to.be.true;
     expect(entity.getComponents('Burning')).to.not.be.empty;
@@ -337,13 +338,9 @@ describe('express components', () => {
     expect(changes[0].target).to.equal(pants.id);
     expect(entity.getComponents('EquipmentEffect')).to.be.empty;
     expect(entity.getComponents('Burning')).to.be.empty;
-
   });
 
-
-
   it('system subscriptions with updated components', () => {
-
     let changes = [];
 
     class Food2 extends ECS.Component {
@@ -355,20 +352,16 @@ describe('express components', () => {
     }
 
     class System extends ECS.System {
-
       init() {
-
         this.subscribe(Food2);
       }
 
       update(tick) {
-
         for (const cng of this.changes) {
           changes.push(cng);
         }
       }
     }
-
 
     ecs.registerComponent(Food2);
     const system = new System(ecs);
@@ -377,7 +370,7 @@ describe('express components', () => {
 
     const e0 = ecs.createEntity({
       c: {
-        food: { type: 'Food2', rot: 4 },
+        food: { type: 'Food2', rot: 4 }
       }
     });
 
@@ -387,7 +380,7 @@ describe('express components', () => {
 
     const e1 = ecs.createEntity({
       c: {
-        food: { type: 'Food2', rot: 5 },
+        food: { type: 'Food2', rot: 5 }
       }
     });
 
@@ -396,14 +389,14 @@ describe('express components', () => {
     expect(e1.c.food.rot).to.equal(5);
     expect(e1.c.food.restore).to.equal(2);
 
-    e1.c.food.update({rot:6});
+    e1.c.food.update({ rot: 6 });
 
     expect(e1.c.food.rot).to.equal(6);
     expect(e1.c.food.restore).to.equal(2);
 
     ecs.runSystems('equipment');
 
-    e1.c.food.update({rot:0,restore:0});
+    e1.c.food.update({ rot: 0, restore: 0 });
 
     expect(e1.c.food.rot).to.equal(0);
     expect(e1.c.food.restore).to.equal(0);
@@ -423,11 +416,9 @@ describe('express components', () => {
 });
 
 describe('system queries', () => {
-
   const ecs = new ECS.World();
 
   it('add and remove forbidden component', () => {
-
     class Tile extends ECS.Component {
       static properties = {
         x: 0,
@@ -442,21 +433,19 @@ describe('system queries', () => {
     ecs.registerComponent(Hidden);
 
     class TileSystem extends ECS.System {
-
       lastResults: Set<Entity>;
       query: Query;
 
       init() {
-
         this.lastResults = new Set();
         this.query = this.world.createQuery({
           all: ['Tile'],
           not: ['Hidden'],
-          persist: true });
+          persist: true
+        });
       }
 
       update(tick) {
-
         this.lastResults = this.query.execute();
       }
     }
@@ -489,7 +478,7 @@ describe('system queries', () => {
       }
     });
 
-    ecs.tick()
+    ecs.tick();
 
     ecs.runSystems('map');
 
@@ -512,14 +501,11 @@ describe('system queries', () => {
 
     expect(tileSystem.lastResults.size).to.equal(1);
     expect(tileSystem.lastResults.has(tile2)).to.be.true;
-
-
   });
 
   it('multiple has and hasnt', () => {
-
-    class Billboard extends ECS.Component {};
-    class Sprite extends ECS.Component {};
+    class Billboard extends ECS.Component {}
+    class Sprite extends ECS.Component {}
     ecs.registerComponent(Billboard);
     ecs.registerComponent(Sprite);
 
@@ -535,7 +521,7 @@ describe('system queries', () => {
     const tile2 = ecs.createEntity({
       c: {
         Tile: {},
-        Billboard: {},
+        Billboard: {}
       }
     });
 
@@ -549,18 +535,19 @@ describe('system queries', () => {
 
     const tile4 = ecs.createEntity({
       c: {
-        Tile: {},
+        Tile: {}
       }
     });
 
     const tile5 = ecs.createEntity({
       c: {
-        Billboard: {},
+        Billboard: {}
       }
     });
 
-    const result = ecs.createQuery()
-      .fromAll('Tile', 'Billboard')
+    const result = ecs
+      .createQuery()
+      .fromAll('Tile', Billboard)
       .not(Sprite, 'Hidden')
       .execute();
 
@@ -571,14 +558,12 @@ describe('system queries', () => {
     expect(resultSet.has(tile3)).to.be.false;
     expect(resultSet.has(tile4)).to.be.false;
     expect(resultSet.has(tile5)).to.be.false;
-
   });
 
   it('tags', () => {
-
     const ecs = new ECS.World();
-    class Tile extends ECS.Component {};
-    class Sprite extends ECS.Component {};
+    class Tile extends ECS.Component {}
+    class Sprite extends ECS.Component {}
 
     ecs.registerComponent(Tile);
     ecs.registerComponent(Sprite);
@@ -607,7 +592,7 @@ describe('system queries', () => {
 
     const tile4 = ecs.createEntity({
       c: {
-        Tile: {},
+        Tile: {}
       }
     });
 
@@ -615,10 +600,12 @@ describe('system queries', () => {
       tags: ['Billboard']
     });
 
-    const q1 = ecs.createQuery({
-      all: ['Tile', 'Billboard'],
-      not: ['Sprite', 'Hidden'],
-    }).persist();
+    const q1 = ecs
+      .createQuery({
+        all: ['Tile', 'Billboard'],
+        not: ['Sprite', 'Hidden']
+      })
+      .persist();
     const result = q1.execute();
 
     const resultSet = new Set([...result]);
@@ -663,11 +650,9 @@ describe('system queries', () => {
     expect(result2.has(tile3)).to.be.false;
     expect(result2.has(tile4)).to.be.false;
     expect(result2.has(tile5)).to.be.false;
-
   });
 
   it('filter by updatedValues', () => {
-
     const ecs = new ECS.World();
     class Comp1 extends ECS.Component {
       static properties = {
@@ -701,7 +686,6 @@ describe('system queries', () => {
   });
 
   it('filter by updatedComponents', () => {
-
     const ecs = new ECS.World();
     class Comp1 extends ECS.Component {
       static properties = {
@@ -745,11 +729,9 @@ describe('system queries', () => {
     const results2 = testQ.execute({ updatedComponents: ticks });
     expect(results2.has(entity1)).to.be.false;
     expect(results2.has(entity2)).to.be.true;
-
   });
 
   it('destroyed entity should be cleared', () => {
-
     const ecs = new ECS.World();
     class Comp1 extends ECS.Component {}
     ecs.registerComponent(Comp1);
@@ -770,18 +752,15 @@ describe('system queries', () => {
 
     const results2 = query.execute();
     expect(results2.has(entity1)).to.be.false;
-
   });
 });
 
-
 describe('entity & component refs', () => {
-
   const ecs = new ECS.World();
 
   class BeltSlots extends ECS.Component {
     static properties = {
-      slots: EntityObject,
+      slots: EntityObject
     };
   }
   class Potion extends ECS.Component {}
@@ -790,7 +769,6 @@ describe('entity & component refs', () => {
   ecs.registerComponent(Potion);
 
   it('Entity Object', () => {
-
     const belt = ecs.createEntity({
       c: {
         BeltSlots: {}
@@ -806,7 +784,7 @@ describe('entity & component refs', () => {
           Potion: {}
         }
       });
-      beltslots.slots[slot] =  potion;
+      beltslots.slots[slot] = potion;
       potions.push(potion);
     }
 
@@ -838,14 +816,15 @@ describe('entity & component refs', () => {
     // Calling delete on a EntityObject component that does
     // not exist should return false
     // when in strict mode, this will throw an exception
-    expect(()=>{delete beltslots.slots.d}).to.throw(TypeError);
+    expect(() => {
+      delete beltslots.slots.d;
+    }).to.throw(TypeError);
   });
 
   it('Entity Set', () => {
-
     class BeltSlots2 extends ECS.Component {
       static properties = {
-        slots: EntitySet,
+        slots: EntitySet
       };
     }
     ecs.registerComponent(BeltSlots2);
@@ -878,7 +857,7 @@ describe('entity & component refs', () => {
 
     const withValues = ecs.createEntity({
       c: {
-        BeltSlots: { slots: { a: potions[0].id, b: potions[2], d: null }}
+        BeltSlots: { slots: { a: potions[0].id, b: potions[2], d: null } }
       }
     });
 
@@ -892,8 +871,6 @@ describe('entity & component refs', () => {
     expect(withValues.c.BeltSlots.slots.c).to.equal(undefined);
     withValues.c.BeltSlots.slots.c = potions[1];
     expect(withValues.c.BeltSlots.slots.c).to.equal(potions[1]);
-
-
   });
 
   class Crying extends ECS.Component {}
@@ -902,7 +879,6 @@ describe('entity & component refs', () => {
   ecs.registerComponent(Angry);
 
   it('Assign entity ref by id', () => {
-
     class Ref extends ECS.Component {
       static properties = {
         other: EntityRef
@@ -926,7 +902,6 @@ describe('entity & component refs', () => {
   });
 
   it('Reassign same entity ref', () => {
-
     const entity = ecs.createEntity({
       c: {
         Crying: {}
@@ -943,13 +918,10 @@ describe('entity & component refs', () => {
 
     expect(entity2.c.Ref.other).to.equal(entity);
   });
-
 });
 
 describe('entity restore', () => {
-
   it('restore mapped object', () => {
-
     const ecs = new ECS.World();
     ecs.registerTags('Potion');
 
@@ -960,7 +932,6 @@ describe('entity restore', () => {
       };
     }
     ecs.registerComponent(EquipmentSlot);
-
 
     const potion1 = ecs.createEntity({
       tags: ['Potion']
@@ -971,8 +942,8 @@ describe('entity restore', () => {
 
     const entity = ecs.createEntity({
       c: {
-        'main': { slot: potion1, type: 'EquipmentSlot' },
-        'secondary': { slot: potion2, type: 'EquipmentSlot' }
+        main: { slot: potion1, type: 'EquipmentSlot' },
+        secondary: { slot: potion2, type: 'EquipmentSlot' }
       }
     });
 
@@ -982,7 +953,6 @@ describe('entity restore', () => {
   });
 
   it('restore unmapped object', () => {
-
     const ecs = new ECS.World();
     ecs.registerTags('Potion');
 
@@ -993,7 +963,6 @@ describe('entity restore', () => {
       };
     }
     ecs.registerComponent(EquipmentSlot);
-
 
     const potion1 = ecs.createEntity({
       tags: ['Potion']
@@ -1029,7 +998,6 @@ describe('entity restore', () => {
   });
 
   it('Unregistered component throws', () => {
-
     const ecs = new ECS.World();
     ecs.registerComponent(class Potion extends ECS.Component {});
 
@@ -1044,9 +1012,8 @@ describe('entity restore', () => {
   });
 
   it('Unassigned field is not set', () => {
-
     const ecs = new ECS.World();
-    class Potion extends ECS.Component {};
+    class Potion extends ECS.Component {}
     ecs.registerComponent(Potion);
     const entity = ecs.createEntity({
       c: {
@@ -1057,17 +1024,18 @@ describe('entity restore', () => {
   });
 
   it('removeComponentByName many', () => {
-
     const ecs = new ECS.World();
     ecs.registerComponent(class NPC extends ECS.Component {});
     ecs.registerComponent(class Other extends ECS.Component {});
-    ecs.registerComponent(class Armor extends ECS.Component {
-      static properties = { 'amount': 5 };
-    });
+    ecs.registerComponent(
+      class Armor extends ECS.Component {
+        static properties = { amount: 5 };
+      }
+    );
 
     const entity = ecs.createEntity({
       c: {
-        NPC: {},
+        NPC: {}
       }
     });
     entity.addComponent({ type: 'Armor', amount: 10 });
@@ -1098,11 +1066,9 @@ describe('entity restore', () => {
 
     expect(removed).to.be.true;
     expect(removed2).to.be.false;
-
   });
 
   it('EntitySet', () => {
-
     const ecs = new ECS.World();
     class SetInventory extends ECS.Component {
       static properties = {
@@ -1112,7 +1078,7 @@ describe('entity restore', () => {
     class Bottle extends ECS.Component {}
     class ThrowAway extends ECS.Component {
       static properties = {
-        a: 1,
+        a: 1
       };
       static serialize = false;
     }
@@ -1184,7 +1150,7 @@ describe('entity restore', () => {
     expect(setInv.slots.has(bottle1)).to.be.false;
     expect(setInv.slots.has(bottle2)).to.be.true;
 
-    setInv.slots.clear()
+    setInv.slots.clear();
     expect(setInv.slots.has(bottle2)).to.be.false;
 
     const bottle4 = ecs.createEntity({
@@ -1213,16 +1179,11 @@ describe('entity restore', () => {
     withValues.c.SetInventory.slots._reset();
     expect(withValues.c.SetInventory.slots.has(bottle4)).to.be.true;
     expect(withValues.c.SetInventory.slots.has(bottle5)).to.be.true;
-
-
   });
-
 });
 
 describe('exporting and restoring', () => {
-
   it('get object and stringify component', () => {
-
     const ecs = new ECS.World();
     class AI extends ECS.Component {
       static properties = {
@@ -1234,7 +1195,7 @@ describe('exporting and restoring', () => {
     const entity = ecs.createEntity({
       c: {
         moon: { type: 'AI', order: 'moon' },
-        jupiter: { type: 'AI', order: 'jupiter' },
+        jupiter: { type: 'AI', order: 'jupiter' }
       }
     });
 
@@ -1246,7 +1207,6 @@ describe('exporting and restoring', () => {
   });
 
   it('getObject on entity', () => {
-
     const ecs = new ECS.World();
     class EquipmentSlot extends ECS.Component {
       static properties = {
@@ -1300,7 +1260,6 @@ describe('exporting and restoring', () => {
   });
 
   it('property skipping', () => {
-
     const ecs = new ECS.World();
     class Effect extends ECS.Component {
       static properties = {
@@ -1351,12 +1310,10 @@ describe('exporting and restoring', () => {
     expect(entity2.c.OtherLiquid).to.not.exist;
     expect(entity2.c.Liquid).to.not.exist;
   });
-
 });
 
 describe('advanced queries', () => {
   it('from and reverse queries', () => {
-
     const ecs = new ECS.World();
 
     ecs.registerTags('A', 'B', 'C', 'D');
@@ -1378,14 +1335,14 @@ describe('advanced queries', () => {
 
     const q = ecs.createQuery().from(entity1, entity2.id, entity3);
     const r = q.execute();
-    
+
     expect(r.has(entity1)).to.be.true;
     expect(r.has(entity2)).to.be.true;
     expect(r.has(entity3)).to.be.true;
 
     const q1b = ecs.createQuery({ from: [entity1, entity2.id, entity3] });
     const r1b = q.execute();
-    
+
     expect(r1b.has(entity1)).to.be.true;
     expect(r1b.has(entity2)).to.be.true;
     expect(r1b.has(entity3)).to.be.true;
@@ -1429,7 +1386,10 @@ describe('advanced queries', () => {
       }
     });
 
-    const q2 = ecs.createQuery({ reverse: { entity: e4, type: 'InInventory'}, persist: true } );
+    const q2 = ecs.createQuery({
+      reverse: { entity: e4, type: 'InInventory' },
+      persist: true
+    });
     const r2 = q2.execute();
 
     expect(r2.size).to.equal(1);
@@ -1492,7 +1452,7 @@ describe('advanced queries', () => {
       tags: ['D', 'B', 'A']
     });
 
-    const q5 = ecs.createQuery().fromAll('A').only('D', 'C', Item)
+    const q5 = ecs.createQuery().fromAll('A').only('D', 'C', Item);
     const rq5 = q5.execute();
 
     expect(rq5.has(entity5)).to.be.true;
@@ -1504,28 +1464,25 @@ describe('advanced queries', () => {
     const rq5b = q5b.execute();
 
     expect(rq5b.has(entity5)).to.be.true;
-
   });
 
   it('track added and removed', () => {
-
     const ecs = new ECS.World();
     class S1 extends ECS.System {
-
       q1: Query;
 
       init() {
-
         this.q1 = this.createQuery({
-          trackAdded: true,
-        }).fromAll('A', 'C').persist();
+          trackAdded: true
+        })
+          .fromAll('A', 'C')
+          .persist();
       }
-      
-      update(tick) {
 
+      update(tick) {
         const r1 = this.q1.execute();
 
-        switch(tick) {
+        switch (tick) {
           case 0:
             expect(r1.has(e5)).to.be.true;
             expect(r1.has(e6)).to.be.false;
@@ -1553,7 +1510,6 @@ describe('advanced queries', () => {
             expect(this.q1.removed.size).to.be.equal(0);
             break;
         }
-        
       }
     }
     class S2 extends ECS.System {}
@@ -1594,9 +1550,12 @@ describe('advanced queries', () => {
     ecs.runSystems('group1');
     ecs.tick();
 
-    const q2 = s2.createQuery({
-      trackRemoved: true,
-    }).fromAll('A', 'C').persist();
+    const q2 = s2
+      .createQuery({
+        trackRemoved: true
+      })
+      .fromAll('A', 'C')
+      .persist();
 
     const r2 = q2.execute();
 
@@ -1630,14 +1589,11 @@ describe('advanced queries', () => {
     ecs.runSystems('group2');
     expect(q2.added.size).to.be.equal(0);
     expect(q2.removed.size).to.be.equal(0);
-
   });
 });
 
 describe('serialize and deserialize', () => {
-
   it('maintain refs across worlds', () => {
-
     const worldA = new ECS.World();
 
     class Inventory extends ECS.Component {
@@ -1681,7 +1637,7 @@ describe('serialize and deserialize', () => {
 
     const q1 = worldB.createQuery().fromAll('NPC');
     const r1 = [...q1.execute()];
-    const npc2 = r1[0]
+    const npc2 = r1[0];
     const bottle2 = [...npc2.c.Inventory.main][0];
 
     expect(npc.id).to.equal(npc2.id);
@@ -1703,7 +1659,6 @@ describe('serialize and deserialize', () => {
   });
 
   it('filters serlizable fields', () => {
-
     const world = new ECS.World();
     class T1 extends ECS.Component {
       static properties = {
@@ -1759,7 +1714,6 @@ describe('serialize and deserialize', () => {
 
 describe('pool stats', () => {
   it('logs output', () => {
-
     const ecs = new ECS.World({
       entityPool: 10
     });
@@ -1769,13 +1723,13 @@ describe('pool stats', () => {
       logs.push(output);
     }
 
-    class Test extends Component {};
+    class Test extends Component {}
     ecs.registerComponent(Test, 50);
     ecs.logStats(2, logStats);
 
     for (let i = 0; i < 1000; i++) {
       ecs.createEntity({
-        components: [{type: 'Test'}]
+        components: [{ type: 'Test' }]
       });
     }
 
@@ -1798,7 +1752,7 @@ describe('pool stats', () => {
     for (let i = 0; i < 14; i++) {
       ecs.tick();
     }
-    
+
     expect(logs.length).to.equal(7);
     const stats2 = ecs.getStats();
     const stest2 = stats2.components.Test;
@@ -1815,7 +1769,6 @@ describe('pool stats', () => {
 
 describe('ApeDestroy', () => {
   it('Test ApeDestroy Queries', () => {
-
     const ecs = new World({
       useApeDestroy: true
     });
@@ -1827,9 +1780,11 @@ describe('ApeDestroy', () => {
 
     const e1 = ecs.createEntity({
       tags: ['A'],
-      components: [{
-        type: 'Test'
-      }]
+      components: [
+        {
+          type: 'Test'
+        }
+      ]
     });
 
     const q1 = ecs.createQuery().fromAll('Test', 'A');
@@ -1837,7 +1792,7 @@ describe('ApeDestroy', () => {
 
     expect(r1).contains(e1);
 
-    const q1b = ecs.createQuery({ all: ['Test', 'A']});
+    const q1b = ecs.createQuery({ all: ['Test', 'A'] });
     const r1b = q1b.execute();
 
     expect(r1b).contains(e1);
@@ -1849,7 +1804,9 @@ describe('ApeDestroy', () => {
 
     expect(r2).not.contains(e1);
 
-    const q3 = ecs.createQuery({ includeApeDestroy: true, not: ['B'] }).fromAll('Test', 'A');
+    const q3 = ecs
+      .createQuery({ includeApeDestroy: true, not: ['B'] })
+      .fromAll('Test', 'A');
     const r3 = q3.execute();
 
     expect(r3).contains(e1);
@@ -1868,9 +1825,8 @@ describe('Component Portability', () => {
     const world2 = new World();
 
     class Testa extends Component {
-
       static properties = {
-        greeting: "Hi",
+        greeting: 'Hi',
         a: 1
       };
 
@@ -1878,7 +1834,6 @@ describe('Component Portability', () => {
 
       greeting: string;
       a: number;
-
     }
 
     world1.registerComponent(Testa);
@@ -1899,8 +1854,8 @@ describe('Component Portability', () => {
     const q1 = world1.createQuery().fromAll('Test');
     const q2 = world2.createQuery().fromAll('Test');
 
-    t1.c.Test.greeting = "Hello";
-    t2.c.Test.greeting = "Howdy";
+    t1.c.Test.greeting = 'Hello';
+    t2.c.Test.greeting = 'Howdy';
 
     const r1 = q1.execute();
     const r2 = q2.execute();
@@ -1909,19 +1864,15 @@ describe('Component Portability', () => {
     expect(r1).contains(t1);
     expect(r2).contains(t2);
     expect(t1.c.Test.greeting).is.equal('Hello');
-
   });
 });
 
 describe('Regressions', () => {
-
   it('#66 Calling destroy twice has very odd effects', () => {
-
     const world = new World({ entityPool: 1 });
     class TestA extends Component {
-
       static properties = {
-        greeting: "Hi",
+        greeting: 'Hi',
         a: 1
       };
 
@@ -1931,9 +1882,8 @@ describe('Regressions', () => {
     }
 
     class TestB extends Component {
-
       static properties = {
-        greeting: "Hi",
+        greeting: 'Hi',
         a: 1
       };
 
@@ -1948,7 +1898,7 @@ describe('Regressions', () => {
     const e = world.createEntity({
       c: {
         TestA: {
-          greeting: "What",
+          greeting: 'What',
           a: 2
         }
       }
@@ -1959,7 +1909,7 @@ describe('Regressions', () => {
     const e2 = world.createEntity({
       c: {
         TestB: {
-          greeting: "No",
+          greeting: 'No',
           a: 3
         }
       }
