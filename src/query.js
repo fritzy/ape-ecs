@@ -3,6 +3,7 @@ const Util = require('./util');
 
 class Query {
   constructor(world, system, init) {
+
     this.system = system;
     this.world = world;
     this.query = {

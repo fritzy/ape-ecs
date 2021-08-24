@@ -3,6 +3,7 @@ const IdGenerator = require('./util').IdGenerator;
 const idGen = new IdGenerator();
 
 class Entity {
+
   constructor() {
     this.types = {};
     this.c = {};
@@ -12,6 +13,7 @@ class Entity {
     this.updatedValues = 0;
     this.destroyed = false;
     this.ready = false;
+    this.bitmask = 0n;
   }
 
   _setup(definition) {
@@ -83,7 +85,11 @@ class Entity {
     if (!this.world.registry.tags.has(tag)) {
       throw new Error(`addTag "${tag}" is not registered. Type-O?`);
     }
+    if (this.tags.has(tag)) {
+      return;
+    }
     this.tags.add(tag);
+    this.bitmask |= 1n << this.world.registry.typenum.get(tag);
     this.updatedComponents = this.world.currentTick;
     if (!this.world.entitiesByComponent.hasOwnProperty(tag)) {
       this.world.entitiesByComponent[tag] = new Set();
@@ -95,6 +101,10 @@ class Entity {
   }
 
   removeTag(tag) {
+    if (!this.tags.has(tag)) {
+      return;
+    }
+    this.bitmask &= ~(1n << this.world.registry.typenum.get(tag)); 
     this.tags.delete(tag);
     this.updatedComponents = this.world.currentTick;
     this.world.entitiesByComponent[tag].delete(this.id);
@@ -110,6 +120,9 @@ class Entity {
     const comp = pool.get(this.world, this, properties);
     if (!this.types[type]) {
       this.types[type] = new Set();
+    }
+    if (this.types[type].size === 0) {
+      this.bitmask |= 1n << this.world.registry.typenum.get(type);
     }
     this.types[type].add(comp);
     this.world._addEntityComponent(type, this);
@@ -133,6 +146,7 @@ class Entity {
     this.types[component.type].delete(component);
 
     if (this.types[component.type].size === 0) {
+      this.bitmask &= ~(1n << this.world.registry.typenum.get(component.type)); 
       delete this.types[component.type];
     }
     this.world._deleteEntityComponent(component);

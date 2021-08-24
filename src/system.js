@@ -1,4 +1,5 @@
 const Query = require('./query');
+const BitQuery = require('./bitquery');
 
 class System {
   constructor(world, ...initArgs) {
@@ -21,6 +22,10 @@ class System {
 
   createQuery(init) {
     return new Query(this.world, this, init);
+  }
+
+  createQuery2(query) {
+    return new BitQuery(this.world, { system: this, ...query });
   }
 
   subscribe(type) {

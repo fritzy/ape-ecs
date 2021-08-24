@@ -28,7 +28,7 @@ class ComponentRegistry {
     this.typenum = new Map();
     this.pool = new Map();
     this.tags = new Set();
-    this.componentNum = 1n;
+    this.componentNum = 0n;
     this.worlds = new Set();
   }
 
@@ -62,7 +62,7 @@ class ComponentRegistry {
       klass.factories = {};
       klass.num = this.componentNum;
       this.typenum.set(name, this.componentNum);
-      this.componentNum *= 2;
+      this.componentNum += 1n;
       for (const field of klass.fields) {
         // istanbul ignore if
         if (componentReserved.has(field)) {
@@ -88,17 +88,18 @@ class ComponentRegistry {
       }
       this.typeset.add(tag);
       this.typenum.set(tag, this.componentNum);
-      this.componentNum *= 2;
+      this.componentNum += 1n;
       this.tags.add(tag);
     }
   }
 
   clear() {
     this.types = {};
-    this.typeset = new Set();
+    this.typeset.clear();
+    this.typenum.clear();
     this.pool = new Map();
     this.tags = new Set();
-    this.componentNum = 1n;
+    this.componentNum = 0n;
   }
 }
 

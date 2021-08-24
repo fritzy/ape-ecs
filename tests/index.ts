@@ -10,6 +10,7 @@ import {
   EntitySet,
   EntityObject,
   Query,
+  BitQuery
 } from '../src';
 import { SSL_OP_NO_TICKET } from 'constants';
 
@@ -50,7 +51,7 @@ describe('express components', () => {
       ]
     });
 
-    const results = s1.createQuery({ all: ['Health'] }).execute();
+    const results = s1.createQuery2({ all: ['Health'] }).run();
 
     expect(results.size).to.equal(1);
   });
@@ -63,7 +64,7 @@ describe('express components', () => {
       }
     });
 
-    const results = ecs.createQuery().fromAll(Health).execute();
+    const results = ecs.createQuery2({ all: ['Health'] }).run();
 
     expect(results.size).to.equal(2);
   });
@@ -444,20 +445,19 @@ describe('system queries', () => {
     class TileSystem extends ECS.System {
 
       lastResults: Set<Entity>;
-      query: Query;
+      query: BitQuery;
 
       init() {
 
         this.lastResults = new Set();
-        this.query = this.world.createQuery({
+        this.query = this.world.createQuery2({
           all: ['Tile'],
-          not: ['Hidden'],
-          persist: true });
+          not: ['Hidden']});
       }
 
       update(tick) {
 
-        this.lastResults = this.query.execute();
+        this.lastResults = this.query.run();
       }
     }
 
@@ -559,10 +559,10 @@ describe('system queries', () => {
       }
     });
 
-    const result = ecs.createQuery()
-      .fromAll('Tile', 'Billboard')
-      .not(Sprite, 'Hidden')
-      .execute();
+    const result = ecs.createQuery2({
+      all: ['Tile', 'Billboard'],
+      not: [Sprite, 'Hidden'],
+    }).run();
 
     const resultSet = new Set([...result]);
 
@@ -616,11 +616,11 @@ describe('system queries', () => {
       tags: ['Billboard']
     });
 
-    const q1 = ecs.createQuery({
+    const q1 = ecs.createQuery2({
       all: ['Tile', 'Billboard'],
       not: ['Sprite', 'Hidden'],
-    }).persist();
-    const result = q1.execute();
+    });
+    const result = q1.run();
 
     const resultSet = new Set([...result]);
 
@@ -695,8 +695,8 @@ describe('system queries', () => {
 
     ecs.tick();
     const ticks = ecs.currentTick;
-    const testQ = ecs.createQuery().fromAll('Comp1').persist();
-    const results1 = testQ.execute();
+    const testQ = ecs.createQuery2({ all: ['Comp1'] });
+    const results1 = testQ.run();
     expect(results1.has(entity1)).to.be.true;
     expect(results1.has(entity2)).to.be.true;
   });
@@ -733,10 +733,8 @@ describe('system queries', () => {
 
     ecs.tick();
     const ticks = ecs.currentTick;
-    const testQ = ecs.createQuery().fromAll('Comp1').persist(true, true);
-    const results1 = testQ.execute();
-    expect(testQ.trackAdded).to.be.true;
-    expect(testQ.trackRemoved).to.be.true;
+    const testQ = ecs.createQuery2({ all: ['Comp1'] });
+    const results1 = testQ.run();
     expect(results1.has(entity1)).to.be.true;
     expect(results1.has(entity2)).to.be.true;
 
@@ -745,7 +743,7 @@ describe('system queries', () => {
     comp1.update();
     entity2.addComponent({ type: 'Comp2' });
 
-    const results2 = testQ.execute({ updatedComponents: ticks });
+    const results2 = testQ.filter(entity => entity.updatedComponents >= ticks );
     expect(results2.has(entity1)).to.be.false;
     expect(results2.has(entity2)).to.be.true;
 
@@ -765,15 +763,15 @@ describe('system queries', () => {
       }
     });
 
-    const query = ecs.createQuery().fromAll('Comp1').persist();
-    const results1 = query.execute();
+    const query = ecs.createQuery2({ all: ['Comp1'] });
+    const results1 = query.run();
     expect(results1.has(entity1)).to.be.true;
 
     entity1.destroy();
 
     ecs.tick();
 
-    const results2 = query.execute();
+    const results2 = query.run();
     expect(results2.has(entity1)).to.be.false;
 
   });
@@ -1409,15 +1407,15 @@ describe('advanced queries', () => {
       tags: ['B', 'C', 'A']
     });
 
-    const q = ecs.createQuery().from(entity1, entity2.id, entity3);
-    const r = q.execute();
+    const q = ecs.createQuery2().from([entity1, entity2.id, entity3]);
+    const r = q.run();
     
     expect(r.has(entity1)).to.be.true;
     expect(r.has(entity2)).to.be.true;
     expect(r.has(entity3)).to.be.true;
 
-    const q1b = ecs.createQuery({ from: [entity1, entity2.id, entity3] });
-    const r1b = q.execute();
+    const q1b = ecs.createQuery2().from([entity1, entity2.id, entity3]);
+    const r1b = q1b.run();
     
     expect(r1b.has(entity1)).to.be.true;
     expect(r1b.has(entity2)).to.be.true;
@@ -1462,29 +1460,29 @@ describe('advanced queries', () => {
       }
     });
 
-    const q2 = ecs.createQuery({ reverse: { entity: e4, type: 'InInventory'}, persist: true } );
-    const r2 = q2.execute();
+    const q2 = ecs.createQuery2().fromReverse(e4, 'InInventory');
+    const r2 = q2.run();
 
     expect(r2.size).to.equal(1);
     expect(r2.has(e5)).to.be.true;
 
-    const q2b = ecs.createQuery().fromReverse(e4.id, InInventory).persist();
-    const r2b = q2b.execute();
+    const q2b = ecs.createQuery2().fromReverse(e4.id, InInventory);
+    const r2b = q2b.run();
 
     expect(r2b.size).to.equal(1);
     expect(r2b.has(e5)).to.be.true;
 
-    const q2c = ecs.createQuery().fromAny(Person, 'Item');
-    const r2c = q2c.execute();
+    const q2c = ecs.createQuery2({ any: [Person, 'Item']});
+    const r2c = q2c.run();
 
     expect(r2c.has(e4)).to.be.true;
     expect(r2c.has(e5)).to.be.true;
 
-    const q3 = ecs.createQuery({ any: ['B', 'C'], persist: true });
-    const r3 = q3.execute();
+    const q3 = ecs.createQuery2({ any: ['B', 'C'] });
+    const r3 = q3.run();
 
-    const q4 = ecs.createQuery({ all: ['B', 'C'], persist: true });
-    const r3b = q4.execute();
+    const q4 = ecs.createQuery2({ all: ['B', 'C'] });
+    const r3b = q4.run();
 
     expect(r3.size).to.equal(3);
     expect(r3.has(entity2)).to.be.true;
@@ -1500,43 +1498,30 @@ describe('advanced queries', () => {
     e5.removeComponent('InInventory');
 
     ecs.tick();
-    const r4 = q3.execute();
+    const r4 = q3.run();
     expect(r3.size).to.equal(2);
     expect(r3.has(entity2)).to.be.false;
     expect(r3.has(entity3)).to.be.true;
 
-    const q2r2 = q2.execute();
+    const q2r2 = q2.run();
     expect(q2r2.size).to.equal(0);
 
-    const r5 = q4.execute();
+    const r5 = q4.run();
     expect(r5.size).to.equal(2);
 
     expect(r3.has(entity1)).to.be.false;
     entity1.addTag('B');
     ecs.tick();
 
-    const r6 = q3.execute();
+    const r6 = q3.run();
     expect(r6.has(entity1)).to.be.true;
-    const r7 = q2.execute();
+    const r7 = q2.run();
 
     expect(r7.has(e5)).to.be.false;
 
     const entity5 = ecs.createEntity({
       tags: ['D', 'B', 'A']
     });
-
-    const q5 = ecs.createQuery().fromAll('A').only('D', 'C', Item)
-    const rq5 = q5.execute();
-
-    expect(rq5.has(entity5)).to.be.true;
-
-    const q5b = ecs.createQuery({
-      all: ['A'],
-      only: ['D', 'C', Item]
-    });
-    const rq5b = q5b.execute();
-
-    expect(rq5b.has(entity5)).to.be.true;
 
   });
 
@@ -1547,18 +1532,19 @@ describe('advanced queries', () => {
 
     class S1 extends ECS.System {
 
-      q1: Query;
+      q1: BitQuery;
 
       init() {
 
-        this.q1 = this.createQuery({
+        this.q1 = this.createQuery2({
           trackAdded: true,
-        }).fromAll('A', 'C').persist();
+          all: ['A', 'C']
+        });
       }
       
       update(tick) {
 
-        const r1 = this.q1.execute();
+        const r1 = this.q1.run();
 
         switch(tick) {
           case 0:
@@ -1593,10 +1579,11 @@ describe('advanced queries', () => {
     }
     class S2 extends ECS.System {}
 
+    ecs.registerTags('A', 'B', 'C');
+
     const s1 = ecs.registerSystem('group1', S1);
     const s2 = ecs.registerSystem('group2', S2);
 
-    ecs.registerTags('A', 'B', 'C');
 
     var e1 = ecs.createEntity({
       tags: ['A']
@@ -1629,11 +1616,12 @@ describe('advanced queries', () => {
     ecs.runSystems('group1');
     ecs.tick();
 
-    const q2 = s2.createQuery({
+    const q2 = s2.createQuery2({
       trackRemoved: true,
-    }).fromAll('A', 'C').persist();
+      all: ['A', 'C']
+    });
 
-    const r2 = q2.execute();
+    const r2 = q2.run();
 
     expect(r2.has(e1)).to.be.true;
     expect(r2.has(e6)).to.be.false;
@@ -1713,8 +1701,8 @@ describe('serialize and deserialize', () => {
 
     worldB.createEntities(entities1);
 
-    const q1 = worldB.createQuery().fromAll('NPC');
-    const r1 = [...q1.execute()];
+    const q1 = worldB.createQuery2({all: ['NPC']});
+    const r1 = [...q1.run()];
     const npc2 = r1[0]
     const bottle2 = [...npc2.c.Inventory.main][0];
 
@@ -1867,32 +1855,32 @@ describe('ApeDestroy', () => {
       }]
     });
 
-    const q1 = ecs.createQuery().fromAll('Test', 'A');
-    const r1 = q1.execute();
+    const q1 = ecs.createQuery2({ all: ['Test', 'A'] });
+    const r1 = q1.run();
 
     expect(r1).contains(e1);
 
-    const q1b = ecs.createQuery({ all: ['Test', 'A']});
-    const r1b = q1b.execute();
+    const q1b = ecs.createQuery2({ all: ['Test', 'A']});
+    const r1b = q1b.run();
 
     expect(r1b).contains(e1);
 
     e1.addTag('ApeDestroy');
 
-    const q2 = ecs.createQuery({ all: ['Test', 'A'], not: ['B'] });
-    const r2 = q2.execute();
+    const q2 = ecs.createQuery2({ all: ['Test', 'A'], not: ['B'] });
+    const r2 = q2.run();
 
     expect(r2).not.contains(e1);
 
-    const q3 = ecs.createQuery({ includeApeDestroy: true, not: ['B'] }).fromAll('Test', 'A');
-    const r3 = q3.execute();
+    const q3 = ecs.createQuery2({ includeApeDestroy: true, not: ['B'], all: ['Test', 'A'] });
+    const r3 = q3.run();
 
     expect(r3).contains(e1);
 
     ecs.tick();
 
-    q3.refresh();
-    const r3b = q3.execute();
+    q3.run();
+    const r3b = q3.run();
     expect(r3b).not.contains(e1);
   });
 });

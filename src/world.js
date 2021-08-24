@@ -4,6 +4,7 @@
  */
 const Entity = require('./entity');
 const Query = require('./query');
+const BitQuery = require('./bitquery');
 const ComponentPool = require('./componentpool');
 const EntityPool = require('./entitypool');
 const setupApeDestroy = require('./cleanup');
@@ -235,6 +236,10 @@ module.exports = class World {
 
   createQuery(init) {
     return new Query(this, null, init);
+  }
+
+  createQuery2(query) {
+    return new BitQuery(this, query);
   }
 
   _sendChange(operation) {

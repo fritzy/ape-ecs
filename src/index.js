@@ -1,5 +1,6 @@
 const { EntityRef, EntitySet, EntityObject } = require('./entityrefs');
 const { ComponentRegistry } = require('./componentregistry');
+const BitQuery = require('./bitquery');
 
 module.exports = {
   World: require('./world'),
@@ -9,5 +10,6 @@ module.exports = {
   EntityRef,
   EntitySet,
   EntityObject,
-  ComponentRegistry
+  ComponentRegistry,
+  BitQuery
 };

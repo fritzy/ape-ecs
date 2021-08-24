@@ -38,6 +38,7 @@ export declare class System {
   init(...initArgs: any[]): void;
   update(tick: number): void;
   createQuery(init?: IQueryConfig): Query;
+  createQuery2(query: IBitQueryConfig): BitQuery;
   subscribe(type: string | ComponentClass): void;
 }
 
@@ -60,6 +61,33 @@ export interface IComponentConfigVal {
   id?: string;
   entity?: string;
   [others: string]: any;
+}
+
+export interface IBitQueryConfig {
+  from?: string;
+  fromSet?: array;
+  reverseEntity?: Entity | string;
+  reverseComponent?: Component | string;
+  all?: array;
+  any?: array;
+  not?: array;
+  trackAdded?: boolean;
+  trackRemoved?: boolean;
+  onAdded?: function;
+  onRemoved?: function;
+  includeApeDestroy?: boolean;
+}
+
+export declare class BitQuery {
+  constructor(world: world, query: IBitQueryConfig);
+  from(entity: (Entity | string)[]): BitQuery;
+  fromReverse<T extends typeof Component>(entity: Entity | string, type: T | string): BitQuery;
+  results: Set<Entity>;
+  added: Set<Entity>;
+  removed: Set<Entity>;
+  run(): Set<Entity>;
+  filter(filter: cb(Entity): boolean): Set<Entity>;
+  clearChanges(): void;
 }
 
 export declare class Query {
@@ -285,6 +313,7 @@ export declare class World {
   getEntities(type: string | ComponentClass): Set<Entity>;
   getComponent(id: string): Component;
   createQuery(init?: IQueryConfig): Query;
+  createQuery2(init?: IBitQueryConfig): BitQuery;
 
   // Allows passing of a class that extends System, or an instance of such a class
   registerSystem<T extends typeof System>(
