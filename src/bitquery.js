@@ -29,7 +29,7 @@ class BitQuery {
     this.added = new Set();
     this.removed = new Set();
 
-    if (this.world.useApeDestroy && !this.query.includeApeDestroy) {
+    if (this.world.config.useApeDestroy && !this.query.includeApeDestroy) {
       this.query.not.push('ApeDestroy');
     }
     if (this.system) {

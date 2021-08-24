@@ -1640,6 +1640,8 @@ describe('advanced queries', () => {
 
     ecs.tick();
 
+    q2.run();
+
     expect(q2.added.size).to.be.equal(0);
     expect(q2.removed.size).to.be.equal(1);
     expect(r2.has(e3)).to.be.true;
@@ -1888,7 +1890,7 @@ describe('ApeDestroy', () => {
 describe('Component Portability', () => {
   it('Components on multiple worlds', () => {
     const world1 = new World({ newRegistry: true });
-    const world2 = new World({ newRegistry: true });
+    const world2 = new World({ registry: world1.registry });
 
     class Testa extends Component {
 
@@ -1905,7 +1907,6 @@ describe('Component Portability', () => {
     }
 
     world1.registerComponent(Testa);
-    world2.registerComponent(Testa);
 
     const t1 = world1.createEntity({
       c: {
@@ -1919,14 +1920,14 @@ describe('Component Portability', () => {
       }
     });
 
-    const q1 = world1.createQuery().fromAll('Test');
-    const q2 = world2.createQuery().fromAll('Test');
+    const q1 = world1.createQuery2({ all: ['Test']});
+    const q2 = world2.createQuery2({ all: ['Test']});
 
     t1.c.Test.greeting = "Hello";
     t2.c.Test.greeting = "Howdy";
 
-    const r1 = q1.execute();
-    const r2 = q2.execute();
+    const r1 = q1.run();
+    const r2 = q2.run();
     expect(r1.size).is.equal(1);
     expect(r2.size).is.equal(1);
     expect(r1).contains(t1);
