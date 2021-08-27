@@ -20,6 +20,7 @@ class IdGenerator {
   }
 }
 
+/*
 function setIntersection() {
   let sets = Array.from(arguments),
     setSizes = sets.map((set) => set.size),
@@ -50,9 +51,10 @@ function setUnion() {
 
   return result;
 }
+*/
 
 module.exports = {
   IdGenerator,
-  setIntersection,
-  setUnion
+  //setIntersection,
+  //setUnion
 };

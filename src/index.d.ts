@@ -37,8 +37,7 @@ export declare class System {
   static subscriptions: string[];
   init(...initArgs: any[]): void;
   update(tick: number): void;
-  createQuery(init?: IQueryConfig): Query;
-  createQuery2(query: IBitQueryConfig): BitQuery;
+  createQuery(query: IBitQueryConfig): BitQuery;
   subscribe(type: string | ComponentClass): void;
 }
 
@@ -312,8 +311,7 @@ export declare class World {
   getEntity(entityId: string): Entity | undefined;
   getEntities(type: string | ComponentClass): Set<Entity>;
   getComponent(id: string): Component;
-  createQuery(init?: IQueryConfig): Query;
-  createQuery2(init?: IBitQueryConfig): BitQuery;
+  createQuery(init?: IBitQueryConfig): BitQuery;
 
   // Allows passing of a class that extends System, or an instance of such a class
   registerSystem<T extends typeof System>(

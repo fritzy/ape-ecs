@@ -1,4 +1,3 @@
-const Query = require('./query');
 const BitQuery = require('./bitquery');
 
 class System {
@@ -20,11 +19,7 @@ class System {
 
   update(tick) {}
 
-  createQuery(init) {
-    return new Query(this.world, this, init);
-  }
-
-  createQuery2(query) {
+  createQuery(query) {
     return new BitQuery(this.world, { system: this, ...query });
   }
 

@@ -213,7 +213,9 @@ class Entity {
         this.removeComponent(component);
       }
     }
-    this.tags.clear();
+    for (const tag of this.tags) {
+      this.removeTag(tag);
+    }
     this.world.entities.delete(this.id);
     delete this.world.entityReverse[this.id];
     this.destroyed = true;

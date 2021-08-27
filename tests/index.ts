@@ -51,7 +51,7 @@ describe('express components', () => {
       ]
     });
 
-    const results = s1.createQuery2({ all: ['Health'] }).run();
+    const results = s1.createQuery({ all: ['Health'] }).run();
 
     expect(results.size).to.equal(1);
   });
@@ -64,7 +64,7 @@ describe('express components', () => {
       }
     });
 
-    const results = ecs.createQuery2({ all: ['Health'] }).run();
+    const results = ecs.createQuery({ all: ['Health'] }).run();
 
     expect(results.size).to.equal(2);
   });
@@ -450,7 +450,7 @@ describe('system queries', () => {
       init() {
 
         this.lastResults = new Set();
-        this.query = this.world.createQuery2({
+        this.query = this.world.createQuery({
           all: ['Tile'],
           not: ['Hidden']});
       }
@@ -559,7 +559,7 @@ describe('system queries', () => {
       }
     });
 
-    const result = ecs.createQuery2({
+    const result = ecs.createQuery({
       all: ['Tile', 'Billboard'],
       not: [Sprite, 'Hidden'],
     }).run();
@@ -616,7 +616,7 @@ describe('system queries', () => {
       tags: ['Billboard']
     });
 
-    const q1 = ecs.createQuery2({
+    const q1 = ecs.createQuery({
       all: ['Tile', 'Billboard'],
       not: ['Sprite', 'Hidden'],
     });
@@ -695,7 +695,7 @@ describe('system queries', () => {
 
     ecs.tick();
     const ticks = ecs.currentTick;
-    const testQ = ecs.createQuery2({ all: ['Comp1'] });
+    const testQ = ecs.createQuery({ all: ['Comp1'] });
     const results1 = testQ.run();
     expect(results1.has(entity1)).to.be.true;
     expect(results1.has(entity2)).to.be.true;
@@ -733,7 +733,7 @@ describe('system queries', () => {
 
     ecs.tick();
     const ticks = ecs.currentTick;
-    const testQ = ecs.createQuery2({ all: ['Comp1'] });
+    const testQ = ecs.createQuery({ all: ['Comp1'] });
     const results1 = testQ.run();
     expect(results1.has(entity1)).to.be.true;
     expect(results1.has(entity2)).to.be.true;
@@ -763,7 +763,7 @@ describe('system queries', () => {
       }
     });
 
-    const query = ecs.createQuery2({ all: ['Comp1'] });
+    const query = ecs.createQuery({ all: ['Comp1'] });
     const results1 = query.run();
     expect(results1.has(entity1)).to.be.true;
 
@@ -1065,6 +1065,12 @@ describe('entity restore', () => {
       });
     };
     expect(badName).to.throw();
+
+    const badQuery = () => {
+      const q = ecs.createQuery({ all: ['Poison'] });
+      q.run();
+    }
+    expect(badQuery).to.throw();
   });
 
   it('Unassigned field is not set', () => {
@@ -1407,14 +1413,14 @@ describe('advanced queries', () => {
       tags: ['B', 'C', 'A']
     });
 
-    const q = ecs.createQuery2().from([entity1, entity2.id, entity3]);
+    const q = ecs.createQuery().from([entity1, entity2.id, entity3]);
     const r = q.run();
     
     expect(r.has(entity1)).to.be.true;
     expect(r.has(entity2)).to.be.true;
     expect(r.has(entity3)).to.be.true;
 
-    const q1b = ecs.createQuery2().from([entity1, entity2.id, entity3]);
+    const q1b = ecs.createQuery().from([entity1, entity2.id, entity3]);
     const r1b = q1b.run();
     
     expect(r1b.has(entity1)).to.be.true;
@@ -1460,28 +1466,34 @@ describe('advanced queries', () => {
       }
     });
 
-    const q2 = ecs.createQuery2().fromReverse(e4, 'InInventory');
+    const q2 = ecs.createQuery().fromReverse(e4, 'InInventory');
     const r2 = q2.run();
+
+    // test for case where a ref won't exist
+    const qf = ecs.createQuery().fromReverse(e4, 'Person');
+    const rf = qf.run();
+
+    expect(rf.size).to.equal(0);
 
     expect(r2.size).to.equal(1);
     expect(r2.has(e5)).to.be.true;
 
-    const q2b = ecs.createQuery2().fromReverse(e4.id, InInventory);
+    const q2b = ecs.createQuery().fromReverse(e4.id, InInventory);
     const r2b = q2b.run();
 
     expect(r2b.size).to.equal(1);
     expect(r2b.has(e5)).to.be.true;
 
-    const q2c = ecs.createQuery2({ any: [Person, 'Item']});
+    const q2c = ecs.createQuery({ any: [Person, 'Item']});
     const r2c = q2c.run();
 
     expect(r2c.has(e4)).to.be.true;
     expect(r2c.has(e5)).to.be.true;
 
-    const q3 = ecs.createQuery2({ any: ['B', 'C'] });
+    const q3 = ecs.createQuery({ any: ['B', 'C'] });
     const r3 = q3.run();
 
-    const q4 = ecs.createQuery2({ all: ['B', 'C'] });
+    const q4 = ecs.createQuery({ all: ['B', 'C'] });
     const r3b = q4.run();
 
     expect(r3.size).to.equal(3);
@@ -1536,7 +1548,7 @@ describe('advanced queries', () => {
 
       init() {
 
-        this.q1 = this.createQuery2({
+        this.q1 = this.createQuery({
           trackAdded: true,
           all: ['A', 'C']
         });
@@ -1616,7 +1628,7 @@ describe('advanced queries', () => {
     ecs.runSystems('group1');
     ecs.tick();
 
-    const q2 = s2.createQuery2({
+    const q2 = s2.createQuery({
       trackRemoved: true,
       all: ['A', 'C']
     });
@@ -1655,6 +1667,20 @@ describe('advanced queries', () => {
     ecs.runSystems('group2');
     expect(q2.added.size).to.be.equal(0);
     expect(q2.removed.size).to.be.equal(0);
+
+    expect(q2.results.size).to.be.equal(2);
+    q2.clear();
+    expect(q2.results.size).to.be.equal(0);
+    q2.run();
+    expect(q2.results.size).to.be.equal(2);
+
+    expect(r2.has(e3)).to.be.true;
+
+    e3.destroy();
+    q2.run();
+    expect(r2.has(e3)).to.be.false;
+    expect(q2.removed.size).to.be.equal(1);
+
 
   });
 });
@@ -1703,7 +1729,7 @@ describe('serialize and deserialize', () => {
 
     worldB.createEntities(entities1);
 
-    const q1 = worldB.createQuery2({all: ['NPC']});
+    const q1 = worldB.createQuery({all: ['NPC']});
     const r1 = [...q1.run()];
     const npc2 = r1[0]
     const bottle2 = [...npc2.c.Inventory.main][0];
@@ -1857,24 +1883,24 @@ describe('ApeDestroy', () => {
       }]
     });
 
-    const q1 = ecs.createQuery2({ all: ['Test', 'A'] });
+    const q1 = ecs.createQuery({ all: ['Test', 'A'] });
     const r1 = q1.run();
 
     expect(r1).contains(e1);
 
-    const q1b = ecs.createQuery2({ all: ['Test', 'A']});
+    const q1b = ecs.createQuery({ all: ['Test', 'A']});
     const r1b = q1b.run();
 
     expect(r1b).contains(e1);
 
     e1.addTag('ApeDestroy');
 
-    const q2 = ecs.createQuery2({ all: ['Test', 'A'], not: ['B'] });
+    const q2 = ecs.createQuery({ all: ['Test', 'A'], not: ['B'] });
     const r2 = q2.run();
 
     expect(r2).not.contains(e1);
 
-    const q3 = ecs.createQuery2({ includeApeDestroy: true, not: ['B'], all: ['Test', 'A'] });
+    const q3 = ecs.createQuery({ includeApeDestroy: true, not: ['B'], all: ['Test', 'A'] });
     const r3 = q3.run();
 
     expect(r3).contains(e1);
@@ -1890,7 +1916,8 @@ describe('ApeDestroy', () => {
 describe('Component Portability', () => {
   it('Components on multiple worlds', () => {
     const world1 = new World({ newRegistry: true });
-    const world2 = new World({ registry: world1.registry });
+    const registry = world1.registry;
+    const world2 = new World({ registry: registry });
 
     class Testa extends Component {
 
@@ -1906,7 +1933,9 @@ describe('Component Portability', () => {
 
     }
 
-    world1.registerComponent(Testa);
+    
+
+    registry.registerComponent(Testa);
 
     const t1 = world1.createEntity({
       c: {
@@ -1920,8 +1949,8 @@ describe('Component Portability', () => {
       }
     });
 
-    const q1 = world1.createQuery2({ all: ['Test']});
-    const q2 = world2.createQuery2({ all: ['Test']});
+    const q1 = world1.createQuery({ all: ['Test']});
+    const q2 = world2.createQuery({ all: ['Test']});
 
     t1.c.Test.greeting = "Hello";
     t2.c.Test.greeting = "Howdy";

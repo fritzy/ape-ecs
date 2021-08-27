@@ -3,9 +3,9 @@ const defaultQuery = {
   fromSet: undefined,
   reverseEntity: undefined,
   reverseComponent: undefined,
-  all: [],
-  any: [],
-  not: [],
+  all: undefined,
+  any: undefined,
+  not: undefined,
   trackAdded: false,
   trackRemoved: false,
   onAdded: undefined,
@@ -30,7 +30,11 @@ class BitQuery {
     this.removed = new Set();
 
     if (this.world.config.useApeDestroy && !this.query.includeApeDestroy) {
-      this.query.not.push('ApeDestroy');
+      if (Array.isArray(this.query.not)) {
+        this.query.not.push('ApeDestroy');
+      } else {
+        this.query.not = [];
+      }
     }
     if (this.system) {
       this.system.queries.push(this);

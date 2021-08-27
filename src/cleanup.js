@@ -2,13 +2,14 @@ const System = require('./system');
 
 class CleanupApeDestroySystem extends System {
   init() {
-    this.destroyQuery = this.createQuery({ includeApeDestroy: true })
-      .fromAll('ApeDestroy')
-      .persist();
+    this.destroyQuery = this.createQuery({
+      includeApeDestroy: true,
+      all: ['ApeDestroy']
+    });
   }
 
   update() {
-    const entities = this.destroyQuery.execute();
+    const entities = this.destroyQuery.run();
     for (const entity of entities) {
       entity.destroy();
     }

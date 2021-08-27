@@ -3,7 +3,6 @@
  * @type {class}
  */
 const Entity = require('./entity');
-const Query = require('./query');
 const BitQuery = require('./bitquery');
 const ComponentPool = require('./componentpool');
 const EntityPool = require('./entitypool');
@@ -234,11 +233,7 @@ module.exports = class World {
     return this.componentsById.get(id);
   }
 
-  createQuery(init) {
-    return new Query(this, null, init);
-  }
-
-  createQuery2(query) {
+  createQuery(query) {
     return new BitQuery(this, query);
   }
 
