@@ -61,6 +61,9 @@ class Entity {
     return this.tags.has(type) || this.types.hasOwnProperty(type);
   }
 
+  setKey(component, key) {
+  }
+
   getOne(type) {
     if (typeof type !== 'string') {
       type = type.name;
@@ -91,9 +94,6 @@ class Entity {
     this.tags.add(tag);
     this.bitmask |= 1n << this.world.registry.typenum.get(tag);
     this.updatedComponents = this.world.currentTick;
-    if (!this.world.entitiesByComponent.hasOwnProperty(tag)) {
-      this.world.entitiesByComponent[tag] = new Set();
-    }
     this.world.entitiesByComponent[tag].add(this.id);
     if (this.ready) {
       this.world._entityUpdated(this);
@@ -125,6 +125,7 @@ class Entity {
       this.bitmask |= 1n << this.world.registry.typenum.get(type);
     }
     this.types[type].add(comp);
+    this.c[comp.key] = comp;
     this.world._addEntityComponent(type, this);
     this.updatedComponents = this.world.currentTick;
     if (this.ready) {
@@ -164,11 +165,9 @@ class Entity {
     };
     for (const type of Object.keys(this.types)) {
       for (const comp of this.types[type]) {
-        // $lab:coverage:off$
         if (!comp.constructor.serialize) {
           continue;
         }
-        // $lab:coverage:on$
         if (comp.key) {
           obj.c[comp.key] = comp.getObject(componentIds);
         } else {
@@ -182,32 +181,8 @@ class Entity {
   destroy() {
 
     if (this.destroyed) return;
-    if (this.world.refs[this.id]) {
-      for (const ref of this.world.refs[this.id]) {
-        const [entityId, componentId, prop, sub] = ref.split('...');
-        const entity = this.world.getEntity(entityId);
-        // istanbul ignore next
-        if (!entity) continue;
-        const component = entity.world.componentsById.get(componentId);
-        // istanbul ignore next
-        if (!component) continue;
-        const path = prop.split('.');
+    this.ready = false;
 
-        let target = component;
-        let parent = target;
-        for (const prop of path) {
-          parent = target;
-          target = target[prop];
-        }
-        if (sub === '__set__') {
-          target.delete(this);
-        } else if (sub === '__obj__') {
-          delete parent[path[1]];
-        } else {
-          parent[prop] = null;
-        }
-      }
-    }
     for (const type of Object.keys(this.types)) {
       for (const component of this.types[type]) {
         this.removeComponent(component);
@@ -216,10 +191,9 @@ class Entity {
     for (const tag of this.tags) {
       this.removeTag(tag);
     }
+    this.world._entityUpdated(this);
     this.world.entities.delete(this.id);
-    delete this.world.entityReverse[this.id];
     this.destroyed = true;
-    this.ready = false;
     this.world.entityPool.destroy(this);
     this.world._clearIndexes(this);
   }

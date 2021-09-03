@@ -3,19 +3,16 @@ const ComponentPool = require('./componentpool');
 const componentReserved = new Set([
   'constructor',
   'init',
+  'id',
   'type',
   'key',
   'destroy',
-  'preDestroy',
-  'postDestroy',
   'getObject',
   '_setup',
+  'clear',
   '_reset',
   'update',
   'clone',
-  '_meta',
-  '_addRef',
-  '_deleteRef',
   'prototype'
 ]);
 
@@ -55,26 +52,18 @@ class ComponentRegistry {
     }
     this.typeset.add(name);
     this.types[name] = klass;
-    if (!klass.registered) {
-      klass.registered = true;
-      klass.fields = Object.keys(klass.properties);
-      klass.primitives = {};
-      klass.factories = {};
-      klass.num = this.componentNum;
-      this.typenum.set(name, this.componentNum);
-      this.componentNum += 1n;
-      for (const field of klass.fields) {
-        // istanbul ignore if
-        if (componentReserved.has(field)) {
-          throw new Error(
-            `Error registering ${klass.name}: Reserved property name "${field}"`
-          );
-        }
-        if (typeof klass.properties[field] === 'function') {
-          klass.factories[field] = klass.properties[field];
-        } else {
-          klass.primitives[field] = klass.properties[field];
-        }
+    klass.bitdigit = this.componentNum;
+    this.typenum.set(name, this.componentNum);
+    this.componentNum += 1n;
+    if (!(klass.properties instanceof Set)) {
+      throw new Error('Components must have the static Set property "properties"');
+    }
+    for (const field of klass.properties) {
+      // istanbul ignore if
+      if (componentReserved.has(field)) {
+        throw new Error(
+          `Error registering ${klass.name}: Reserved property name "${field}"`
+        );
       }
     }
     this.pool.set(name, new ComponentPool(this, name, spinup));

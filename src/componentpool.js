@@ -1,4 +1,5 @@
 class ComponentPool {
+
   constructor(registry, type, spinup) {
     this.registry = registry;
     this.type = type;
@@ -12,11 +13,12 @@ class ComponentPool {
   get(world, entity, initial) {
     let comp;
     if (this.pool.length === 0) {
-      comp = new this.klass(world);
+      comp = new this.klass();
     } else {
       comp = this.pool.pop();
     }
     comp._setup(world, entity, initial);
+    comp.init(initial);
     this.active++;
     return comp;
   }
@@ -40,7 +42,7 @@ class ComponentPool {
 
   spinUp(count) {
     for (let i = 0; i < count; i++) {
-      const comp = new this.klass(undefined);
+      const comp = new this.klass();
       this.pool.push(comp);
     }
     this.targetSize = Math.max(this.targetSize, this.pool.length);

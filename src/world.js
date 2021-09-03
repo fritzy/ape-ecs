@@ -291,7 +291,7 @@ module.exports = class World {
   }
 
   _deleteEntityComponent(component) {
-    this.entitiesByComponent[component.type].delete(component._meta.entityId);
+    this.entitiesByComponent[component.type].delete(component.entity.id);
   }
 
   _clearIndexes(entity) {

@@ -85,9 +85,11 @@ class BitQuery {
       if (typeof comp !== 'string') {
         comp = comp.name;
       }
-      if(!this.registry.typeset.has(comp))
+      const digit = this.registry.typenum.get(comp);
+      if (typeof digit !== 'bigint') {
         throw new Error(`Component/Tag not defined: ${comp}`);
-      return this.registry.typenum.get(comp);
+      }
+      return digit;
     })].reduce((mask, digit) => mask |= 1n << digit);
   }
 
