@@ -39,6 +39,8 @@ export declare class System {
   update(tick: number): void;
   createQuery(query: IBitQueryConfig): BitQuery;
   subscribe(type: string | ComponentClass): void;
+  added: Set;
+  removed: Set;
 }
 
 // passed to query.execute()
@@ -64,28 +66,29 @@ export interface IComponentConfigVal {
 
 export interface IBitQueryConfig {
   from?: string;
-  fromSet?: array;
+  fromSet?: Array<string | Entity>;
   reverseEntity?: Entity | string;
   reverseComponent?: Component | string;
-  all?: array;
-  any?: array;
-  not?: array;
+  all?: Array<string | ComponentClass>;
+  any?: Array<string | ComponentClass>;
+  not?: Array<string | ComponentClass>;
   trackAdded?: boolean;
   trackRemoved?: boolean;
-  onAdded?: function;
-  onRemoved?: function;
+  onAdded?: () => void;
+  onRemoved?: () => void;
   includeApeDestroy?: boolean;
 }
 
 export declare class BitQuery {
-  constructor(world: world, query: IBitQueryConfig);
+  constructor(world: World, query: IBitQueryConfig);
   from(entity: (Entity | string)[]): BitQuery;
   fromReverse<T extends typeof Component>(entity: Entity | string, type: T | string): BitQuery;
   results: Set<Entity>;
   added: Set<Entity>;
+  clear(): void;
   removed: Set<Entity>;
   run(): Set<Entity>;
-  filter(filter: cb(Entity): boolean): Set<Entity>;
+  filter(filter: (Entity) => Boolean): Set<Entity>;
   clearChanges(): void;
 }
 
@@ -145,6 +148,13 @@ export declare class Component {
   static typeName?: string;
 }
 
+export declare class EntityComponent extends Component {
+  get link(): Entity;
+  set link(entity: Entity);
+  get linkId(): string;
+  set linkId(entity: string);
+}
+
 // an object that has strings as keys and strings as values
 // has "Map" in the name because it's almost a Map(), close enough
 export interface IStringMap {
@@ -158,7 +168,7 @@ export interface IStringNullMap {
 
 // an object where the key is a string and the val is a set of Components
 export interface IEntityByType {
-  [name: string]: Set<Component>;
+  [name: string]: ComponentSet;
 }
 
 // an object where the key is a string and the val is a single Component
@@ -205,27 +215,33 @@ export interface IComponentConfigValObject {
 
 // returned from entity.getObject()
 export interface IEntityObject {
-  id: string;
-  tags: string[];
-  components: IComponentObject[];
-  c: IEntityComponentObjects;
+  id?: string;
+  tags?: string[];
+  c?[type: string]: any;
 }
 
 // an object where the key is a string and the val is a single System
 // export interface IWorldSubscriptions {
 //   [name: string]: System;
 // }
+//
+type ComponentSet = typeof Set & { [name: string]: Component; }
+/*
+export declare class ComponentSet extends Set {
+  [name: string]: Component;
+}
+*/
 
 export declare class Entity {
-  types: IEntityByType;
-  c: IEntityComponents;
+  types: Set<string>;
   id: string;
   tags: Set<string>;
+  [name: string]: ComponentSet;
   updatedComponents: number;
   updatedValues: number;
   destroyed: boolean;
   // _setup(definition: any): void;
-  has(type: string | ComponentClass): boolean;
+  has(type: string | typeof Component): boolean;
   getOne(type: string): Component | undefined;
   getOne<T extends Component>(type: { new (): T }): T | undefined;
   getComponents(type: string): Set<Component>;
@@ -233,6 +249,7 @@ export declare class Entity {
   addTag(tag: string): void;
   removeTag(tag: string): void;
   addComponent(
+    type: string | ComponentClass,
     properties: IComponentConfig | IComponentObject
   ): Component | undefined;
   removeComponent(component: Component | string): boolean;
@@ -253,8 +270,7 @@ export interface IWorldConfig {
 export interface IEntityConfig {
   id?: string;
   tags?: string[];
-  components?: IComponentConfig[];
-  c?: IComponentConfigValObject;
+  c?[type: string]: IComponentConfigValObject;
 }
 
 export interface IPoolStat {
@@ -273,6 +289,7 @@ export interface IWorldStats {
 export declare class ComponentRegistry {
   clear(): void;
   registerTags(...tags: string[]): void;
+  types: Object;
 
   // Both options allow the passing of a class that extends Component
   registerComponent<T extends typeof Component>(
@@ -293,6 +310,7 @@ export declare class World {
   systems: Map<string, Set<System>>;
   tick(): number;
   registerTags(...tags: string[]): void;
+  entityPool: any;
 
   // Both options allow the passing of a class that extends Component
   registerComponent<T extends typeof Component>(
@@ -303,7 +321,7 @@ export declare class World {
   getStats(): IWorldStats;
   logStats(freq: number, callback?: Function): void;
 
-  createEntity(definition: IEntityConfig | IEntityObject): Entity;
+  createEntity(definition?: IEntityConfig | IEntityObject): Entity;
   getObject(): IEntityObject[];
   createEntities(definition: IEntityConfig[] | IEntityObject[]): void;
   copyTypes(world: World, types: string[]): void;
@@ -340,12 +358,14 @@ export interface IEntityRef {
 }
 
 // This is a proxy
+/*
 export interface IEntityObject {
   get(obj: IStringNullMap, prop: string): Entity;
   set(obj: IStringNullMap, prop: string, value: string): boolean;
   deleteProperty(obj: IStringNullMap, prop: string): boolean;
   [others: string]: any;
 }
+*/
 
 export function EntityRef(
   comp: Component,

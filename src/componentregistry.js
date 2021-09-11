@@ -32,6 +32,9 @@ class ComponentRegistry {
   addWorld(world) {
 
     this.worlds.add(world);
+    for (const type of this.typeset) {
+      world.entitiesByComponent[type] = new Set();
+    }
   }
 
   registerComponent(klass, spinup) {
@@ -55,10 +58,10 @@ class ComponentRegistry {
     klass.bitdigit = this.componentNum;
     this.typenum.set(name, this.componentNum);
     this.componentNum += 1n;
-    if (!(klass.properties instanceof Set)) {
-      throw new Error('Components must have the static Set property "properties"');
+    if (!(klass.properties instanceof Object)) {
+      throw new Error('Components must have the static property "properties"');
     }
-    for (const field of klass.properties) {
+    for (const field of Object.keys(klass.properties)) {
       // istanbul ignore if
       if (componentReserved.has(field)) {
         throw new Error(
@@ -67,6 +70,9 @@ class ComponentRegistry {
       }
     }
     this.pool.set(name, new ComponentPool(this, name, spinup));
+    for (const world of this.worlds) {
+      world.entitiesByComponent[name] = new Set();
+    }
   }
 
   registerTags(...tags) {
@@ -79,6 +85,9 @@ class ComponentRegistry {
       this.typenum.set(tag, this.componentNum);
       this.componentNum += 1n;
       this.tags.add(tag);
+      for (const world of this.worlds) {
+        world.entitiesByComponent[tag] = new Set();
+      }
     }
   }
 

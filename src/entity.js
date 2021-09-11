@@ -1,25 +1,30 @@
 const BaseComponent = require('./component');
+const ComponentSet = require('./componentset');
 const IdGenerator = require('./util').IdGenerator;
 const idGen = new IdGenerator();
 
 class Entity {
 
   constructor() {
-    this.types = {};
-    this.c = {};
     this.id = '';
     this.tags = new Set();
+    this.links = new Set();
+    this.c = {};
     this.updatedComponents = 0;
     this.updatedValues = 0;
     this.destroyed = false;
     this.ready = false;
     this.bitmask = 0n;
+    this.reverse = new Set();
+    this.world = undefined;
   }
 
-  _setup(definition) {
+  _setup(world, definition) {
+    this.world = world;
     this.destroyed = false;
     if (definition.id) {
       this.id = definition.id;
+      delete definition.id;
     } else {
       this.id = idGen.genId();
     }
@@ -28,73 +33,57 @@ class Entity {
     this.updatedComponents = this.world.currentTick;
 
     if (definition.tags) {
-      for (const tag of definition.tags) {
-        this.addTag(tag);
-      }
-    }
-
-    if (definition.components) {
-      for (const compdef of definition.components) {
-        this.addComponent(compdef);
-      }
+      this.addTag(...definition.tags);
     }
 
     if (definition.c) {
-      const defs = definition.c;
-      for (const key of Object.keys(defs)) {
-        const comp = {
-          ...defs[key],
-          key
-        };
-        if (!comp.type) comp.type = key;
-        this.addComponent(comp);
+      for (const type of Object.keys(definition.c)) {
+        if (Array.isArray(definition.c[type])) {
+          for (const def of definition.c[type]) {
+            this.addComponent(type, def);
+          }
+        } else {
+          for (const key of Object.keys(definition.c[type])) {
+            const def = definition.c[type][key];
+            def.key = key;
+            this.addComponent(type, def);
+          }
+        }
       }
     }
+
     this.ready = true;
     this.world._entityUpdated(this);
+  }
+
+  _linkComponent(component) {
+    this.links.add(component);
+  }
+
+  _unlinkComponent(component) {
+    this.links.delete(component);
   }
 
   has(type) {
     if (typeof type !== 'string') {
       type = type.name;
     }
-    return this.tags.has(type) || this.types.hasOwnProperty(type);
+    return this.tags.has(type) || this.c.hasOwnProperty(type);
   }
 
-  setKey(component, key) {
-  }
-
-  getOne(type) {
-    if (typeof type !== 'string') {
-      type = type.name;
+  addTag(...tags) {
+    for (const tag of tags) {
+      if (!this.world.registry.tags.has(tag)) {
+        throw new Error(`addTag "${tag}" is not registered. Typo?`);
+      }
+      if (this.tags.has(tag)) {
+        return;
+      }
+      this.tags.add(tag);
+      this.bitmask |= 1n << this.world.registry.typenum.get(tag);
+      this.world.entitiesByComponent[tag].add(this);
     }
-    let component;
-    // istanbul ignore else
-    if (this.types[type]) {
-      component = [...this.types[type]][0];
-    }
-    return component;
-  }
-
-  getComponents(type) {
-    if (typeof type !== 'string') {
-      type = type.name;
-    }
-    return this.types[type] || new Set();
-  }
-
-  addTag(tag) {
-    // istanbul ignore next
-    if (!this.world.registry.tags.has(tag)) {
-      throw new Error(`addTag "${tag}" is not registered. Type-O?`);
-    }
-    if (this.tags.has(tag)) {
-      return;
-    }
-    this.tags.add(tag);
-    this.bitmask |= 1n << this.world.registry.typenum.get(tag);
     this.updatedComponents = this.world.currentTick;
-    this.world.entitiesByComponent[tag].add(this.id);
     if (this.ready) {
       this.world._entityUpdated(this);
     }
@@ -104,87 +93,81 @@ class Entity {
     if (!this.tags.has(tag)) {
       return;
     }
-    this.bitmask &= ~(1n << this.world.registry.typenum.get(tag)); 
+    this.bitmask &= ~(1n << this.world.registry.typenum.get(tag));
     this.tags.delete(tag);
     this.updatedComponents = this.world.currentTick;
-    this.world.entitiesByComponent[tag].delete(this.id);
+    this.world.entitiesByComponent[tag].delete(this);
     this.world._entityUpdated(this);
   }
 
-  addComponent(properties) {
-    const type = properties.type;
+  addComponent(type, properties) {
+    if (typeof type !== 'string') {
+      type = type.name;
+    }
     const pool = this.world.registry.pool.get(type);
     if (pool === undefined) {
       throw new Error(`Component "${type}" has not been registered.`);
     }
     const comp = pool.get(this.world, this, properties);
-    if (!this.types[type]) {
-      this.types[type] = new Set();
+    if (!this.c[type]) {
+      this.c[type] = new ComponentSet();
     }
-    if (this.types[type].size === 0) {
+    if (this.c[type].size === 0) {
       this.bitmask |= 1n << this.world.registry.typenum.get(type);
     }
-    this.types[type].add(comp);
-    this.c[comp.key] = comp;
+    this.c[type].add(comp);
     this.world._addEntityComponent(type, this);
-    this.updatedComponents = this.world.currentTick;
     if (this.ready) {
+      this.updatedComponents = this.world.currentTick;
       this.world._entityUpdated(this);
     }
-    return comp;
+    return this;
   }
 
   removeComponent(component) {
-    if (typeof component === 'string') {
-      component = this.c[component];
-    }
-    if (component === undefined) {
-      return false;
-    }
-    if (component.key) {
-      delete this.c[component.key];
-    }
-    this.types[component.type].delete(component);
+    this.c[component.type].delete(component);
 
-    if (this.types[component.type].size === 0) {
-      this.bitmask &= ~(1n << this.world.registry.typenum.get(component.type)); 
-      delete this.types[component.type];
+    if (this.c[component.type].size === 0) {
+      this.bitmask &= ~(1n << this.world.registry.typenum.get(component.type));
+      delete this.c[component.type];
     }
     this.world._deleteEntityComponent(component);
     this.world._entityUpdated(this);
     component.destroy();
-    return true;
+    return this;
   }
 
   getObject(componentIds = true) {
     const obj = {
       id: this.id,
       tags: [...this.tags],
-      components: [],
       c: {}
     };
-    for (const type of Object.keys(this.types)) {
-      for (const comp of this.types[type]) {
-        if (!comp.constructor.serialize) {
-          continue;
-        }
-        if (comp.key) {
-          obj.c[comp.key] = comp.getObject(componentIds);
-        } else {
-          obj.components.push(comp.getObject(componentIds));
-        }
+    for (const type of Object.keys(this.c)) {
+      if(!this.world.registry.types[type].serialize) {
+        continue;
+      }
+      obj.c[type] = {};
+      for (const comp of this.c[type]) {
+        obj.c[type][comp.key] = comp.getObject(componentIds);
       }
     }
     return obj;
   }
 
-  destroy() {
+  destroy(now=false) {
 
     if (this.destroyed) return;
+    if (!now && this.world.config.useApeDestroy) {
+      this.addTag('ApeDestroy');
+      return;
+    }
     this.ready = false;
-
-    for (const type of Object.keys(this.types)) {
-      for (const component of this.types[type]) {
+    for (const link of this.links) {
+      this._unlinkComponent(link);
+    }
+    for (const type of Object.keys(this.c)) {
+      for (const component of this.c[type]) {
         this.removeComponent(component);
       }
     }

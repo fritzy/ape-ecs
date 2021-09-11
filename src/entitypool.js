@@ -5,8 +5,6 @@ class EntityPool {
     this.world = world;
     this.pool = [];
     this.destroyed = [];
-    this.worldEntity = class WorldEntity extends Entity {};
-    this.worldEntity.prototype.world = this.world;
     this.spinUp(spinup);
     this.targetSize = spinup;
   }
@@ -18,11 +16,11 @@ class EntityPool {
   get(definition, onlyComponents = false) {
     let entity;
     if (this.pool.length === 0) {
-      entity = new this.worldEntity();
+      entity = new Entity();
     } else {
       entity = this.pool.pop();
     }
-    entity._setup(definition, onlyComponents);
+    entity._setup(this.world, definition, onlyComponents);
     return entity;
   }
 
@@ -45,7 +43,7 @@ class EntityPool {
 
   spinUp(count) {
     for (let i = 0; i < count; i++) {
-      const entity = new this.worldEntity();
+      const entity = new Entity();
       this.pool.push(entity);
     }
     this.targetSize = Math.max(this.targetSize, this.pool.length);

@@ -36,7 +36,6 @@ class Test2 extends ECS.Component {
 function benchmarks() {
   let start, end;
 
-
   const ecs = new ECS.World({ trackChanges: false, entityPool: 100 });
   ecs.registerComponent(Test);
   ecs.registerComponent(Test2);
@@ -48,7 +47,6 @@ function benchmarks() {
   start = perf_hooks.performance.now();
 
   for (let i = 0; i < CREATE; i++) {
-
     entities.push(
       ecs.createEntity({
         components: [
@@ -68,6 +66,7 @@ function benchmarks() {
       })
     );
   }
+
   end = perf_hooks.performance.now();
   times.create2Comp = end - start;
   output('create2Comp');
@@ -79,6 +78,7 @@ function benchmarks() {
     entities[i].c.Test2.c = 16;
     entities[i].c.Test2.d = 17;
   }
+
   end = perf_hooks.performance.now();
   times.rewriteComp = end - start;
   output('rewriteComp');
@@ -90,7 +90,6 @@ function benchmarks() {
   end = perf_hooks.performance.now();
   times.destroy2Comp = end - start;
   output('destroy2Comp');
-
 
   start = perf_hooks.performance.now();
   for (let i = 0; i < CREATE; i++) {
@@ -116,9 +115,6 @@ function benchmarks() {
   end = perf_hooks.performance.now();
   times.recreating = end - start;
   output('recreating');
-
 }
 
 benchmarks();
-
-

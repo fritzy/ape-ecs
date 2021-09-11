@@ -11,13 +11,15 @@ class CleanupApeDestroySystem extends System {
   update() {
     const entities = this.destroyQuery.run();
     for (const entity of entities) {
-      entity.destroy();
+      entity.destroy(true);
     }
   }
 }
 
 function setupApeDestroy(world) {
-  world.registerTags('ApeDestroy');
+  if (!world.registry.typeset.has('ApeDestroy')) {
+    world.registerTags('ApeDestroy');
+  }
   world.registerSystem('ApeCleanup', CleanupApeDestroySystem);
 }
 

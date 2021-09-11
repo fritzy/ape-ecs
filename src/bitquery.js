@@ -17,28 +17,47 @@ const defaultQuery = {
 class BitQuery {
 
   constructor(world, query) {
-
     this.world = world;
     this.registry = world.registry;
     this.results = new Set();
     this.query = {...defaultQuery, ...query};
     this.system = this.query.system;
+    this.persisted = !!this.system;
+    this.ran = false;
     this.allMask = 0n;
     this.notMask = 0n;
     this.anyMask = 0n;
     this.added = new Set();
     this.removed = new Set();
 
+    if (this.query.all) {
+      this.query.all = this.query.all.map(type =>
+        typeof type === 'string' ? type : type.name);
+    }
+    if (this.query.not) {
+      this.query.not = this.query.not.map(type =>
+        typeof type === 'string' ? type : type.name);
+    }
+    if (this.query.any) {
+      this.query.any = query.any.map(type =>
+        typeof type === 'string' ? type : type.name);
+    }
+    if (this.query.fromSet){
+      this.from(this.query.fromSet);
+    }
+
     if (this.world.config.useApeDestroy && !this.query.includeApeDestroy) {
       if (Array.isArray(this.query.not)) {
         this.query.not.push('ApeDestroy');
       } else {
-        this.query.not = [];
+        this.query.not = ['ApeDestroy'];
       }
     }
     if (this.system) {
       this.system.queries.push(this);
+      this.world.queries.push(this);
     }
+
 
     this._setMasks();
   }
@@ -49,25 +68,32 @@ class BitQuery {
   }
 
   clearChanges() {
-    if (this.added) {
+    if (this.query.trackAdded) {
       this.added.clear();
     }
-    if (this.removed) {
+    if (this.query.trackRemoved) {
       this.removed.clear();
     }
   }
 
-  from(entities) {
+  _removeEntity(entity) {
+    if (this.results.has(entity)) {
+      this.results.delete(entity);
+      if (this.query.trackRemoved) {
+        this.removed.add(entity);
+      }
+    }
+  }
 
+  from(entities) {
     this.query.from = 'set';
-    this.query.fromSet = entities.map(e => 
+    this.query.fromSet = entities.map(e =>
       typeof e === 'string' ? this.world.entities.get(e) : e
     )
     return this;
   }
 
   fromReverse(entity, type) {
-
     if (typeof type !== 'string')
       type = type.name;
     if (typeof entity !== 'string')
@@ -78,28 +104,18 @@ class BitQuery {
     return this;
   }
 
-
   _makeMask(compArray) {
-
     return [0n, ... compArray.map((comp) => {
-      if (typeof comp !== 'string') {
-        comp = comp.name;
-      }
       const digit = this.registry.typenum.get(comp);
       if (typeof digit !== 'bigint') {
-        throw new Error(`Component/Tag not defined: ${comp}`);
+        throw new Error(`Unregistered type: ${comp}`);
       }
       return digit;
     })].reduce((mask, digit) => mask |= 1n << digit);
   }
 
   _setMasks() {
-
     if (this.query.all) {
-      // sort all components by number of entities so that we can start with the smallest set
-      this.query.all = this.query.all.map(comp => typeof comp === 'string' ? comp : comp.name)
-        .sort((a, b) => ((this.world.entitiesByComponent[a] || new Set()).size
-          - (this.world.entitiesByComponent[b] || new Set()).size))
       this.allMask = this._makeMask(this.query.all);
     }
     if (this.query.any) {
@@ -110,16 +126,50 @@ class BitQuery {
     }
   }
 
-  run() {
+  updateEntity(entity) {
+    let found = true;
+    if (this.allMask && (entity.bitmask & this.allMask) !== this.allMask) {
+      found = false;
+    }
+    if (this.anyMask && (entity.bitmask & this.anyMask) === 0n) {
+      found = false;
+    }
+    if (this.notMask && found
+      && (entity.bitmask & this.notMask) !== 0n) {
+      found = false;
+    }
+    if (found) {
+      if (!this.results.has(entity)) {
+        this.results.add(entity);
+        if (this.query.trackAdded) {
+          this.added.add(entity);
+        }
+      }
+    } else {
+      this._removeEntity(entity);
+    }
+  }
 
+  run() {
+    if (!this.persisted || !this.ran) {
+      if (this.ran)
+        this.results.clear();
+      return this.refresh();
+    }
+    return this.results;
+  }
+
+  refresh() {
     let from;
+    this.ran = true;
     if (this.query.from === 'reverse') {
-      const entity = this.query.reverseEntity;
+      const entity = this.world.getEntity(this.query.reverseEntity);
       const type = this.query.reverseComponent;
-      if (this.world.entityReverse[entity]
-      && this.world.entityReverse[entity][type] instanceof Map) {
-        from = [...this.world.entityReverse[entity][type].keys()]
-          .map(id => this.world.entities.get(id))
+
+      if (entity) {
+        from = [...entity.links]
+          .filter(component => type === undefined || component.type === type)
+          .map(component => component.entity)
       } else {
         from = [];
       }
@@ -128,7 +178,15 @@ class BitQuery {
     } else {
       if (this.allMask) {
         // use the smallest set of entities possible as the starting point
-        from = [...this.world.entitiesByComponent[this.query.all[0]] || []].map(id => this.world.getEntity(id));
+        let smallCount = Infinity;
+        for (const type of this.query.all) {
+          const cset = this.world.entitiesByComponent[type];
+          if (cset && cset.size < smallCount){
+            smallCount = cset.size;
+            from = cset;
+          }
+        }
+        if (!from) from = [];
       } else {
         from = this.world.entities.values();
       }
@@ -137,57 +195,13 @@ class BitQuery {
       from = new Set(from);
     }
     for (const entity of from) {
-      let found = true;
-      if (this.allMask && (entity.bitmask & this.allMask) !== this.allMask) {
-        found = false;
-      }
-      if (this.anyMask && (entity.bitmask & this.anyMask) === 0n) {
-        found = false;
-      }
-      if (this.notMask && found 
-        && (entity.bitmask & this.notMask) !== 0n) {
-        found = false;
-      }
-      if (found) {
-        if (!this.results.has(entity)) {
-          this.results.add(entity);
-          if (this.query.trackAdded) {
-            this.added.add(entity);
-          }
-        }
-      } else {
-        if (this.results.has(entity)) {
-          this.results.delete(entity);
-          if (this.query.trackRemoved) {
-            this.removed.add(entity);
-          }
-        }
-      }
-    }
-    for (const entity of this.results) {
-      if (entity.destroyed || !from.has(entity)) {
-        this.results.delete(entity);
-        if (this.query.trackRemoved) {
-          this.removed.add(entity);
-        }
-      }
+      this.updateEntity(entity);
     }
     return this.results;
   }
 
   filter(filter) {
-    this.run();
-    return new Set([... this.results].filter(filter));
-  }
-
-  onAdd(cb) {
-
-    this.query.onAdded = cb;
-  }
-
-  onRemove(cb) {
-
-    this.query.onRemoved = cb;
+    return new Set([...this.run()].filter(filter));
   }
 
 }
