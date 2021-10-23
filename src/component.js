@@ -43,7 +43,7 @@ class Component {
         }
       }
     }
-    this.lastTick = this.world.tick;
+    this.entity.updatedValues = this.lastTick = this.world.currentTick;
   }
 
   get key() {
@@ -51,7 +51,7 @@ class Component {
   }
 
   set key(value) {
-    this.entity.c[this.type]?.updateKey?.(this, this._key, value);
+    this.entity?.c[this.type]?.updateKey?.(this, this._key, value);
     this._key = value;
   }
 

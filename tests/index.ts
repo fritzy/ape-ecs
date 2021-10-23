@@ -56,6 +56,25 @@ class Colour extends ECS.Component {
   }
 }
 
+class EquipmentSlot extends ECS.EntityComponent {
+  static properties = {
+    name: 'leftHand'
+  }
+}
+
+class Weapon extends ECS.Component {
+  static properties = {
+    name: 'weapon',
+    damage: 5
+  }
+}
+class Player extends ECS.Component {
+  static properties = {
+    name: 'player',
+  }
+}
+
+
 describe('express components', () => {
 
   const ecs = new ECS.World();
@@ -87,7 +106,7 @@ describe('express components', () => {
     expect(e1.has('Health')).to.equal(true);
     expect(e1.has(Health)).to.equal(true);
     expect(e1.has('ApeDestroy')).to.equal(false);
-    expect(e1.c.Health[0].hp).to.equal(10);
+    expect(e1.c.Health.first.hp).to.equal(10);
     const results = s1.createQuery({ all: ['Health'] }).run();
     expect(results.size).to.equal(1);
 
@@ -128,6 +147,8 @@ describe('express components', () => {
     expect(results.size).to.equal(2);
     const results2 = ecs.createQuery({ any: [Health], not: ['Armor'] }).run();
     expect(results2.size).to.equal(1);
+    const results3 = ecs.createQuery({ any: ['Health'], not: [Armor] }).run();
+    expect(results3.size).to.equal(1);
   });
 
   it('init and destroy component', () => {
@@ -152,8 +173,9 @@ describe('express components', () => {
     }
     ecs.registerComponent(Test);
     const entity = ecs.createEntity()
-      .addComponent('Test', { key: 'Test' });
+      .addComponent('Test', { key: 'Test', id: 'hey3'});
     expect(entity.c.Test.Test.y).to.equal(1);
+    expect(entity.c.Test.Test.id).to.equal('hey3');
     expect(hit).to.equal(false);
     entity.removeComponent(entity.c.Test.Test);
     expect(hit).to.equal(true);
@@ -164,12 +186,15 @@ describe('express components', () => {
     const q1 = ecs.createQuery({ all: [Health] });
     const r1 = q1.run();
     expect(r1.size).to.equal(2);
-    const q1r2 = q1.filter((e) => e.c.Health[0].hp === 12);
+    const q1r2 = q1.filter((e) => e.c.Health.first.hp === 12);
     expect(q1r2.size).to.equal(1);
     const e1 = r1.values().next().value;
     const q2 = ecs.createQuery({ fromSet: [e1], all: [Health] });
     const q2r1 = q2.run();
     expect(q2r1.size).to.equal(1);
+    const q2a = ecs.createQuery({ fromSet: [e1.id], all: [Health] });
+    const q2ar1 = q2a.run();
+    expect(q2ar1.size).to.equal(1);
     e1.destroy();
     const q2r2 = q2.run();
     expect(q2r2.size).to.equal(0);
@@ -196,23 +221,6 @@ describe('express components', () => {
 
 describe('reverse query', () => {
 
-  class Weapon extends ECS.Component {
-    static properties = {
-      name: 'weapon',
-      damage: 5
-    }
-  }
-  class Player extends ECS.Component {
-    static properties = {
-      name: 'player',
-    }
-  }
-  class EquipmentSlot extends ECS.EntityComponent {
-    static properties = {
-      name: 'leftHand'
-    }
-  }
-
   const ecs = new ECS.World( { newRegistry: true });
   ecs.registerComponent(Weapon)
   ecs.registerComponent(Player)
@@ -235,7 +243,7 @@ describe('reverse query', () => {
 
     player.c.EquipmentSlot.leftHand.key = 'offHand';
     expect(sword.links).includes(player.c.EquipmentSlot.offHand, 'links work')
-    const q2 = ecs.createQuery().fromReverse(sword, EquipmentSlot);
+    const q2 = ecs.createQuery().fromReverse(sword.id, 'EquipmentSlot');
     const results2 = q2.run();
     expect(results2).includes(player, 'reverse includes player');
     expect(results2.size).to.equal(1);
@@ -311,6 +319,7 @@ describe('system queries', () => {
        this.lastRemoved = [...this.slotsQ.removed];
      }
   }
+  class System2 extends ECS.System {};
   class EquipmentSlot extends ECS.EntityComponent {
     static properties = {
       name: 'slot'
@@ -330,6 +339,7 @@ describe('system queries', () => {
   const equipmentSystem = new EquipmentSystem(world);
 
   world.registerSystem('equipment', equipmentSystem)
+  world.registerSystem('equipment', System2)
 
   it('persistent query', () => {
 
@@ -350,9 +360,13 @@ describe('system queries', () => {
     world.runSystems('equipment');
     expect(equipmentSystem.lastSlots).not.contains('1');
     expect(equipmentSystem.lastSlots.length).to.equal(0);
+    expect(e1.updatedValues).to.equal(world.currentTick - 1);
+    e1.c.EquipmentSlot.leftHand.update();
+    expect(e1.updatedValues).to.equal(world.currentTick);
     e1.addTag('NPC');
     world.tick();
     world.runSystems('equipment');
+    expect(() => world.runSystems('garbage')).to.throw();
     expect(equipmentSystem.lastSlots).contains('1');
     expect(equipmentSystem.lastSlots.length).to.equal(1);
     expect(equipmentSystem.lastAdded.length).to.equal(1);
@@ -365,6 +379,10 @@ describe('system queries', () => {
     expect(equipmentSystem.lastRemoved.length).to.equal(1);
     expect(equipmentSystem.lastAdded.length).to.equal(0);
 
+    expect(e1.c.EquipmentSlot.size).to.equal(2);
+    e1.removeComponent(e1.c.EquipmentSlot.rightHand);
+    expect(e1.c.EquipmentSlot.size).to.equal(1);
+
   });
 });
 
@@ -372,7 +390,7 @@ describe('serialize', () => {
 
   it('copy objects', () => {
 
-    const ecs1 = new ECS.World({ newRegistry: true });
+    const ecs1 = new ECS.World({ newRegistry: true, useApeDestroy: false });
     const ecs2 = new ECS.World({ registry: ecs1.registry });
     expect(ecs1.registry).to.equal(ecs2.registry);
 
@@ -426,7 +444,7 @@ describe('serialize', () => {
     const entities2 = ecs2.getEntities('Health');
 
     expect(entities1[0].id).to.equal(entities2[0].id);
-    expect(entities1[0].c.Armor[0].ac).to.equal(ecs2.getComponent(entities1[0].c.Armor[0].id).ac);
+    expect(entities1[0].c.Armor.first.ac).to.equal(ecs2.getComponent(entities1[0].c.Armor.first.id).ac);
 
     const e5 = ecs2.createEntity({
       c: {
@@ -437,6 +455,14 @@ describe('serialize', () => {
     const obj5 = e5.getObject();
     expect(obj5.c).has.property('Health');
     expect(obj5.c).has.not.property('Sprite');
+
+    e1.destroy();
+    e1.destroy();
+
+    ecs1.tick();
+
+    expect(e1.destroyed).to.equal(true);
+    expect(ecs1.entityPool.pool).contains(e1);
 
   });
 });
@@ -467,4 +493,27 @@ describe('pools', () => {
     expect(world.entityPool.pool.length).to.be.below(5);
 
   });
+});
+
+describe('componentset keys', () => {
+  const world = new ECS.World({ newRegistry: true });
+  world.registerComponent(Player);
+  world.registerComponent(Health);
+  world.registerComponent(EquipmentSlot);
+
+  it('errors', () => {
+    const e1 = world.createEntity({
+      c: {
+        EquipmentSlot: {
+          leftHand: {},
+          rightHand: {}
+        }
+      }
+    });
+    expect(() => {
+      e1.addComponent('EquipmentSlot', { key: 'leftHand' })
+    }).to.throw();
+    e1.c.EquipmentSlot.add(e1.c.EquipmentSlot.leftHand);
+  });
+
 });

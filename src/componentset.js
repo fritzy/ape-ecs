@@ -1,8 +1,9 @@
 class ComponentSet extends Set {
 
   add(item) {
+    /* istanbul ignore next */
+    if (this[item.key] && this[item.key] !== item) throw new Error(`ComponentSet already has key "${key}"`);
     super.add(item)
-    if (this[item.key] && this[item.key] !== item) throw new Error(`ComponentSet already has a component with the key "${item.key}"`);
     this[item.key] = item;
   }
 
@@ -12,13 +13,12 @@ class ComponentSet extends Set {
   }
 
   updateKey(item, old, key) {
-    if (this[key]) throw new Error(`ComponentSet already has a component with the key "${item.key}"`);
+    if (this[key]) throw new Error(`ComponentSet already has a component with the key "${key}"`);
     delete this[old];
     this[key] = item;
   }
 
-  get 0() {
-    if (this.size === 0) return undefined;
+  get first() {
     return this.values().next().value;
   }
 

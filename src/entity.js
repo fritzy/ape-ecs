@@ -157,6 +157,7 @@ class Entity {
 
   destroy(now=false) {
 
+    /* istanbul ignore next */
     if (this.destroyed) return;
     if (!now && this.world.config.useApeDestroy) {
       this.addTag('ApeDestroy');

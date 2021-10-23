@@ -53,7 +53,6 @@ module.exports = class World {
       this.runSystems('ApeCleanup');
     }
     this.currentTick++;
-    //this.updateIndexes();
     this.entityPool.release();
     // istanbul ignore else
     if (this.config.cleanupPools) {
@@ -125,7 +124,7 @@ module.exports = class World {
 
   runSystems(group) {
     const systems = this.systems.get(group);
-    if (!systems) return;
+    if (!systems) throw new Error(`No system group ${group}`);
     for (const system of systems) {
       system._preUpdate();
       system.update(this.currentTick);

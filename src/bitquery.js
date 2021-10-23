@@ -181,11 +181,13 @@ class BitQuery {
         let smallCount = Infinity;
         for (const type of this.query.all) {
           const cset = this.world.entitiesByComponent[type];
+          /* istanbul ignore else */
           if (cset && cset.size < smallCount){
             smallCount = cset.size;
             from = cset;
           }
         }
+        /* istanbul ignore next */
         if (!from) from = [];
       } else {
         from = this.world.entities.values();
