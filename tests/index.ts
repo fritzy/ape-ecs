@@ -11,7 +11,6 @@ import {
   EntityObject,
   EntityComponent,
   Query,
-  BitQuery
 } from '../src';
 import { SSL_OP_NO_TICKET } from 'constants';
 
@@ -20,7 +19,7 @@ const ECS = {
   System: System,
   Component,
   EntityComponent,
-  BitQuery,
+  Query,
 };
 
 
@@ -295,7 +294,7 @@ describe('system queries', () => {
 
   class EquipmentSystem extends ECS.System {
 
-    slotsQ: BitQuery;
+    slotsQ: Query;
     lastSlots: string[];
     lastAdded: Entity[];
     lastRemoved: Entity[];

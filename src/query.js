@@ -14,7 +14,7 @@ const defaultQuery = {
   includeApeDestroy: false
 };
 
-class BitQuery {
+class Query {
 
   constructor(world, query) {
     this.world = world;
@@ -208,4 +208,4 @@ class BitQuery {
 
 }
 
-module.exports = BitQuery;
+module.exports = Query;

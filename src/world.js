@@ -3,7 +3,7 @@
  * @type {class}
  */
 const Entity = require('./entity');
-const BitQuery = require('./bitquery');
+const Query = require('./query');
 const ComponentPool = require('./componentpool');
 const EntityPool = require('./entitypool');
 const setupApeDestroy = require('./cleanup');
@@ -107,7 +107,7 @@ module.exports = class World {
   }
 
   createQuery(query) {
-    return new BitQuery(this, query);
+    return new Query(this, query);
   }
 
   registerSystem(group, system, initParams) {

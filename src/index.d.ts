@@ -14,20 +14,6 @@ export interface IQueryReverse {
   type: string | ComponentClass;
 }
 
-// the object passed to world.createQuery()
-export interface IQueryConfig {
-  trackAdded?: boolean;
-  trackRemoved?: boolean;
-  includeApeDestroy?: boolean;
-  persist?: boolean;
-  from?: (Entity | string)[];
-  all?: (string | ComponentClass)[];
-  any?: (string | ComponentClass)[];
-  reverse?: IQueryReverse;
-  not?: (string | ComponentClass)[];
-  only?: (string | ComponentClass)[];
-}
-
 export declare class System {
   constructor(world: World, ...initArgs: any[]);
   world: World;
@@ -37,7 +23,7 @@ export declare class System {
   static subscriptions: string[];
   init(...initArgs: any[]): void;
   update(tick: number): void;
-  createQuery(query: IBitQueryConfig): BitQuery;
+  createQuery(query: IQueryConfig): Query;
   subscribe(type: string | ComponentClass): void;
   added: Set;
   removed: Set;
@@ -64,7 +50,7 @@ export interface IComponentConfigVal {
   [others: string]: any;
 }
 
-export interface IBitQueryConfig {
+export interface IQueryConfig {
   from?: string;
   fromSet?: Array<string | Entity>;
   reverseEntity?: Entity | string;
@@ -79,10 +65,10 @@ export interface IBitQueryConfig {
   includeApeDestroy?: boolean;
 }
 
-export declare class BitQuery {
-  constructor(world: World, query: IBitQueryConfig);
-  from(entity: (Entity | string)[]): BitQuery;
-  fromReverse<T extends typeof Component>(entity: Entity | string, type: T | string): BitQuery;
+export declare class Query {
+  constructor(world: World, query: IQueryConfig);
+  from(entity: (Entity | string)[]): Query;
+  fromReverse<T extends typeof Component>(entity: Entity | string, type: T | string): Query;
   results: Set<Entity>;
   added: Set<Entity>;
   clear(): void;
@@ -90,29 +76,6 @@ export declare class BitQuery {
   run(): Set<Entity>;
   filter(filter: (Entity) => Boolean): Set<Entity>;
   clearChanges(): void;
-}
-
-export declare class Query {
-  constructor(world: World, system: System, init: IQueryConfig);
-  persisted: boolean;
-  results: Set<Entity>;
-  executed: boolean;
-  added: Set<Entity>;
-  removed: Set<Entity>;
-  trackAdded: boolean;
-  trackRemoved: boolean;
-  from(...entities: (Entity | string)[]): Query;
-  fromReverse<T extends typeof Component>(
-    entity: Entity | string,
-    componentName: string | T
-  ): Query;
-  fromAll(...types: (string | (new () => Component))[]): Query;
-  fromAny(...types: (string | (new () => Component))[]): Query;
-  not(...types: (string | (new () => Component))[]): Query;
-  only(...types: (string | (new () => Component))[]): Query;
-  persist(trackAdded?: boolean, trackRemoved?: boolean): Query;
-  refresh(): Query;
-  execute(filter?: IQueryExecuteConfig): Set<Entity>;
 }
 
 export interface IComponentUpdate {
@@ -329,7 +292,7 @@ export declare class World {
   getEntity(entityId: string): Entity | undefined;
   getEntities(type: string | ComponentClass): Set<Entity>;
   getComponent(id: string): Component;
-  createQuery(init?: IBitQueryConfig): BitQuery;
+  createQuery(init?: IQueryConfig): Query;
 
   // Allows passing of a class that extends System, or an instance of such a class
   registerSystem<T extends typeof System>(

@@ -1,5 +1,5 @@
 const { ComponentRegistry } = require('./componentregistry');
-const BitQuery = require('./bitquery');
+const Query = require('./query');
 
 module.exports = {
   World: require('./world'),
@@ -8,5 +8,5 @@ module.exports = {
   EntityComponent : require('./linkcomponent'),
   Entity: require('./entity'),
   ComponentRegistry,
-  BitQuery
+  Query
 };
