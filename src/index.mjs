@@ -1,4 +1,4 @@
-export * as World from './world.js';
+export { World, IWorldConfig } from './world.ts';
 export * as System from './system.js';
 export * as Component from './component.js';
 export * as EntityComponent from './linkcomponent.js';

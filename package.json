@@ -13,7 +13,7 @@
     "test_only": "cross-env TS_NODE_FILES=true mocha --exit --require ts-node/register --colors tests/*.ts",
     "testp": "mocha tests/index.js",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
-    "build": "webpack --config ./build.webpack.config.js",
+    "build": "tsc src/world.ts",
     "md": "jsdoc2md src/ecs.js",
     "prettier": "prettier --write src/",
     "webbench": "webpack-dev-server",
@@ -43,8 +43,5 @@
     "prettier": "^2.4.1",
     "ts-node": "^10.3.0",
     "typescript": "^4.4.4"
-  },
-  "workspaces": [
-    "fritzytest"
-  ]
+  }
 }
