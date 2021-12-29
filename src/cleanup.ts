@@ -1,6 +1,10 @@
-const System = require('./system');
+import { System } from './system';
+export const Query = require('./query.js');
 
 class CleanupApeDestroySystem extends System {
+
+  destroyQuery: typeof Query;
+
   init() {
     this.destroyQuery = this.createQuery({
       includeApeDestroy: true,
@@ -16,11 +20,11 @@ class CleanupApeDestroySystem extends System {
   }
 }
 
-function setupApeDestroy(world) {
+export default function setupApeDestroy(world) {
   if (!world.registry.typeset.has('ApeDestroy')) {
     world.registerTags('ApeDestroy');
   }
   world.registerSystem('ApeCleanup', CleanupApeDestroySystem);
 }
 
-module.exports = setupApeDestroy;
+//module.exports = setupApeDestroy;

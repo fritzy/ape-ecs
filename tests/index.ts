@@ -6,22 +6,18 @@ import {
   World,
   Component,
   Entity,
-  EntityRef,
-  EntitySet,
-  EntityObject,
   EntityComponent,
   Query,
-} from '../src';
+} from '../src/index';
 import { SSL_OP_NO_TICKET } from 'constants';
 
 const ECS = {
   World,
-  System: System,
+  System,
   Component,
   EntityComponent,
   Query,
 };
-
 
 class Health extends ECS.Component {
   static properties = {
@@ -84,8 +80,8 @@ describe('express components', () => {
 
   it('create entity', () => {
 
-    const S1 = class System extends ECS.System {}
-    const s1 = new S1(ecs);
+    class System1 extends ECS.System {}
+    const s1 = new System1(ecs);
 
     const e1 = ecs.createEntity({
       c: {
@@ -127,8 +123,6 @@ describe('express components', () => {
     expect(e2.has('Colour')).to.equal(true);
     expect(e2.has('Color')).to.equal(false);
     expect(e2.has(Color)).to.equal(true);
-
-
   });
 
   it('bad registrations', () => {
@@ -155,6 +149,11 @@ describe('express components', () => {
     let hit = false;
     const ecs = new ECS.World({ newRegistry: true });
     class Test extends ECS.Component {
+
+      x: number;
+      y: number;
+
+
       static properties = {
         x: null,
         y: 2
@@ -173,6 +172,9 @@ describe('express components', () => {
     ecs.registerComponent(Test);
     const entity = ecs.createEntity()
       .addComponent('Test', { key: 'Test', id: 'hey3'});
+    if (entity === undefined) {
+      throw new Error('entity is undefined');
+    }
     expect(entity.c.Test.Test.y).to.equal(1);
     expect(entity.c.Test.Test.id).to.equal('hey3');
     expect(hit).to.equal(false);
@@ -294,13 +296,14 @@ describe('system queries', () => {
 
   class EquipmentSystem extends ECS.System {
 
-    slotsQ: Query;
+    slotsQ: typeof Query;
     lastSlots: string[];
-    lastAdded: Entity[];
-    lastRemoved: Entity[];
+    lastAdded: typeof Entity[];
+    lastRemoved: typeof Entity[];
 
 
-     init() {
+     constructor(world) {
+       super(world)
        this.slotsQ = this.createQuery({ 
          all: [EquipmentSlot, 'NPC'], 
          trackAdded: true,
@@ -320,6 +323,10 @@ describe('system queries', () => {
   }
   class System2 extends ECS.System {};
   class EquipmentSlot extends ECS.EntityComponent {
+
+    key: string;
+    slot: string;
+
     static properties = {
       name: 'slot'
     }
@@ -335,9 +342,9 @@ describe('system queries', () => {
 
   world.registerComponent(EquipmentSlot);
   world.registerTags('NPC', 'Enemy', 'Player');
-  const equipmentSystem = new EquipmentSystem(world);
+  //const equipmentSystem = new EquipmentSystem(world);
 
-  world.registerSystem('equipment', equipmentSystem)
+  const equipmentSystem = world.registerSystem('equipment', EquipmentSystem)
   world.registerSystem('equipment', System2)
 
   it('persistent query', () => {

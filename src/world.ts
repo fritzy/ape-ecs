@@ -2,10 +2,9 @@
 import Entity from './entity.js';
 import EntityPool from './entitypool.js';
 import Component from './component.js';
-import System from './system.js';
+import { System } from './system';
 import Query from './query.js';
-import ComponentPool from './componentpool.js';
-import setupApeDestroy from './componentpool.js';
+import setupApeDestroy from './cleanup';
 import { singletonRepo, ComponentRegistry } from './componentregistry.js';
 
 export interface IWorldConfig {
@@ -27,7 +26,7 @@ export class World {
   componentsById: Map<string, Component>;
   updatedEntities: Set<Entity>;
   queries: Query[];
-  systems: Map<string, System>;
+  systems: Map<string, Set<System>>;
   entityPool: EntityPool;
 
   constructor(config?: IWorldConfig) {
@@ -87,7 +86,7 @@ export class World {
     this.registry.registerComponent(klass, spinup);
   }
 
-  createEntity(definition): Entity {
+  createEntity(definition?: object): Entity {
     definition = definition || {};
     return this.entityPool.get(definition);
   }
@@ -121,14 +120,14 @@ export class World {
     return this.componentsById.get(id);
   }
 
-  createQuery(query): Query {
+  createQuery(query?: object): Query {
     return new Query(this, query);
   }
 
-  registerSystem(group: string, system: typeof System | System, initParams: object): System {
-    initParams = initParams || [];
+  registerSystem(group: string, system: any, initParams?: object): any {
+    initParams = initParams || {};
     if (typeof system === 'function') {
-      system = new system(this, ...initParams);
+      system = new system(this, initParams);
     }
     if (!this.systems.has(group)) {
       this.systems.set(group, new Set());

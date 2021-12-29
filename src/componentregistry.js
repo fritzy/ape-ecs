@@ -69,7 +69,8 @@ class ComponentRegistry {
         );
       }
     }
-    this.pool.set(name, new ComponentPool(this, name, spinup));
+    const pool = new ComponentPool(this, name, spinup);
+    this.pool.set(name, pool);
     for (const world of this.worlds) {
       world.entitiesByComponent[name] = new Set();
     }

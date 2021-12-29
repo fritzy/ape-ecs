@@ -1,18 +1,24 @@
+import { World } from './world';
 const Query = require('./query');
 
-class System {
-  constructor(world, ...initArgs) {
+export class System {
+
+  world: World;
+  queries: any[];
+  lastTick: number;
+
+  constructor(world: World, initArgs?: object) {
     this.world = world;
     this.queries = [];
     this.lastTick = this.world.currentTick;
-    this.init(...initArgs);
+    this.init(initArgs);
   }
 
-  init() {}
+  init(initArgs?: object) {}
 
-  update(tick) {}
+  update(tick: number) {}
 
-  createQuery(query) {
+  createQuery(query: any): typeof Query {
     return new Query(this.world, { system: this, ...query });
   }
 
@@ -27,5 +33,3 @@ class System {
   }
 
 }
-
-module.exports = System;
