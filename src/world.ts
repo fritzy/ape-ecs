@@ -1,7 +1,7 @@
 
 import Entity from './entity.js';
 import EntityPool from './entitypool.js';
-import Component from './component.js';
+import { Component } from './component';
 import { System } from './system';
 import Query from './query.js';
 import setupApeDestroy from './cleanup';
@@ -18,8 +18,8 @@ export interface IWorldConfig {
 export class World {
 
   config: IWorldConfig;
-  entitiesByComponent: {[index: string] : Component};
-  registry: ComponentRegistry;
+  entitiesByComponent: {[index: string] : Set<Entity>};
+  registry: any;
   entities: Map<string, Entity>;
   currentTick: number;
   types: {[key: string]: typeof Component};
@@ -82,7 +82,7 @@ export class World {
     this.registry.registerTags(...tags);
   }
 
-  registerComponent(klass: typeof Component, spinup: number = 1) {
+  registerComponent(klass: any, spinup: number = 1) {
     this.registry.registerComponent(klass, spinup);
   }
 
@@ -109,14 +109,14 @@ export class World {
     return this.entities.get(entityId);
   }
 
-  getEntities(type: string | typeof Component): Entity[] {
+  getEntities(type: string | any): Entity[] {
     if (typeof type !== 'string') {
       type = type.name;
     }
     return [...this.entitiesByComponent[type]];
   }
 
-  getComponent(id: string): Component {
+  getComponent(id: string): any {
     return this.componentsById.get(id);
   }
 

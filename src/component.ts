@@ -1,7 +1,19 @@
 const Util = require('./util');
 const idGen = new Util.IdGenerator();
 
-class Component {
+import { World } from './world';
+import Entity from './entity';
+
+export class Component {
+
+  static properties?: null | object = null;
+  static serialize?: boolean = true;
+  static serializeFields? : null | string[] = null;
+  world: World;
+  id: null | string;
+  lastTick: number;
+  entity: Entity;
+  _key: string;
 
   constructor() {
     this.world = null;
@@ -17,7 +29,7 @@ class Component {
   }
 
   clear() {
-    for (const prop of Object.keys(this.constructor.properties)) {
+    for (const prop of Object.keys((this.constructor as typeof Component).properties)) {
       this[prop] = undefined;
     }
   }
@@ -25,7 +37,7 @@ class Component {
   _setup(world, entity, initial) {
     this.world = world;
     this.entity = entity;
-    const values = { ...this.constructor.properties, ...initial };
+    const values = { ...(this.constructor as typeof Component).properties, ...initial };
     this.id = initial.id || idGen.genId();
     this.key = initial.key || this.id;
     this.update(values);
@@ -38,7 +50,7 @@ class Component {
   update(values) {
     if (values !== undefined) {
       for (const prop of Object.keys(values)) {
-        if (this.constructor.properties.hasOwnProperty(prop)) {
+        if ((this.constructor as typeof Component).properties.hasOwnProperty(prop)) {
           this[prop] = values[prop];
         }
       }
@@ -66,12 +78,12 @@ class Component {
       entity: this?.entity?.id,
       key: this._key
     }
-    if (this.constructor.serializeFields !== null) {
-      for (const prop of this.constructor.serializeFields) {
+    if ((this.constructor as typeof Component).serializeFields !== null) {
+      for (const prop of (this.constructor as typeof Component).serializeFields) {
         obj[prop] = this[prop];
       }
     } else {
-      for (const prop of Object.keys(this.constructor.properties)) {
+      for (const prop of Object.keys((this.constructor as typeof Component).properties)) {
         obj[prop] = this[prop];
       }
     }
@@ -84,9 +96,3 @@ class Component {
   }
 
 }
-
-Component.properties = null;
-Component.serialize = true;
-Component.serializeFields = null;
-
-module.exports = Component;

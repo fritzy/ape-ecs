@@ -1,11 +1,18 @@
-const Component = require('./component');
+import { Component } from './component';
+import Entity = require("./entity");
 
-class EntityComponent extends Component {
+export class EntityComponent extends Component {
+
+  static properties: any = {
+    linkId: null
+  };
+
+  _link: Entity;
 
   constructor() {
     super();
     this._link = undefined;
-    this.constructor.properties.linkId = undefined;
+    (this.constructor as typeof EntityComponent).properties.linkId = undefined;
   }
 
   get link() {
@@ -50,5 +57,3 @@ class EntityComponent extends Component {
     super.destroy();
   }
 }
-
-module.exports = EntityComponent;

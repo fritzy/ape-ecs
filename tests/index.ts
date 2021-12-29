@@ -153,7 +153,6 @@ describe('express components', () => {
       x: number;
       y: number;
 
-
       static properties = {
         x: null,
         y: 2
@@ -324,7 +323,6 @@ describe('system queries', () => {
   class System2 extends ECS.System {};
   class EquipmentSlot extends ECS.EntityComponent {
 
-    key: string;
     slot: string;
 
     static properties = {

@@ -6,13 +6,15 @@
     "lib": ["es2020"],
     "module": "commonjs",
     "target": "es2020",
-
+    "declaration": true,
     "strict": false,
+    "allowJs": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "dist"
   },
   "files": [
-    "./src/world.ts"
+    "./src/index.ts"
   ]
 }
