@@ -1,3 +1,8 @@
+import { World } from './world';
+import { ComponentRegistry } from './componentregistry';
+import Entity from './entity';
+import { System } from './system';
+
 const defaultQuery = {
   from: 'all', //set, reverse
   fromSet: undefined,
@@ -14,7 +19,21 @@ const defaultQuery = {
   includeApeDestroy: false
 };
 
-class Query {
+
+export default class Query {
+
+  world: World;
+  registry: ComponentRegistry;
+  results: Set<Entity>
+  query: any;
+  system: System;
+  added: Set<Entity>;
+  removed: Set<Entity>;
+  persisted: boolean;
+  ran: boolean;
+  allMask: bigint;
+  notMask: bigint;
+  anyMask: bigint;
 
   constructor(world, query) {
     this.world = world;
@@ -150,7 +169,7 @@ class Query {
     }
   }
 
-  run() {
+  run(): Set<Entity> {
     if (!this.persisted || !this.ran) {
       if (this.ran)
         this.results.clear();

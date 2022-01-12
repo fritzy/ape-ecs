@@ -1,11 +1,11 @@
 
-import Entity from './entity.js';
-import EntityPool from './entitypool.js';
+import Entity from './entity';
+import EntityPool from './entitypool';
 import { Component } from './component';
 import { System } from './system';
-import Query from './query.js';
+import Query from './query';
 import setupApeDestroy from './cleanup';
-import { singletonRepo, ComponentRegistry } from './componentregistry.js';
+import { singletonRepo, ComponentRegistry } from './componentregistry';
 
 export interface IWorldConfig {
   entityPool?: number;

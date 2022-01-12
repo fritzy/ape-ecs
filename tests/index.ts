@@ -1,4 +1,3 @@
-
 import { expect } from 'chai';
 
 import {
@@ -295,11 +294,10 @@ describe('system queries', () => {
 
   class EquipmentSystem extends ECS.System {
 
-    slotsQ: typeof Query;
+    slotsQ: Query;
     lastSlots: string[];
-    lastAdded: typeof Entity[];
-    lastRemoved: typeof Entity[];
-
+    lastAdded: Entity[];
+    lastRemoved: Entity[];
 
      constructor(world) {
        super(world)

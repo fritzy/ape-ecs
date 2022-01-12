@@ -1,5 +1,5 @@
 import { Component } from './component';
-import Entity = require("./entity");
+import Entity from './entity';
 
 export class EntityComponent extends Component {
 

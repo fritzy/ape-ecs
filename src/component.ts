@@ -1,5 +1,5 @@
-const Util = require('./util');
-const idGen = new Util.IdGenerator();
+import { IdGenerator } from './util';
+const idGen = new IdGenerator();
 
 import { World } from './world';
 import Entity from './entity';
@@ -58,11 +58,11 @@ export class Component {
     this.entity.updatedValues = this.lastTick = this.world.currentTick;
   }
 
-  get key() {
+  get key(): string {
     return this._key;
   }
 
-  set key(value) {
+  set key(value: string) {
     this.entity?.c[this.type]?.updateKey?.(this, this._key, value);
     this._key = value;
   }

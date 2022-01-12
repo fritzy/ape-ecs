@@ -1,9 +1,23 @@
-const BaseComponent = require('./component');
-const ComponentSet = require('./componentset');
-const IdGenerator = require('./util').IdGenerator;
+import { IdGenerator } from './util';
 const idGen = new IdGenerator();
 
-class Entity {
+import ComponentSet from './componentset';
+import { Component } from './component';
+import { World } from './world';
+
+export default class Entity {
+
+  id: string;
+  tags: Set<string>;
+  links: Set<any>;
+  c: any;
+  updatedComponents: number;
+  updatedValues: number;
+  destroyed: boolean;
+  ready: boolean;
+  bitmask: bigint;
+  reverse: Set<any>;
+  world: World;
 
   constructor() {
     this.id = '';
@@ -64,14 +78,14 @@ class Entity {
     this.links.delete(component);
   }
 
-  has(type) {
+  has(type: string | any): boolean {
     if (typeof type !== 'string') {
       type = type.name;
     }
     return this.tags.has(type) || this.c.hasOwnProperty(type);
   }
 
-  addTag(...tags) {
+  addTag(...tags: (string | any)[]) {
     for (const tag of tags) {
       if (!this.world.registry.tags.has(tag)) {
         throw new Error(`addTag "${tag}" is not registered. Typo?`);
@@ -182,5 +196,3 @@ class Entity {
     this.world._clearIndexes(this);
   }
 }
-
-module.exports = Entity;

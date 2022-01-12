@@ -1,4 +1,5 @@
-const ComponentPool = require('./componentpool');
+import ComponentPool from './componentpool';
+import { World } from './world';
 
 const componentReserved = new Set([
   'constructor',
@@ -16,7 +17,15 @@ const componentReserved = new Set([
   'prototype'
 ]);
 
-class ComponentRegistry {
+export class ComponentRegistry {
+
+  types: any;
+  typeset: Set<string>;
+  typenum: Map<string, bigint>;
+  pool: Map<string, ComponentPool>;
+  tags: Set<string>;
+  componentNum: bigint;
+  worlds: Set<World>;
 
   constructor() {
 
@@ -102,9 +111,4 @@ class ComponentRegistry {
   }
 }
 
-const singletonRepo = new ComponentRegistry();
-
-module.exports = {
-  singletonRepo,
-  ComponentRegistry
-};
+export const singletonRepo = new ComponentRegistry();

@@ -1,6 +1,13 @@
-const Entity = require('./entity');
+import Entity from './entity';
+import { World } from './world';
 
-class EntityPool {
+export default class EntityPool {
+
+  world: World;
+  pool: Entity[];
+  destroyed: Entity[];
+  targetSize: number;
+
   constructor(world, spinup) {
     this.world = world;
     this.pool = [];
@@ -49,5 +56,3 @@ class EntityPool {
     this.targetSize = Math.max(this.targetSize, this.pool.length);
   }
 }
-
-module.exports = EntityPool;

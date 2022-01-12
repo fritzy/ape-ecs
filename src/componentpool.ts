@@ -1,4 +1,15 @@
-class ComponentPool {
+import { World } from './world';
+import Entity from './entity';
+import { Component } from './component';
+
+export default class ComponentPool {
+
+  registry: any;
+  type: string;
+  klass: any;
+  pool: any[];
+  targetSize: number;
+  active: number;
 
   constructor(registry, type, spinup) {
     this.registry = registry;
@@ -10,7 +21,7 @@ class ComponentPool {
     this.spinUp(spinup);
   }
 
-  get(world, entity, initial) {
+  get(world: World, entity: Entity, initial: object) {
     let comp;
     if (this.pool.length === 0) {
       comp = new this.klass();
@@ -23,7 +34,7 @@ class ComponentPool {
     return comp;
   }
 
-  release(comp) {
+  release(comp: Component) {
     comp._reset();
     //comp._meta.entity = null;
     this.pool.push(comp);
@@ -40,7 +51,7 @@ class ComponentPool {
     }
   }
 
-  spinUp(count) {
+  spinUp(count: number) {
     for (let i = 0; i < count; i++) {
       const comp = new this.klass();
       this.pool.push(comp);
@@ -48,5 +59,3 @@ class ComponentPool {
     this.targetSize = Math.max(this.targetSize, this.pool.length);
   }
 }
-
-module.exports = ComponentPool;

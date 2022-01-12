@@ -31,5 +31,4 @@ export class System {
       query.clearChanges();
     }
   }
-
 }

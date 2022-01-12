@@ -1,9 +1,9 @@
 import { System } from './system';
-export const Query = require('./query.js');
+import Query from './query';
 
 class CleanupApeDestroySystem extends System {
 
-  destroyQuery: typeof Query;
+  destroyQuery: Query;
 
   init() {
     this.destroyQuery = this.createQuery({
