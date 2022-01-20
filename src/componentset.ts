@@ -13,12 +13,14 @@ export default class ComponentSet<Component> extends Set<Component> {
   }
 
   delete(item: Component): boolean {
+    /* istanbul ignore else */
     if (item instanceof Component) {
       const result = super.delete(item)
       delete this[item.key]
       return result;
+    } else {
+      return false;
     }
-    return false;
   }
 
   updateKey(item: Component, old: string, key: string) {

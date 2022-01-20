@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "test": "nyc npm run test_only",
-    "test_only": "cross-env TS_NODE_FILES=true mocha --exit --require ts-node/register --colors tests/*.ts",
+    "test_only": "mocha -r ts-node/register tests/*.ts",
     "testp": "mocha tests/index.js",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "build": "tsc --build",
@@ -31,6 +31,7 @@
   "homepage": "https://github.com/fritzy/ape-ecs#readme",
   "devDependencies": {
     "@hapi/eslint-plugin-hapi": "^4.3.5",
+    "@istanbuljs/nyc-config-typescript": "^1.0.2",
     "@types/chai": "^4.2.22",
     "@types/mocha": "^9.0.0",
     "@types/node": "^16.11.1",

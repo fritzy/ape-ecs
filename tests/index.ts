@@ -14,6 +14,7 @@ const ECS = {
   World,
   System,
   Component,
+  Entity,
   EntityComponent,
   Query,
 };
@@ -341,7 +342,8 @@ describe('system queries', () => {
   //const equipmentSystem = new EquipmentSystem(world);
 
   const equipmentSystem = world.registerSystem('equipment', EquipmentSystem)
-  world.registerSystem('equipment', System2)
+  const system2 = new System2(world);
+  world.registerSystem('equipment', system2)
 
   it('persistent query', () => {
 
