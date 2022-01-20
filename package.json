@@ -13,7 +13,7 @@
     "test_only": "cross-env TS_NODE_FILES=true mocha --exit --require ts-node/register --colors tests/*.ts",
     "testp": "mocha tests/index.js",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
-    "build": "tsc --build --clean",
+    "build": "tsc --build",
     "md": "jsdoc2md src/ecs.js",
     "prettier": "prettier --write src/",
     "webbench": "webpack-dev-server",

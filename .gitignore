@@ -4,3 +4,4 @@ coverage
 isolate-*
 webbenchmark/build
 package-lock.json
+dist
