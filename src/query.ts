@@ -13,6 +13,7 @@ const defaultQuery = {
   not: undefined,
   trackAdded: false,
   trackRemoved: false,
+  trackChanged: false,
   onAdded: undefined,
   onRemoved: undefined,
   system: undefined,

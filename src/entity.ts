@@ -85,13 +85,13 @@ export default class Entity {
     return this.tags.has(type) || this.c.hasOwnProperty(type);
   }
 
-  addTag(...tags: (string | any)[]) {
+  addTag(...tags: (string | any)[]): Entity {
     for (const tag of tags) {
       if (!this.world.registry.tags.has(tag)) {
         throw new Error(`addTag "${tag}" is not registered. Typo?`);
       }
       if (this.tags.has(tag)) {
-        return;
+        return this;
       }
       this.tags.add(tag);
       this.bitmask |= 1n << this.world.registry.typenum.get(tag);
@@ -101,6 +101,7 @@ export default class Entity {
     if (this.ready) {
       this.world._entityUpdated(this);
     }
+    return this;
   }
 
   removeTag(tag) {
@@ -114,7 +115,7 @@ export default class Entity {
     this.world._entityUpdated(this);
   }
 
-  addComponent(type, properties) {
+  addComponent(type, properties): Entity {
     if (typeof type !== 'string') {
       type = type.name;
     }
